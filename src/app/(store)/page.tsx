@@ -18,7 +18,6 @@ import { getClient } from "@/lib/urql";
 import { cn, keytoUrl } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 const LandingRouteQuery = gql(/* GraphQL */ `
@@ -70,25 +69,43 @@ const LandingRouteQuery = gql(/* GraphQL */ `
 export default async function Home() {
   const currentUser = await getCurrentUser();
 
-  const { data } = await getClient().query(LandingRouteQuery, {
+  const { data, error } = await getClient().query(LandingRouteQuery, {
     user_id: currentUser?.id,
   });
 
-  if (data === null) return notFound();
+  if (data === null && error) {
+    console.error("LandingRouteQuery failed:", error.message);
+  }
+
+  const products = data?.products;
+  const collectionScrollCards = data?.collectionScrollCards;
 
   return (
     <main>
       <HeroSection />
 
       <Shell>
-        {data.products && data.products.edges ? (
+        {error ? (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-6 my-8 text-sm">
+            <p className="font-semibold mb-2">Store data not loaded</p>
+            <p className="text-muted-foreground mb-2">
+              Enable GraphQL in Supabase: SQL Editor → run{" "}
+              <code className="bg-white px-1">supabase/02-enable-graphql.sql</code>
+            </p>
+            <p className="text-muted-foreground">
+              Or: Database → Extensions → enable <strong>pg_graphql</strong>
+            </p>
+          </div>
+        ) : null}
+
+        {collectionScrollCards?.edges?.length ? (
           <ProductSubCollectionsCircles
-            collections={data.collectionScrollCards.edges}
+            collections={collectionScrollCards.edges}
           />
         ) : null}
 
-        {data.products && data.products.edges ? (
-          <FeaturedProductsCards products={data.products.edges} />
+        {products?.edges?.length ? (
+          <FeaturedProductsCards products={products.edges} />
         ) : null}
 
         <CollectionGrid />
