@@ -7,10 +7,7 @@ import { CollectionCardFragment } from "@/features/collections";
 import { CarouselItem } from "@/components/ui/carousel";
 import { keytoUrl } from "@/lib/utils";
 import { HomeSectionHeader } from "./HomeSectionHeader";
-import {
-  HomeCarousel,
-  homeCarouselItemClass,
-} from "./HomeCarousel";
+import { HomeCarousel, homeCarouselItemClass } from "./HomeCarousel";
 
 type CollectionNode = DocumentType<typeof CollectionCardFragment>;
 

@@ -15,7 +15,7 @@ interface MainNavbarProps {
 
 async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
   return (
-    <nav className="bg-background/95 fixed z-50 w-full">
+    <nav className="fixed z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
       <div
         className={cn(
           adminLayout ? "mx-auto px-[3rem] max-w-[2500px] py-3" : "container",

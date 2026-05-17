@@ -36,7 +36,10 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
           />
         </Link>
         {badge ? (
-          <Badge className="absolute top-3 left-3 z-10" variant={badge as "default"}>
+          <Badge
+            className="absolute top-3 left-3 z-10"
+            variant={badge as "default"}
+          >
             {badge}
           </Badge>
         ) : null}

@@ -39,50 +39,50 @@ export function MobileBottomNav() {
     );
 
   return (
-      <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-[200] border-t border-zinc-700 bg-zinc-900 text-white shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
-        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))" }}
-        aria-label="Mobile navigation"
-      >
-        <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around">
-          <Link href="/shop" className={itemClass(false)}>
-            <Search className="h-5 w-5 shrink-0" strokeWidth={1.75} />
-            <span>Search</span>
-          </Link>
-          <Link
-            href="/sign-in"
-            className={itemClass(
-              pathname.startsWith("/sign") || pathname.startsWith("/setting"),
-            )}
-          >
-            <User className="h-5 w-5 shrink-0" strokeWidth={1.75} />
-            <span>Account</span>
-          </Link>
-          <Link href="/" className={itemClass(pathname === "/")}>
-            <Home
-              className="h-5 w-5 shrink-0"
-              strokeWidth={pathname === "/" ? 2.25 : 1.75}
-            />
-            <span>Home</span>
-          </Link>
-          <Link
-            href="/wish-list"
-            className={itemClass(pathname === "/wish-list")}
-          >
-            <span className="relative inline-flex">
-              <Heart className="h-5 w-5 shrink-0" strokeWidth={1.75} />
-              <NavBadge count={wishCount} />
-            </span>
-            <span>Wishlist</span>
-          </Link>
-          <Link href="/cart" className={itemClass(pathname === "/cart")}>
-            <span className="relative inline-flex">
-              <ShoppingCart className="h-5 w-5 shrink-0" strokeWidth={1.75} />
-              <NavBadge count={cartCount} />
-            </span>
-            <span>Cart</span>
-          </Link>
-        </div>
-      </nav>
+    <nav
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[200] border-t border-zinc-700 bg-zinc-900 text-white shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
+      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))" }}
+      aria-label="Mobile navigation"
+    >
+      <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around">
+        <Link href="/shop" className={itemClass(false)}>
+          <Search className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+          <span>Search</span>
+        </Link>
+        <Link
+          href="/sign-in"
+          className={itemClass(
+            pathname.startsWith("/sign") || pathname.startsWith("/setting"),
+          )}
+        >
+          <User className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+          <span>Account</span>
+        </Link>
+        <Link href="/" className={itemClass(pathname === "/")}>
+          <Home
+            className="h-5 w-5 shrink-0"
+            strokeWidth={pathname === "/" ? 2.25 : 1.75}
+          />
+          <span>Home</span>
+        </Link>
+        <Link
+          href="/wish-list"
+          className={itemClass(pathname === "/wish-list")}
+        >
+          <span className="relative inline-flex">
+            <Heart className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+            <NavBadge count={wishCount} />
+          </span>
+          <span>Wishlist</span>
+        </Link>
+        <Link href="/cart" className={itemClass(pathname === "/cart")}>
+          <span className="relative inline-flex">
+            <ShoppingCart className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+            <NavBadge count={cartCount} />
+          </span>
+          <span>Cart</span>
+        </Link>
+      </div>
+    </nav>
   );
 }

@@ -10,68 +10,75 @@ import {
 } from "@/components/ui/sheet";
 import { siteConfig } from "@/config/site";
 import Link from "next/link";
-import { Icons } from "./icons";
-import Branding from "./Branding";
+import { Menu } from "lucide-react";
+import { BrandLogo } from "./BrandLogo";
 import SocialMedias from "./SocialMedias";
+import { cn } from "@/lib/utils";
 
-export function SideMenu() {
+const navLinkClass =
+  "rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-[#00542E]/10 active:bg-[#00542E]/15";
+
+type SideMenuProps = {
+  triggerClassName?: string;
+};
+
+export function SideMenu({ triggerClassName }: SideMenuProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="shrink-0" aria-label="Open menu">
-          <Icons.menu className="h-5 w-5" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-10 w-10 shrink-0 -ml-1 justify-center",
+            triggerClassName,
+          )}
+          aria-label="Open menu"
+        >
+          <Menu className="h-6 w-6" strokeWidth={1.75} />
         </Button>
       </SheetTrigger>
 
       <SheetContent
         side="left"
-        className="flex w-[min(100vw,340px)] flex-col gap-0 p-0 sm:max-w-sm"
+        mobileNavSafe
+        className="flex w-[min(100vw-3rem,320px)] flex-col gap-0 border-r border-[#00542E]/15 p-0 sm:max-w-xs"
       >
-        <SheetHeader className="border-b px-5 py-4 text-left space-y-0">
-          <SheetTitle className="sr-only">Menu</SheetTitle>
-          <Branding className="text-lg font-semibold" />
+        <SheetHeader className="space-y-3 border-b border-[#00542E]/15 bg-[#00542E]/[0.06] px-4 py-4 text-left">
+          <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#00542E]/80">
+            Menu
+          </p>
+          <BrandLogo size="lg" className="w-full max-w-full" />
         </SheetHeader>
 
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-5 py-5">
-          <Link
-            href="/"
-            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
-          >
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-4 py-4">
+          <Link href="/" className={navLinkClass}>
             Home
           </Link>
-          <Link
-            href="/shop"
-            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
-          >
+          <Link href="/shop" className={navLinkClass}>
             Shop
           </Link>
           {siteConfig.mainNav.map(({ title, href }, index) => (
-            <Link
-              key={index}
-              href={href}
-              className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
-            >
+            <Link key={index} href={href} className={navLinkClass}>
               {title}
             </Link>
           ))}
-          <Link
-            href="/wish-list"
-            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
-          >
+          <Link href="/wish-list" className={navLinkClass}>
             Wishlist
           </Link>
-          <Link
-            href="/cart"
-            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
-          >
+          <Link href="/cart" className={navLinkClass}>
             Cart
           </Link>
         </nav>
 
-        <div className="mt-auto border-t px-5 py-5 text-sm text-muted-foreground">
-          <p className="leading-relaxed">{siteConfig.address}</p>
+        <div className="shrink-0 border-t border-[#00542E]/15 bg-muted/30 px-4 py-4 text-xs leading-relaxed text-muted-foreground">
+          <p>{siteConfig.address}</p>
           <p className="mt-2">
-            <a className="hover:text-foreground" href={`tel:${siteConfig.phone}`}>
+            <a
+              className="hover:text-foreground"
+              href={`tel:${siteConfig.phone.replace(/\s/g, "")}`}
+            >
               {siteConfig.phone}
             </a>
           </p>
@@ -83,7 +90,7 @@ export function SideMenu() {
               {siteConfig.email}
             </Link>
           </p>
-          <div className="mt-4">
+          <div className="mt-3">
             <SocialMedias />
           </div>
         </div>

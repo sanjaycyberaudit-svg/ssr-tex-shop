@@ -38,7 +38,6 @@ export function HomeCarousel({
   );
 }
 
-
 export const homeCarouselItemClass =
   "pl-3 sm:pl-4 min-w-0 shrink-0 grow-0 basis-[92%] sm:basis-[78%] md:basis-[48%] lg:basis-[36%]";
 

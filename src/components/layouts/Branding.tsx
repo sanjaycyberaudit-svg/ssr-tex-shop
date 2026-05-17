@@ -1,20 +1,15 @@
+import { BrandLogo } from "./BrandLogo";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
-import React from "react";
 
-type Props = { className?: string };
+type Props = {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+  showText?: boolean;
+};
 
-function Branding({ className }: Props) {
+function Branding({ className, size = "md", showText = true }: Props) {
   return (
-    <Link
-      href="/"
-      className={cn(
-        "text-base sm:text-xl md:text-2xl font-semibold align-middle",
-        className,
-      )}
-    >
-      Sakthi Textiles
-    </Link>
+    <BrandLogo size={size} showText={showText} className={cn(className)} />
   );
 }
 

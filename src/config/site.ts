@@ -5,7 +5,7 @@ import { slugify } from "@/lib/utils";
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Sakthi Textiles",
+  name: "Sakthi Textile",
   description: "Authentic silk and cotton sarees — wholesale and retail",
   url: "https://hiyori.hugo-coding.com",
   address: "Salem, Tamil Nadu, India",

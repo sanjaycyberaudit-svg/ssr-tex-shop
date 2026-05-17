@@ -53,6 +53,8 @@ interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {
   closeButtonClassName?: string;
+  /** Leaves room for fixed mobile bottom nav (does not cover it). */
+  mobileNavSafe?: boolean;
 }
 
 const SheetContent = React.forwardRef<
@@ -60,21 +62,41 @@ const SheetContent = React.forwardRef<
   SheetContentProps
 >(
   (
-    { side = "right", className, children, closeButtonClassName, ...props },
+    {
+      side = "right",
+      className,
+      children,
+      closeButtonClassName,
+      mobileNavSafe = false,
+      ...props
+    },
     ref,
   ) => (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay
+        className={cn(
+          mobileNavSafe &&
+            "bottom-[var(--mobile-nav-height)] md:bottom-0 z-[150]",
+        )}
+      />
       <SheetPrimitive.Content
         ref={ref}
-        className={cn(sheetVariants({ side }), className)}
+        className={cn(
+          sheetVariants({ side }),
+          mobileNavSafe && [
+            "z-[151] !top-0 !bottom-[var(--mobile-nav-height)] !h-auto",
+            "max-h-[calc(100dvh-var(--mobile-nav-height))]",
+            "md:!inset-y-0 md:!bottom-0 md:!h-full md:max-h-none",
+          ],
+          className,
+        )}
         {...props}
       >
         {children}
         <SheetPrimitive.Close
           className={cn(
-            side === "right" ? "right-6 md:right-12" : "left-6 md:left-12",
-            "absolute top-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
+            side === "right" ? "right-4 top-4" : "left-auto right-4 top-4",
+            "absolute rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
           )}
         >
           <X className={cn("h-4 w-4", closeButtonClassName)} />
