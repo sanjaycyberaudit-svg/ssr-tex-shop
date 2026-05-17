@@ -5,8 +5,8 @@ import { slugify } from "@/lib/utils";
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "HIYORI",
-  description: "Ecommerce Application built with NextJS 14",
+  name: "Sakthi Textiles",
+  description: "Authentic silk and cotton sarees — wholesale and retail",
   url: "https://hiyori.hugo-coding.com",
   address: "1600 Amphitheatre Parkway in Mountain View, California",
   phone: "+1(234)-567-8901",

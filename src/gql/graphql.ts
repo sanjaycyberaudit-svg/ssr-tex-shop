@@ -4598,7 +4598,7 @@ export const LandingRouteQueryDocument = {
               {
                 kind: "Argument",
                 name: { kind: "Name", value: "first" },
-                value: { kind: "IntValue", value: "4" },
+                value: { kind: "IntValue", value: "12" },
               },
               {
                 kind: "Argument",
@@ -4785,7 +4785,7 @@ export const LandingRouteQueryDocument = {
               {
                 kind: "Argument",
                 name: { kind: "Name", value: "first" },
-                value: { kind: "IntValue", value: "6" },
+                value: { kind: "IntValue", value: "10" },
               },
               {
                 kind: "Argument",
