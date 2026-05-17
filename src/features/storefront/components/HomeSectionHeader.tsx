@@ -15,8 +15,8 @@ export function HomeSectionHeader({
   viewMoreLabel = "View More",
 }: Props) {
   return (
-    <div className="flex items-center justify-between gap-3 mb-4 md:mb-5 px-1">
-      <h2 className="text-xl md:text-2xl font-bold tracking-tight">
+    <div className="mb-3 flex min-w-0 flex-col gap-2 sm:mb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 md:mb-5">
+      <h2 className="min-w-0 text-lg font-bold leading-tight tracking-tight sm:text-xl md:text-2xl">
         {title}
         {titleAccent ? (
           <span className="text-primary"> {titleAccent}</span>
@@ -25,7 +25,7 @@ export function HomeSectionHeader({
       <Link
         href={href}
         className={cn(
-          "shrink-0 rounded-full bg-primary px-4 py-2 text-xs md:text-sm font-medium text-primary-foreground",
+          "inline-flex w-fit shrink-0 items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground sm:text-sm",
           "hover:opacity-90 transition-opacity",
         )}
       >

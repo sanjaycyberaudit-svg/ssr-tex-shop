@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { siteConfig } from "@/config/site";
@@ -17,42 +18,75 @@ export function SideMenu() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="p-0">
-          <Icons.menu />
+        <Button variant="ghost" size="icon" className="shrink-0" aria-label="Open menu">
+          <Icons.menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
 
       <SheetContent
         side="left"
-        className="w-full md:max-w-xl pr-[4rem]"
-        closeButtonClassName="w-6 h-6 md:w-10 md:h-10"
+        className="flex w-[min(100vw,340px)] flex-col gap-0 p-0 sm:max-w-sm"
       >
-        <div className="grid py-8 gap-y-3 ml-12 md:ml-[96px] mt-[120px]">
+        <SheetHeader className="border-b px-5 py-4 text-left space-y-0">
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <Branding className="text-lg font-semibold" />
+        </SheetHeader>
+
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-5 py-5">
+          <Link
+            href="/"
+            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
+          >
+            Home
+          </Link>
+          <Link
+            href="/shop"
+            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
+          >
+            Shop
+          </Link>
           {siteConfig.mainNav.map(({ title, href }, index) => (
-            <Link key={index} href={href} className="text-xl md:text-3xl">
+            <Link
+              key={index}
+              href={href}
+              className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
+            >
               {title}
             </Link>
           ))}
-        </div>
+          <Link
+            href="/wish-list"
+            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
+          >
+            Wishlist
+          </Link>
+          <Link
+            href="/cart"
+            className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted"
+          >
+            Cart
+          </Link>
+        </nav>
 
-        <SheetFooter className="fixed grid bottom-[96px] ml-12 md:ml-[96px] space-x-0">
-          <Branding className="text-xl md:text-4xl md:mb-3" />
-
-          <div className="mb-8 text-muted-foreground">
-            <p className="text-xs md:text-sm ml-0">{siteConfig.address}</p>
-            <p className="text-xs md:text-sm ml-0">
-              <span>{siteConfig.phone}</span> {` / `}
-              <Link
-                className="hover:underline hover:text-primary"
-                href={`mailto:${siteConfig.email}`}
-              >
-                {siteConfig.email}
-              </Link>
-            </p>
+        <div className="mt-auto border-t px-5 py-5 text-sm text-muted-foreground">
+          <p className="leading-relaxed">{siteConfig.address}</p>
+          <p className="mt-2">
+            <a className="hover:text-foreground" href={`tel:${siteConfig.phone}`}>
+              {siteConfig.phone}
+            </a>
+          </p>
+          <p className="mt-1">
+            <Link
+              className="hover:text-foreground hover:underline"
+              href={`mailto:${siteConfig.email}`}
+            >
+              {siteConfig.email}
+            </Link>
+          </p>
+          <div className="mt-4">
+            <SocialMedias />
           </div>
-
-          <SocialMedias />
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   );

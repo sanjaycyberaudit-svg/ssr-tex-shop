@@ -10,10 +10,14 @@ async function StoreLayout({ children }: Props) {
   return (
     <>
       <Navbar />
-      <main className="pt-[50px] pb-20 md:pb-0">{children}</main>
+      <main className="w-full max-w-[100vw] overflow-x-hidden pt-14 md:pt-[50px] pb-[var(--mobile-nav-height)] md:pb-0">
+        {children}
+      </main>
       <CartSheet />
       <MobileBottomNav />
-      <MainFooter />
+      <div className="md:contents pb-[var(--mobile-nav-height)] md:pb-0">
+        <MainFooter />
+      </div>
     </>
   );
 }

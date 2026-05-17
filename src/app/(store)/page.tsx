@@ -72,7 +72,7 @@ export default async function Home() {
   const collectionScrollCards = data?.collectionScrollCards;
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen w-full min-w-0 overflow-x-hidden">
       <HomeHeroBanner />
 
       <Shell>

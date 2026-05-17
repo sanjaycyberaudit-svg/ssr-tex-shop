@@ -33,6 +33,9 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.1rem;
+    --mobile-nav-height: calc(
+      3.5rem + max(0.5rem, env(safe-area-inset-bottom, 0px))
+    );
   }
 
   .dark {
@@ -103,6 +106,8 @@ input[type="number"] {
   background: hsl(var(--primary));
 }
 
-.safe-area-pb {
-  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
 }

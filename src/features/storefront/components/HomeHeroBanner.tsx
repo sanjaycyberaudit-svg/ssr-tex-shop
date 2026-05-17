@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 
 export function HomeHeroBanner() {
   return (
-    <section className="w-full bg-background">
-      <div className="container px-3 sm:px-4 pt-3 pb-2 md:pt-6 md:pb-4">
+    <section className="w-full min-w-0 overflow-hidden bg-background">
+      <div className="container px-4 sm:px-6 pt-2 pb-1 md:pt-5 md:pb-3">
         <Link
           href="/shop"
-          className="relative block w-full overflow-hidden rounded-2xl md:rounded-3xl shadow-md aspect-[16/9] sm:aspect-[2/1] md:aspect-[21/9] max-h-[420px] md:max-h-[520px]"
+          className="relative block w-full max-w-full overflow-hidden rounded-2xl shadow-md aspect-[2/1] sm:aspect-[5/2] md:aspect-[21/9] md:max-h-[480px]"
         >
           <Image
             src="/images/hero-banner.png"
@@ -17,10 +17,10 @@ export function HomeHeroBanner() {
             fill
             priority
             sizes="(max-width: 768px) 100vw, 1200px"
-            className="object-cover object-center"
+            className="object-cover object-[center_25%] sm:object-center"
           />
         </Link>
-        <div className="mt-4 hidden md:flex justify-center">
+        <div className="mt-4 hidden justify-center md:flex">
           <Link
             href="/shop"
             className={cn(buttonVariants({ size: "lg" }), "rounded-full px-10")}
