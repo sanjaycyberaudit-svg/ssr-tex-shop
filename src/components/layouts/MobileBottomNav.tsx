@@ -45,7 +45,10 @@ export function MobileBottomNav() {
           <Search className="h-5 w-5" strokeWidth={1.75} />
           <span>Search</span>
         </Link>
-        <Link href="/sign-in" className={itemClass(pathname.startsWith("/sign"))}>
+        <Link
+          href="/sign-in"
+          className={itemClass(pathname.startsWith("/sign"))}
+        >
           <User className="h-5 w-5" strokeWidth={1.75} />
           <span>Account</span>
         </Link>
@@ -53,14 +56,20 @@ export function MobileBottomNav() {
           <Home className="h-5 w-5" strokeWidth={isHome ? 2.25 : 1.75} />
           <span>Home</span>
         </Link>
-        <Link href="/wish-list" className={cn(itemClass(pathname === "/wish-list"), "relative")}>
+        <Link
+          href="/wish-list"
+          className={cn(itemClass(pathname === "/wish-list"), "relative")}
+        >
           <span className="relative">
             <Heart className="h-5 w-5" strokeWidth={1.75} />
             <NavBadge count={wishCount} />
           </span>
           <span>Wishlist</span>
         </Link>
-        <Link href="/cart" className={cn(itemClass(pathname === "/cart"), "relative")}>
+        <Link
+          href="/cart"
+          className={cn(itemClass(pathname === "/cart"), "relative")}
+        >
           <span className="relative">
             <ShoppingCart className="h-5 w-5" strokeWidth={1.75} />
             <NavBadge count={cartCount} />

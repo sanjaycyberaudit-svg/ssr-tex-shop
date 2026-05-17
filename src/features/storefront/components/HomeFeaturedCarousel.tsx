@@ -5,10 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { DocumentType } from "@/gql";
-import {
-  ProductCardFragment,
-  ProductCardSkeleton,
-} from "@/features/products";
+import { ProductCardFragment, ProductCardSkeleton } from "@/features/products";
 import { AddToCartButton } from "@/features/carts";
 import { AddToWishListButton } from "@/features/wishlists";
 import {

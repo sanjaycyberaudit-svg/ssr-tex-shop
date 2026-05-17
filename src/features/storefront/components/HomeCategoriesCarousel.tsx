@@ -24,7 +24,11 @@ export function HomeCategoriesCarousel({ collections }: Props) {
 
   return (
     <section className="py-6 md:py-10">
-      <HomeSectionHeader title="Product" titleAccent="Categories" href="/shop" />
+      <HomeSectionHeader
+        title="Product"
+        titleAccent="Categories"
+        href="/shop"
+      />
       <Carousel
         opts={{ align: "start", loop: collections.length > 1 }}
         plugins={[

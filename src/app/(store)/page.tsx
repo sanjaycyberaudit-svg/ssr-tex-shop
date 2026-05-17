@@ -1,12 +1,8 @@
 import { getCurrentUser } from "@/features/users/actions";
 import { Shell } from "@/components/layouts/Shell";
 import { Icons } from "@/components/layouts/icons";
-import {
-  CollectionCardFragment,
-} from "@/features/collections";
-import {
-  ProductCardFragment,
-} from "@/features/products";
+import { CollectionCardFragment } from "@/features/collections";
+import { ProductCardFragment } from "@/features/products";
 import {
   HomeHeroBanner,
   HomeCategoriesCarousel,

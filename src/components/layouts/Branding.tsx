@@ -8,7 +8,10 @@ function Branding({ className }: Props) {
   return (
     <Link
       href="/"
-      className={cn("text-base sm:text-xl md:text-2xl font-semibold align-middle", className)}
+      className={cn(
+        "text-base sm:text-xl md:text-2xl font-semibold align-middle",
+        className,
+      )}
     >
       Sakthi Textiles
     </Link>
