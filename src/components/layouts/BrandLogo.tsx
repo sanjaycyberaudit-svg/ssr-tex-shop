@@ -28,10 +28,17 @@ export function BrandLogo({
   return (
     <Link
       href="/"
-      className={cn("inline-flex min-w-0 max-w-full items-center gap-2", className)}
+      className={cn(
+        "inline-flex min-w-0 max-w-full items-center gap-2",
+        className,
+      )}
     >
       <span
-        className={cn("relative shrink-0 overflow-hidden", s.box, logoClassName)}
+        className={cn(
+          "relative shrink-0 overflow-hidden",
+          s.box,
+          logoClassName,
+        )}
       >
         <Image
           src="/images/sakthi-logo.png"

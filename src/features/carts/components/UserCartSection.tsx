@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { DocumentType, gql } from "@/gql";
 import { expectedErrorsHandler } from "@/lib/urql";
+import { formatPrice } from "@/lib/utils";
 import { User } from "@supabase/supabase-js";
 import { useMutation, useQuery } from "@urql/next";
 import { notFound } from "next/navigation";
@@ -180,7 +181,9 @@ function UserCartSection({ user }: UserCartSectionProps) {
               <CardDescription>{`${productCount} Items`}</CardDescription>
             </CardHeader>
             <CardContent className="relative overflow-hidden px-3 py-2">
-              <p className="text-3xl md:text-lg lg:text-2xl font-bold">{`$ ${subtotal.toFixed(2).toString()}`}</p>
+              <p className="text-3xl md:text-lg lg:text-2xl font-bold">
+                {formatPrice(subtotal)}
+              </p>
             </CardContent>
 
             <CardFooter className="gap-x-2 md:gap-x-5 px-3">

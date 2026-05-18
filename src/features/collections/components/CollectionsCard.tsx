@@ -26,17 +26,17 @@ function CollectionsCard({
   const { slug, label, featuredImage } = collection;
 
   return (
-    <div className="rounded-xl overflow-hidden relative md:w-[350px] w-[220px]">
+    <div className="relative w-full overflow-hidden rounded-xl">
       <figure className="shrink-0">
         <Link
           href={`/collections/${slug}`}
-          className="overflow-hidden rounded-xl relative"
+          className="relative block overflow-hidden rounded-xl"
         >
           <Image
             src={keytoUrl(featuredImage.key)}
             height={200}
             width={350}
-            className="aspect-[16/9] opacity-65 h-fit w-fit object-cover rounded-xl hover:scale-[1.02] hover:opacity-80 transition-all duration-500"
+            className="aspect-[16/9] w-full object-cover opacity-65 transition-all duration-500 hover:scale-[1.02] hover:opacity-80"
             alt={featuredImage.alt}
           />
           <figcaption className="absolute bottom-3 left-3 text-sm md:text-lg font-medium text-foreground">
@@ -51,5 +51,5 @@ function CollectionsCard({
 export default CollectionsCard;
 
 export const CollectionsCardSkeleton = () => (
-  <Skeleton className="rounded-xl overflow-hidden relative h-[200px] md:w-[350px] w-[220px]" />
+  <Skeleton className="relative h-[200px] w-full overflow-hidden rounded-xl" />
 );

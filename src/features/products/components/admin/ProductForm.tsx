@@ -232,7 +232,7 @@ function ProductFrom({ product }: ProductsFormProps) {
               <Input
                 defaultValue={product?.price}
                 aria-invalid={!!form.formState.errors.price}
-                placeholder="Price"
+                placeholder="Price in ₹ (e.g. 1299)"
                 {...register("price")}
               />
             </FormControl>

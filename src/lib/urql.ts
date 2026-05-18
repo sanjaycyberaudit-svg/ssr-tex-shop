@@ -20,8 +20,12 @@ export const makeClient = (access_token?: string) => {
         headers["Authorization"] = `Bearer ${access_token}`;
       }
 
-      return { headers };
+      return {
+        headers,
+        cache: "no-store" as RequestCache,
+      };
     },
+    requestPolicy: "network-only",
   });
 };
 

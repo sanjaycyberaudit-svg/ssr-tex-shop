@@ -1,17 +1,14 @@
-import React, { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import { ProductForm } from "@/features/products";
-import db from "@/lib/supabase/db";
 
-async function NewProjectPage() {
-  const products = await db.query.products.findMany();
-  if (!products) return notFound();
+export const dynamic = "force-dynamic";
 
+async function NewProductPage() {
   return (
     <AdminShell
-      heading="Add Project"
-      description="Input the field below, after that press Add Project button to save the project."
+      heading="Add Product"
+      description="Fill in the fields below, then click Create to save the product."
     >
       <Suspense>
         <ProductForm />
@@ -20,4 +17,4 @@ async function NewProjectPage() {
   );
 }
 
-export default NewProjectPage;
+export default NewProductPage;

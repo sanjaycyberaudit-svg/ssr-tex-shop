@@ -23,7 +23,7 @@ export function HomeCategoriesCarousel({ collections }: Props) {
       <HomeSectionHeader
         title="Product"
         titleAccent="Categories"
-        href="/shop"
+        href="/collections"
       />
       <HomeCarousel loop={collections.length > 1}>
         {collections.map(({ node }) => (

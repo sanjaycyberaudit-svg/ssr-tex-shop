@@ -21,10 +21,6 @@ const sidebarNavItems = [
     title: "Address",
     href: "/setting/address",
   },
-  {
-    title: "News Letter",
-    href: "/setting/newsletter",
-  },
 ];
 
 interface SettingsLayoutProps {

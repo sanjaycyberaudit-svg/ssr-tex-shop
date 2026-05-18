@@ -73,12 +73,13 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
         </nav>
 
         <div className="shrink-0 border-t border-[#00542E]/15 bg-muted/30 px-4 py-4 text-xs leading-relaxed text-muted-foreground">
-          <p>{siteConfig.address}</p>
+          <address className="not-italic">
+            {siteConfig.addressLines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </address>
           <p className="mt-2">
-            <a
-              className="hover:text-foreground"
-              href={`tel:${siteConfig.phone.replace(/\s/g, "")}`}
-            >
+            <a className="hover:text-foreground" href={siteConfig.phoneHref}>
               {siteConfig.phone}
             </a>
           </p>
@@ -90,8 +91,11 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
               {siteConfig.email}
             </Link>
           </p>
-          <div className="mt-3">
-            <SocialMedias />
+          <div className="mt-4 pt-3 border-t border-[#00542E]/10">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#00542E]/70 mb-2">
+              Follow us
+            </p>
+            <SocialMedias variant="compact" />
           </div>
         </div>
       </SheetContent>

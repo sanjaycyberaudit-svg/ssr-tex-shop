@@ -1,21 +1,51 @@
 import type { NavItemWithOptionalChildren } from "@/types";
 
-import { slugify } from "@/lib/utils";
-
 export type SiteConfig = typeof siteConfig;
+
+/** Business card — Sakthi Textiles */
+const ADDRESS_LINES = [
+  "337/55 Palakara Thottam Street",
+  "Mottur, Elampillai PO",
+  "Salem Dt, 637502",
+] as const;
+
+const PHONE = "+91 77080 69049";
+const PHONE_HREF = "tel:+917708069049";
+const EMAIL = "contact@sakthitextiles.com";
+
+const SOCIAL = {
+  instagram: "https://www.instagram.com/sakthitextiles",
+  youtube: "https://www.youtube.com/@sakthitextiles",
+  facebook: "https://www.facebook.com/sakthitextiles",
+  whatsapp: "https://wa.me/917708069049",
+} as const;
 
 export const siteConfig = {
   name: "Sakthi Textile",
   description: "Authentic silk and cotton sarees — wholesale and retail",
-  url: "https://hiyori.hugo-coding.com",
-  address: "Salem, Tamil Nadu, India",
-  phone: "+91 9952252964",
-  email: "contact@sakthitextiles.com",
+  url: "https://sakthi-textiles-shop.vercel.app",
+  addressLines: ADDRESS_LINES,
+  /** Single-line address for compact UI */
+  address: ADDRESS_LINES.join(", "),
+  phone: PHONE,
+  /** `tel:` href (digits only, with country code) */
+  phoneHref: PHONE_HREF,
+  email: EMAIL,
+  currency: "INR",
+  currencySymbol: "₹",
+  /** Update with your real profile URLs */
+  social: SOCIAL,
   mainNav: [
     {
       title: "Collections",
-      href: "/shop",
+      href: "/collections",
       description: "Browse saree collections.",
+      items: [],
+    },
+    {
+      title: "Featured",
+      href: "/featured",
+      description: "Handpicked sarees.",
       items: [],
     },
     {
@@ -23,6 +53,70 @@ export const siteConfig = {
       href: "/orders",
       description: "Your orders.",
       items: [],
+    },
+  ] satisfies NavItemWithOptionalChildren[],
+
+  /** Storefront footer columns */
+  footerNav: [
+    {
+      title: "Shop",
+      items: [
+        { title: "All sarees", href: "/shop", items: [] },
+        { title: "Featured sarees", href: "/featured", items: [] },
+        { title: "All categories", href: "/collections", items: [] },
+        { title: "Wishlist", href: "/wish-list", items: [] },
+        { title: "Cart", href: "/cart", items: [] },
+      ],
+    },
+    {
+      title: "Collections",
+      items: [
+        {
+          title: "Kanjivaram Wedding",
+          href: "/collections/kanjivaram-wedding-sarees",
+          items: [],
+        },
+        {
+          title: "Cotton Sarees",
+          href: "/collections/cotton-sarees",
+          items: [],
+        },
+        {
+          title: "Soft Silk Sarees",
+          href: "/collections/soft-silk-sarees",
+          items: [],
+        },
+        {
+          title: "Wedding Collections",
+          href: "/collections/wedding-collections",
+          items: [],
+        },
+        {
+          title: "Traditional Silk",
+          href: "/collections/traditional-silk-sarees",
+          items: [],
+        },
+        { title: "View all categories", href: "/collections", items: [] },
+      ],
+    },
+    {
+      title: "Customer Service",
+      items: [
+        { title: "Shipping & Returns", href: "/shipping-returns", items: [] },
+        { title: "Store Policy", href: "/store-policy", items: [] },
+        { title: "Payment Methods", href: "/payment-methods", items: [] },
+        { title: "FAQ", href: "/faq", items: [] },
+        { title: "My orders", href: "/orders", items: [] },
+      ],
+    },
+    {
+      title: "About Sakthi Textiles",
+      items: [
+        { title: "Our Story", href: "/about", items: [] },
+        { title: "Our Collections", href: "/collections", items: [] },
+        { title: "Visit our store", href: "/contact#store", items: [] },
+        { title: "Contact", href: "/contact", items: [] },
+      ],
     },
   ] satisfies NavItemWithOptionalChildren[],
 };

@@ -1,6 +1,6 @@
 "use client";
 import { SearchQuery } from "@/features/search";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { Icons } from "@/components/layouts/icons";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,7 @@ function FilterBadges({
       )}
       {query.priceRange && (
         <Badge className="px-3 py-2 gap-x-3">
-          {`Price Range: $${query.priceRange[0]} - $${query.priceRange[1]}`}
+          {`Price: ${formatPrice(query.priceRange[0])} – ${formatPrice(query.priceRange[1])}`}
           <button
             onClick={() =>
               router.push(pathname + "?" + onDeleteHandler("price_range"))

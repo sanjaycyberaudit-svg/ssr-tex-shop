@@ -9,7 +9,7 @@ import { AddToCartButton } from "@/features/carts";
 import { AddToWishListButton } from "@/features/wishlists";
 import { CarouselItem } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
-import { keytoUrl } from "@/lib/utils";
+import { formatPrice, keytoUrl } from "@/lib/utils";
 import { HomeSectionHeader } from "./HomeSectionHeader";
 import { HomeCarousel, homeFeaturedItemClass } from "./HomeCarousel";
 
@@ -69,7 +69,11 @@ export function HomeFeaturedCarousel({ products }: Props) {
 
   return (
     <section className="w-full min-w-0 py-4 sm:py-8 md:py-10">
-      <HomeSectionHeader title="Featured" titleAccent="Products" href="/shop" />
+      <HomeSectionHeader
+        title="Featured"
+        titleAccent="Products"
+        href="/featured"
+      />
       <HomeCarousel loop={products.length > 1}>
         {products.map(({ node }) => (
           <CarouselItem key={node.id} className={homeFeaturedItemClass}>

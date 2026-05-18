@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { DocumentType, gql } from "@/gql";
-import { cn, keytoUrl } from "@/lib/utils";
+import { cn, formatPrice, keytoUrl } from "@/lib/utils";
 
 import {
   Card,
@@ -90,7 +90,7 @@ export function ProductCard({
           </CardDescription>
         </div>
 
-        <div className="">${price}</div>
+        <div className="font-medium">{formatPrice(price)}</div>
 
         <div className="hidden md:block">
           <Rating value={product.rating} precision={0.5} readOnly />

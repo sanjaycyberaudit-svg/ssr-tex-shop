@@ -1,6 +1,6 @@
 "use client";
 import { DocumentType, gql } from "@/gql";
-import { keytoUrl } from "@/lib/utils";
+import { formatPrice, keytoUrl } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "../../../components/ui/card";
@@ -54,7 +54,7 @@ function BuyAgainCard({ products }: BuyAgainCardProps) {
                 {node.name}
               </Link>
               <Link href={node.slug} className="text-red-700">
-                <p>${node.price}</p>
+                <p>{formatPrice(node.price)}</p>
               </Link>
             </div>
           </div>

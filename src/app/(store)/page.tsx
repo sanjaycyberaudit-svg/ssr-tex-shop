@@ -10,6 +10,9 @@ import {
 } from "@/features/storefront/components";
 import { gql } from "@/gql";
 import { getClient } from "@/lib/urql";
+import { siteConfig } from "@/config/site";
+
+export const dynamic = "force-dynamic";
 
 const LandingRouteQuery = gql(/* GraphQL */ `
   query LandingRouteQuery($user_id: UUID) {
@@ -112,7 +115,7 @@ function TrustFeatures() {
     {
       Icon: Icons.cart,
       title: "Contact Support",
-      description: "Friendly help when you need it.",
+      description: `Call ${siteConfig.phone} or email us anytime.`,
     },
     {
       Icon: Icons.tag,

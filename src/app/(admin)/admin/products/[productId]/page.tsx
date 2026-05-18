@@ -6,6 +6,8 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 type EditProjectPageProps = {
   params: {
     productId: string;
@@ -22,8 +24,8 @@ async function EditProjectPage({
 
   return (
     <AdminShell
-      heading="Add Project"
-      description="Input the field below, after that press Add Project button to save the project."
+      heading="Edit Product"
+      description="Update the fields below, then click Update to save changes."
     >
       <Suspense>
         <ProductForm product={product} />

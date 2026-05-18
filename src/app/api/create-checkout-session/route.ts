@@ -12,13 +12,21 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+const shippingSchema = z.object({
+  addressId: z.string().min(1),
+  fullName: z.string().min(2),
+  email: z.string().email(),
+  mobile: z.string().min(10),
+});
+
 const orderProductsSchema = z.object({
   orderProducts: z.record(
     z.object({
-      quantity: z.number().min(1), // Assuming quantity should be at least 1
+      quantity: z.number().min(1),
     }),
   ),
   guest: z.boolean(),
+  shipping: shippingSchema,
 });
 
 type OrderProducts = CartItems;
@@ -27,6 +35,7 @@ export async function POST(request: Request) {
   const data = (await request.json()) as {
     orderProducts: OrderProducts;
     guest: boolean;
+    shipping: z.infer<typeof shippingSchema>;
   };
 
   let user: User | undefined;
@@ -50,9 +59,12 @@ export async function POST(request: Request) {
       .insert(orders)
       .values({
         user_id: !data.guest
-          ? (await supabase.auth.getUser()).data.user.id
+          ? (await supabase.auth.getUser()).data.user?.id
           : null,
-        currency: "cad",
+        name: data.shipping.fullName,
+        email: data.shipping.email,
+        addressId: data.shipping.addressId,
+        currency: "inr",
         amount: `${amount}`,
         order_status: "pending",
         payment_status: "unpaid",
@@ -72,10 +84,16 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       billing_address_collection: "required",
+      customer_email: data.shipping.email,
+      phone_number_collection: { enabled: true },
+      metadata: {
+        customer_mobile: data.shipping.mobile,
+        shipping_address_id: data.shipping.addressId,
+      },
       client_reference_id: insertedOrder[0].id,
       line_items: productsQuantity.map(({ name, price, quantity }) => ({
         price_data: {
-          currency: "cad",
+          currency: "inr",
           product_data: {
             name: name,
           },

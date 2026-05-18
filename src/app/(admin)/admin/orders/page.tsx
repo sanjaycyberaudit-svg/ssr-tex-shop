@@ -1,12 +1,11 @@
 import AdminShell from "@/components/admin/AdminShell";
-import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/features/cms";
 import { OrdersColumns } from "@/features/orders";
 import { gql } from "@/gql";
 import { getClient } from "@/lib/urql";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 type AdminOrdersPageProps = {
   searchParams: {
@@ -36,14 +35,8 @@ async function OrdersPage({ searchParams }: AdminOrdersPageProps) {
   return (
     <AdminShell
       heading="Orders"
-      description={"Edit orders from the dashboard. "}
+      description="View and manage customer orders and payment status."
     >
-      <section className="flex justify-end items-center pb-5 w-full">
-        <Link href="/admin/collections/new" className={cn(buttonVariants())}>
-          New Order
-        </Link>
-      </section>
-
       <DataTable
         columns={OrdersColumns}
         data={data.ordersCollection.edges || []}

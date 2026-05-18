@@ -2,7 +2,8 @@
  * Push .env.local variables to linked Vercel project (production + preview).
  * Run: node scripts/push-vercel-env.mjs
  */
-import { readFileSync, spawnSync } from "fs";
+import { readFileSync } from "fs";
+import { spawnSync } from "child_process";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 

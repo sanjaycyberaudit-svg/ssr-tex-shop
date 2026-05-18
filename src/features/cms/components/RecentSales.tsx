@@ -1,67 +1,59 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import type { RecentOrderRow } from "@/lib/admin/getDashboardStats";
+import { formatDate, formatInr } from "@/lib/utils";
+import Link from "next/link";
 
-export function RecentSales() {
+type Props = {
+  orders: RecentOrderRow[];
+};
+
+function initials(name: string | null, email: string | null) {
+  const base = name?.trim() || email?.trim() || "?";
+  const parts = base.split(/\s+/);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return base.slice(0, 2).toUpperCase();
+}
+
+export function RecentSales({ orders }: Props) {
+  if (orders.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground py-8 text-center">
+        No orders yet. Sales will show here when customers checkout.
+      </p>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/01.png" alt="Avatar" />
-          <AvatarFallback>OM</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Olivia Martin</p>
-          <p className="text-sm text-muted-foreground">
-            olivia.martin@email.com
-          </p>
-        </div>
-        <div className="ml-auto font-medium">+$1,999.00</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="flex h-9 w-9 items-center justify-center space-y-0 border">
-          <AvatarImage src="/avatars/02.png" alt="Avatar" />
-          <AvatarFallback>JL</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Jackson Lee</p>
-          <p className="text-sm text-muted-foreground">jackson.lee@email.com</p>
-        </div>
-        <div className="ml-auto font-medium">+$39.00</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/03.png" alt="Avatar" />
-          <AvatarFallback>IN</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
-          <p className="text-sm text-muted-foreground">
-            isabella.nguyen@email.com
-          </p>
-        </div>
-        <div className="ml-auto font-medium">+$299.00</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/04.png" alt="Avatar" />
-          <AvatarFallback>WK</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">William Kim</p>
-          <p className="text-sm text-muted-foreground">will@email.com</p>
-        </div>
-        <div className="ml-auto font-medium">+$99.00</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/avatars/05.png" alt="Avatar" />
-          <AvatarFallback>SD</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">Sofia Davis</p>
-          <p className="text-sm text-muted-foreground">sofia.davis@email.com</p>
-        </div>
-        <div className="ml-auto font-medium">+$39.00</div>
-      </div>
+    <div className="space-y-6">
+      {orders.map((order) => (
+        <Link
+          key={order.id}
+          href="/admin/orders"
+          className="flex items-center hover:opacity-80 transition-opacity"
+        >
+          <Avatar className="h-9 w-9">
+            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              {initials(order.name, order.email)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="ml-4 space-y-0.5 min-w-0 flex-1">
+            <p className="text-sm font-medium leading-none truncate">
+              {order.name ?? "Guest"}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {order.email ?? order.id}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {formatDate(order.createdAt)} · {order.payment_status}
+            </p>
+          </div>
+          <div className="ml-auto font-medium text-sm shrink-0">
+            {formatInr(order.amount)}
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
+
+export default RecentSales;

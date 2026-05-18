@@ -8,6 +8,9 @@ import { notFound } from "next/navigation";
 import { CollectionsColumns } from "@/features/collections";
 import { DataTable } from "@/features/cms";
 
+/** Always load live collections from Supabase GraphQL (not build-time cache). */
+export const dynamic = "force-dynamic";
+
 type AdminCollectionsPageProps = {
   searchParams: {
     [key: string]: string | string[] | undefined;

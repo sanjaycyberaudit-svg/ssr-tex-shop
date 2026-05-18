@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { keytoUrl } from "@/lib/utils";
+import { formatPrice, keytoUrl } from "@/lib/utils";
 import { UseQueryExecute } from "@urql/next";
 import Link from "next/link";
 import { Icons } from "../../../components/layouts/icons";
@@ -85,7 +85,7 @@ function CartItemCard({
       </CardHeader>
 
       <CardFooter className="gap-x-2 md:gap-x-5 p-0 ">
-        <p>$ {product.price}</p>
+        <p>{formatPrice(product.price)}</p>
 
         <Button
           aria-label="Remove Item Button"

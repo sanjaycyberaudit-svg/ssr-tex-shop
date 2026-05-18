@@ -17,6 +17,7 @@ import {
 import { AddToWishListButton } from "@/features/wishlists";
 import { gql } from "@/gql";
 import { getClient } from "@/lib/urql";
+import { formatPrice } from "@/lib/utils";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -93,7 +94,7 @@ async function ProductDetailPage({ params }: Props) {
               <h1 className="text-4xl font-semibold tracking-wide mb-3">
                 {name}
               </h1>
-              <p className="text-2xl font-semibold mb-3">{`$${price}`}</p>
+              <p className="text-2xl font-semibold mb-3">{formatPrice(price)}</p>
             </div>
             <AddToWishListButton productId={id} />
           </section>
@@ -125,11 +126,10 @@ async function ProductDetailPage({ params }: Props) {
               <AccordionItem value="item-3">
                 <AccordionTrigger>Ship & Returns</AccordionTrigger>
                 <AccordionContent>
-                  Shipping & Returns Spend $80 to receive free shipping for a
-                  limited time. Oversized items require additional handling
-                  fees. Learn more Except for furniture, innerwear, and food,
-                  merchandise can be returned or exchanged within 30 days of
-                  delivery. Learn more
+                  Shipping across Tamil Nadu and India. Free delivery on
+                  selected orders — contact us on WhatsApp for details.
+                  Returns or exchanges may be accepted within 7 days for
+                  unused sarees with tags; please call before returning.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

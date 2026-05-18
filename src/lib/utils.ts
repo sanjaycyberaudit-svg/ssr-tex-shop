@@ -38,11 +38,24 @@ export const keytoUrl = (key?: string) => {
     : `https://${DEMO_S3_BUCKET}.s3.${DEMO_S3_REGION}.amazonaws.com/public/bathroom-planning.jpg`;
 };
 
-export function formatPrice(price: number | string) {
-  return new Intl.NumberFormat("en-US", {
+/** Store currency — Indian Rupee (₹) */
+export const STORE_CURRENCY = "INR" as const;
+
+export function formatPrice(
+  price: number | string,
+  currency: string = STORE_CURRENCY,
+) {
+  const isInr = currency === "INR";
+  return new Intl.NumberFormat(isInr ? "en-IN" : "en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
+    maximumFractionDigits: isInr ? 0 : 2,
   }).format(Number(price));
+}
+
+/** Alias for rupee formatting (same as formatPrice) */
+export function formatInr(price: number | string) {
+  return formatPrice(price, STORE_CURRENCY);
 }
 
 export function formatDate(date: Date) {
