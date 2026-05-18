@@ -25,7 +25,7 @@ function FooterLinkColumn({
             <li key={item.title}>
               <Link
                 href={href}
-                className="text-sm text-muted-foreground hover:text-primary hover:underline"
+                className="text-sm text-muted-foreground transition-colors hover:text-primary hover:underline"
                 {...(isExternal
                   ? { target: "_blank", rel: "noopener noreferrer" }
                   : {})}
@@ -46,7 +46,7 @@ function MainFooter() {
   return (
     <footer className="mt-[80px] border-t border-[#00542E]/20 bg-muted/30 md:mt-[120px]">
       <div className="container pb-8 pt-8 md:pb-10 md:pt-10">
-        <div className="mb-10 grid grid-cols-2 gap-8 sm:grid-cols-2 md:grid-cols-4 md:gap-6 lg:max-w-4xl">
+        <div className="mb-10 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-2 md:grid-cols-4 md:gap-x-8 lg:max-w-5xl">
           {footerNav.map((column) => (
             <FooterLinkColumn
               key={column.title}
@@ -56,38 +56,74 @@ function MainFooter() {
           ))}
         </div>
 
-        <div className="flex flex-col items-start justify-between gap-6 border-t border-[#00542E]/15 pt-8 md:flex-row md:items-center">
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:gap-6">
-            <Branding className="text-2xl md:text-3xl" />
-            <div className="text-xs font-light text-muted-foreground md:text-[11px]">
-              <address className="not-italic leading-relaxed">
-                {siteConfig.addressLines.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
-              </address>
-              <p className="mt-2">
-                <Link
-                  className="hover:text-primary hover:underline"
-                  href={siteConfig.phoneHref}
-                >
-                  {siteConfig.phone}
-                </Link>
-                {" · "}
-                <Link
-                  className="hover:text-primary hover:underline"
-                  href={`mailto:${siteConfig.email}`}
-                >
-                  {siteConfig.email}
-                </Link>
-              </p>
-              <p className="mt-2 text-[10px] text-muted-foreground/80">
-                © {new Date().getFullYear()} {siteConfig.name}. All rights
-                reserved.
-              </p>
+        <div className="border-t border-[#00542E]/15 pt-8 md:pt-10">
+          <div className="grid gap-8 md:grid-cols-[minmax(0,200px)_1fr_auto] md:items-start md:gap-10 lg:gap-14">
+            <div className="flex flex-col items-start">
+              <Branding size="lg" className="max-w-[220px]" />
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 sm:gap-8 md:max-w-xl">
+              <div>
+                <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#00542E]">
+                  Store address
+                </h3>
+                <address className="space-y-0.5 not-italic text-sm leading-relaxed text-muted-foreground">
+                  {siteConfig.addressLines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </address>
+              </div>
+
+              <div>
+                <h3 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#00542E]">
+                  Contact
+                </h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+                    <span className="shrink-0 font-medium text-foreground/80 sm:w-12">
+                      Phone
+                    </span>
+                    <Link
+                      href={siteConfig.phoneHref}
+                      className="hover:text-primary hover:underline"
+                    >
+                      {siteConfig.phone}
+                    </Link>
+                  </li>
+                  <li className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+                    <span className="shrink-0 font-medium text-foreground/80 sm:w-12">
+                      Email
+                    </span>
+                    <Link
+                      href={`mailto:${siteConfig.email}`}
+                      className="break-all hover:text-primary hover:underline"
+                    >
+                      {siteConfig.email}
+                    </Link>
+                  </li>
+                  <li className="pt-1">
+                    <Link
+                      href="/contact"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      View contact page →
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-start gap-3 md:items-end">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#00542E]">
+                Follow us
+              </h3>
+              <SocialMedias containerClassName="md:justify-end" />
             </div>
           </div>
 
-          <SocialMedias containerClassName="md:mr-2" />
+          <p className="mt-8 border-t border-[#00542E]/10 pt-6 text-center text-xs text-muted-foreground/90">
+            © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
