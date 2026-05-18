@@ -34,7 +34,16 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/admin") && !user) {
+    const signIn = new URL("/sign-in", request.url);
+    signIn.searchParams.set("error", "Please sign in to access admin.");
+    return NextResponse.redirect(signIn);
+  }
 
   return response;
 }

@@ -11,11 +11,8 @@ import { env } from "@/env.mjs";
 import createClient from "@/lib/supabase/server";
 
 export const getCurrentUser = async () => {
-  const cookieStore = cookies();
-  const supabase = createServerClient({ cookieStore });
-
-  const userResponse = await supabase.auth.getUser();
-  return userResponse.data.user;
+  const { getSessionUser } = await import("@/lib/auth/admin");
+  return getSessionUser();
 };
 export const getCurrentUserSession = async () => {
   const cookieStore = cookies();
@@ -32,19 +29,8 @@ export const isAdmin = (currentUser: User | null) =>
 
 /** DB + metadata check for admin routes (profiles.is_admin fallback). */
 export const checkIsAdmin = async (currentUser: User | null) => {
-  if (!currentUser) return false;
-  if (currentUser.app_metadata?.isAdmin) return true;
-
-  try {
-    const row = await db
-      .select({ is_admin: profiles.is_admin })
-      .from(profiles)
-      .where(eq(profiles.id, currentUser.id))
-      .limit(1);
-    return row[0]?.is_admin === true;
-  } catch {
-    return false;
-  }
+  const { isAdminUser } = await import("@/lib/auth/admin");
+  return isAdminUser(currentUser);
 };
 
 export const getUser = async ({ userId }: { userId: string }) => {

@@ -156,6 +156,15 @@ function toDate(value: Date | string): Date {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
+  try {
+    return await loadDashboardStats();
+  } catch (err) {
+    console.error("[getDashboardStats]", err);
+    throw err;
+  }
+}
+
+async function loadDashboardStats(): Promise<DashboardStats> {
   const now = new Date();
   const thisMonthStart = monthStart(now);
   const lastMonthStart = monthStart(
@@ -319,8 +328,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     featuredProducts: productRows.filter((p) => p.featured).length,
     lowStockCount: lowStockRows.length,
     outOfStockCount: outOfStockRows.length,
-    totalCollections: collectionCount[0]?.count ?? 0,
-    totalCustomers: customerCount[0]?.count ?? 0,
+    totalCollections: Number(collectionCount[0]?.count ?? 0),
+    totalCustomers: Number(customerCount[0]?.count ?? 0),
     paidOrdersCount: paidOrders.length,
     pendingOrdersCount: pending.length,
     monthlyRevenue: buildMonthlyRevenue(paidInRange),

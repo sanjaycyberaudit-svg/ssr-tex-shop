@@ -21,6 +21,7 @@
     "db:studio": "npx drizzle-kit studio",
     "db:seed": "tsx --env-file=.env.local ./src/lib/supabase/seed.ts",
     "db:seed-collections": "tsx --env-file=.env.local ./scripts/seed-sakthi-collections.ts",
+    "make-admin": "node scripts/make-admin.mjs",
     "db:drop": "drizzle-kit drop --config=drizzle.config.ts",
     "codegen": "graphql-codegen",
     "codegen:fetch": "node --no-warnings scripts/fetchGraphQLSchema",
