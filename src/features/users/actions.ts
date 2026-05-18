@@ -26,8 +26,26 @@ export const getCurrentUserSession = async () => {
   return userResponse.data.session;
 };
 
+/** Quick check from JWT metadata (safe optional chaining). */
 export const isAdmin = (currentUser: User | null) =>
-  currentUser?.app_metadata.isAdmin;
+  Boolean(currentUser?.app_metadata?.isAdmin);
+
+/** DB + metadata check for admin routes (profiles.is_admin fallback). */
+export const checkIsAdmin = async (currentUser: User | null) => {
+  if (!currentUser) return false;
+  if (currentUser.app_metadata?.isAdmin) return true;
+
+  try {
+    const row = await db
+      .select({ is_admin: profiles.is_admin })
+      .from(profiles)
+      .where(eq(profiles.id, currentUser.id))
+      .limit(1);
+    return row[0]?.is_admin === true;
+  } catch {
+    return false;
+  }
+};
 
 export const getUser = async ({ userId }: { userId: string }) => {
   const cookieStore = cookies();

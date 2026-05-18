@@ -106,13 +106,53 @@ function buildMonthlyRevenue(
   }
 
   for (const order of paidOrders) {
-    const d = order.createdAt;
+    const d = toDate(order.createdAt);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const point = points.find((p) => p.monthKey === key);
     if (point) point.total += Number(order.amount);
   }
 
   return points;
+}
+
+export function getEmptyDashboardStats(): DashboardStats {
+  const now = new Date();
+  const monthlyRevenue: MonthlyRevenuePoint[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    monthlyRevenue.push({
+      monthKey: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      name: MONTH_LABELS[d.getMonth()],
+      total: 0,
+    });
+  }
+  return {
+    totalRevenue: 0,
+    revenueThisMonth: 0,
+    revenueLastMonth: 0,
+    revenueChangePct: null,
+    totalOrders: 0,
+    ordersThisMonth: 0,
+    ordersLastMonth: 0,
+    ordersChangePct: null,
+    totalProducts: 0,
+    featuredProducts: 0,
+    lowStockCount: 0,
+    outOfStockCount: 0,
+    totalCollections: 0,
+    totalCustomers: 0,
+    paidOrdersCount: 0,
+    pendingOrdersCount: 0,
+    monthlyRevenue,
+    recentOrders: [],
+    notifications: [],
+    topProducts: [],
+    ordersByPayment: [],
+  };
+}
+
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -158,23 +198,29 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   ]);
 
   const paidOrders = allOrders.filter((o) => o.payment_status === "paid");
-  const paidInRange = paidOrders.filter((o) => o.createdAt >= twelveMonthsAgo);
+  const paidInRange = paidOrders.filter(
+    (o) => toDate(o.createdAt) >= twelveMonthsAgo,
+  );
 
   const totalRevenue = paidOrders.reduce((s, o) => s + Number(o.amount), 0);
 
-  const ordersThisMonth = allOrders.filter((o) => o.createdAt >= thisMonthStart);
-  const ordersLastMonth = allOrders.filter(
-    (o) => o.createdAt >= lastMonthStart && o.createdAt < thisMonthStart,
+  const ordersThisMonth = allOrders.filter(
+    (o) => toDate(o.createdAt) >= thisMonthStart,
   );
+  const ordersLastMonth = allOrders.filter((o) => {
+    const created = toDate(o.createdAt);
+    return created >= lastMonthStart && created < thisMonthStart;
+  });
 
   const revenueThisMonth = paidOrders
-    .filter((o) => o.createdAt >= thisMonthStart)
+    .filter((o) => toDate(o.createdAt) >= thisMonthStart)
     .reduce((s, o) => s + Number(o.amount), 0);
 
   const revenueLastMonth = paidOrders
-    .filter(
-      (o) => o.createdAt >= lastMonthStart && o.createdAt < thisMonthStart,
-    )
+    .filter((o) => {
+      const created = toDate(o.createdAt);
+      return created >= lastMonthStart && created < thisMonthStart;
+    })
     .reduce((s, o) => s + Number(o.amount), 0);
 
   const paymentGroups = allOrders.reduce<Record<string, number>>((acc, o) => {
@@ -286,7 +332,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       currency: o.currency,
       payment_status: o.payment_status,
       order_status: o.order_status,
-      createdAt: o.createdAt,
+      createdAt: toDate(o.createdAt),
     })),
     notifications: notifications.slice(0, 12),
     topProducts,

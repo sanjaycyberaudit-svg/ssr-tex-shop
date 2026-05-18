@@ -83,7 +83,7 @@ function UserNav() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
 
-            {user.app_metadata.isAdmin && (
+            {user.app_metadata?.isAdmin && (
               <>
                 <DropdownMenuGroup>
                   <Link href="/admin">

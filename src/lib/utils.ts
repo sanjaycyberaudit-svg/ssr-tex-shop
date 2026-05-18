@@ -58,7 +58,7 @@ export function formatInr(price: number | string) {
   return formatPrice(price, STORE_CURRENCY);
 }
 
-export function formatDate(date: Date) {
+export function formatDate(date: Date | string) {
   return dayjs(date).format("MMMM D, YYYY");
 }
 

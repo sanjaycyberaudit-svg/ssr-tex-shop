@@ -1,4 +1,4 @@
-import { getCurrentUser, isAdmin } from "@/features/users/actions";
+import { checkIsAdmin, getCurrentUser } from "@/features/users/actions";
 import MainFooter from "@/components/layouts/MainFooter";
 import Navbar from "@/components/layouts/MainNavbar";
 import { redirect } from "next/navigation";
@@ -9,8 +9,9 @@ type Props = { children: ReactNode };
 async function AdminLayout({ children }: Props) {
   const currentUser = await getCurrentUser();
 
-  if (!isAdmin(currentUser))
+  if (!(await checkIsAdmin(currentUser))) {
     redirect(`/sign-in?error=Only authenticated users can access`);
+  }
 
   return (
     <main>

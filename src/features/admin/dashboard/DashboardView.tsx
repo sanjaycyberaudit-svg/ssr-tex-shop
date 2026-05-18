@@ -31,28 +31,47 @@ import { siteConfig } from "@/config/site";
 
 type Props = {
   stats: DashboardStats;
+  statsError?: string | null;
 };
 
 function ChangeLabel({ pct }: { pct: number | null }) {
   if (pct === null) {
-    return <span className="text-xs text-muted-foreground">No prior month data</span>;
+    return (
+      <span className="text-xs text-muted-foreground">No prior month data</span>
+    );
   }
   const up = pct >= 0;
   return (
     <p
       className={`text-xs flex items-center gap-1 ${up ? "text-emerald-600" : "text-amber-600"}`}
     >
-      {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      {up ? (
+        <TrendingUp className="h-3 w-3" />
+      ) : (
+        <TrendingDown className="h-3 w-3" />
+      )}
       {up ? "+" : ""}
       {pct}% from last month
     </p>
   );
 }
 
-export function DashboardView({ stats }: Props) {
+export function DashboardView({ stats, statsError }: Props) {
   return (
     <div className="flex-col md:flex">
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-4 md:pt-6">
+        {statsError ? (
+          <div
+            role="alert"
+            className="rounded-lg border border-amber-500/40 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          >
+            <p className="font-medium">
+              Some dashboard data could not be loaded
+            </p>
+            <p className="mt-1 text-xs opacity-90">{statsError}</p>
+          </div>
+        ) : null}
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
@@ -92,7 +111,9 @@ export function DashboardView({ stats }: Props) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Revenue
+                  </CardTitle>
                   <IndianRupee className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -114,36 +135,48 @@ export function DashboardView({ stats }: Props) {
                   <div className="text-2xl font-bold">{stats.totalOrders}</div>
                   <ChangeLabel pct={stats.ordersChangePct} />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {stats.paidOrdersCount} paid · {stats.pendingOrdersCount} pending
+                    {stats.paidOrdersCount} paid · {stats.pendingOrdersCount}{" "}
+                    pending
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Products</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Products
+                  </CardTitle>
                   <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalProducts}</div>
+                  <div className="text-2xl font-bold">
+                    {stats.totalProducts}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {stats.featuredProducts} featured on homepage
                   </p>
                   {(stats.lowStockCount > 0 || stats.outOfStockCount > 0) && (
                     <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3" />
-                      {stats.lowStockCount} low · {stats.outOfStockCount} out of stock
+                      {stats.lowStockCount} low · {stats.outOfStockCount} out of
+                      stock
                     </p>
                   )}
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Collections</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Collections
+                  </CardTitle>
                   <FolderOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalCollections}</div>
-                  <p className="text-xs text-muted-foreground">Saree categories live</p>
+                  <div className="text-2xl font-bold">
+                    {stats.totalCollections}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Saree categories live
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     <Users className="inline h-3 w-3 mr-1" />
                     {stats.totalCustomers} registered customers
@@ -198,14 +231,19 @@ export function DashboardView({ stats }: Props) {
               <Card className="md:col-span-2">
                 <CardHeader>
                   <CardTitle className="text-base">Shop contact</CardTitle>
-                  <CardDescription>Shown on storefront footer & menu</CardDescription>
+                  <CardDescription>
+                    Shown on storefront footer & menu
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm space-y-1">
                   {siteConfig.addressLines.map((line) => (
                     <p key={line}>{line}</p>
                   ))}
                   <p className="pt-2">
-                    <a href={siteConfig.phoneHref} className="text-primary hover:underline">
+                    <a
+                      href={siteConfig.phoneHref}
+                      className="text-primary hover:underline"
+                    >
                       {siteConfig.phone}
                     </a>
                     {" · "}
@@ -232,14 +270,18 @@ export function DashboardView({ stats }: Props) {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {stats.ordersByPayment.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No orders yet.</p>
+                    <p className="text-sm text-muted-foreground">
+                      No orders yet.
+                    </p>
                   ) : (
                     stats.ordersByPayment.map(({ status, count }) => (
                       <div
                         key={status}
                         className="flex justify-between items-center text-sm"
                       >
-                        <span className="capitalize">{status.replace(/_/g, " ")}</span>
+                        <span className="capitalize">
+                          {status.replace(/_/g, " ")}
+                        </span>
                         <Badge variant="secondary">{count}</Badge>
                       </div>
                     ))
@@ -248,7 +290,9 @@ export function DashboardView({ stats }: Props) {
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Top products (units sold)</CardTitle>
+                  <CardTitle className="text-base">
+                    Top products (units sold)
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {stats.topProducts.length === 0 ? (
@@ -257,7 +301,10 @@ export function DashboardView({ stats }: Props) {
                     </p>
                   ) : (
                     stats.topProducts.map((p) => (
-                      <div key={p.productId} className="flex justify-between text-sm gap-2">
+                      <div
+                        key={p.productId}
+                        className="flex justify-between text-sm gap-2"
+                      >
                         <Link
                           href={`/admin/products/${p.productId}`}
                           className="truncate hover:underline font-medium"
@@ -314,7 +361,8 @@ export function DashboardView({ stats }: Props) {
                   Sales summary
                 </CardTitle>
                 <CardDescription>
-                  Snapshot for {siteConfig.name} — use Orders page for full detail
+                  Snapshot for {siteConfig.name} — use Orders page for full
+                  detail
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -335,11 +383,15 @@ export function DashboardView({ stats }: Props) {
                       </tr>
                       <tr>
                         <td className="py-3 pr-4">Revenue this month</td>
-                        <td className="py-3">{formatInr(stats.revenueThisMonth)}</td>
+                        <td className="py-3">
+                          {formatInr(stats.revenueThisMonth)}
+                        </td>
                       </tr>
                       <tr>
                         <td className="py-3 pr-4">Revenue last month</td>
-                        <td className="py-3">{formatInr(stats.revenueLastMonth)}</td>
+                        <td className="py-3">
+                          {formatInr(stats.revenueLastMonth)}
+                        </td>
                       </tr>
                       <tr>
                         <td className="py-3 pr-4">Total orders</td>
@@ -354,7 +406,9 @@ export function DashboardView({ stats }: Props) {
                         <td className="py-3">{stats.paidOrdersCount}</td>
                       </tr>
                       <tr>
-                        <td className="py-3 pr-4">Pending / unpaid attention</td>
+                        <td className="py-3 pr-4">
+                          Pending / unpaid attention
+                        </td>
                         <td className="py-3">{stats.pendingOrdersCount}</td>
                       </tr>
                       <tr>
@@ -423,7 +477,10 @@ export function DashboardView({ stats }: Props) {
                               {n.description}
                             </p>
                           </div>
-                          <Badge variant="outline" className="capitalize shrink-0">
+                          <Badge
+                            variant="outline"
+                            className="capitalize shrink-0"
+                          >
                             {n.type}
                           </Badge>
                         </Link>

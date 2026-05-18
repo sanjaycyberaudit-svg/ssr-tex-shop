@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   const client = createClient({ cookieStore, isAdmin: true });
   const session = await client.auth.getSession();
 
-  if (!session.data.session.user.app_metadata.isAdmin)
+  if (!session.data.session?.user?.app_metadata?.isAdmin)
     return NextResponse.json(
       { message: `Only Admin allowed to do this action.` },
       { status: 500 },
