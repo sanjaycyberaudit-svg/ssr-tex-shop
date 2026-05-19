@@ -1,18 +1,14 @@
-"use server";
-
 import { env } from "@/env.mjs";
+import { processUploadedImage } from "@/lib/image/processUpload";
 import { uploadImage } from "@/lib/s3";
 import db from "@/lib/supabase/db";
 import { medias } from "@/lib/supabase/schema";
 import { mediaSchema } from "@/validations/medias";
 import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
-import sharp from "sharp";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
-  // const session = await getServerSession(authOptions)
-  //   if (!session) return NextResponse.json({}, { status: 401 })
   const formData = await request.formData();
   const data = Object.fromEntries(formData) as z.infer<typeof mediaSchema>;
   const validation = mediaSchema.safeParse(data);
@@ -21,61 +17,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(validation.error.format(), { status: 400 });
   }
 
-  let statusCode = 201;
-  let errorMessage = "Unexpected Error";
+  const uploadedPaths: string[] = [];
+  const errors: string[] = [];
 
-  const uploadResponse = await Promise.all(
-    Object.entries(data).map(async ([index, file]) => {
-      const fileExtension = file.type.split("/")[1];
-      const key = nanoid() + "." + fileExtension;
+  for (const file of Object.values(data)) {
+    if (!file || !(file instanceof File)) continue;
 
-      const params = {
+    try {
+      const processed = await processUploadedImage(file);
+      const key = `public/${nanoid()}.${processed.extension}`;
+
+      await uploadImage({
         Bucket: env.NEXT_PUBLIC_S3_BUCKET,
-        Key: "public/" + key,
-        Body: Buffer.from(await file.arrayBuffer()),
-        ContentType: file.type,
-      };
+        Key: key,
+        Body: processed.buffer,
+        ContentType: processed.contentType,
+        CacheControl: "public, max-age=31536000, immutable",
+      });
 
-      try {
-        const s3Response = await uploadImage(params);
+      await db.insert(medias).values({ alt: file.name, key }).returning();
 
-        if (s3Response) {
-          const insertedMedia = await db
-            .insert(medias)
-            .values({ alt: file.name, key: params.Key })
-            .returning();
+      uploadedPaths.push(file.name);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Upload failed.";
+      errors.push(`${file.name}: ${message}`);
+    }
+  }
 
-          return file.path;
-        }
-      } catch (err) {
-        statusCode = 400;
-        errorMessage = err.message;
-        return { message: err.message };
-      }
-    }),
-  );
+  if (uploadedPaths.length === 0) {
+    return NextResponse.json(
+      { message: errors.join(" ") || "No images were uploaded." },
+      { status: 400 },
+    );
+  }
 
-  return statusCode >= 300
-    ? NextResponse.json({ message: errorMessage }, { status: statusCode })
-    : NextResponse.json(uploadResponse, { status: statusCode });
+  if (errors.length > 0) {
+    return NextResponse.json(
+      { uploaded: uploadedPaths, errors },
+      { status: 207 },
+    );
+  }
+
+  return NextResponse.json(uploadedPaths, { status: 201 });
 }
-
-const fileToStream = async (file: File) => {
-  // Upload Image to S3 bucket
-  const mimeType = file.type;
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const imageBuffer = await sharp(buffer);
-  const metadata = await imageBuffer.metadata();
-
-  if (mimeType !== "image/gif")
-    return {
-      mimeType: "image/webp",
-      buffer: await sharp(buffer).webp().toBuffer(),
-    };
-
-  return {
-    mimeType: "image/gif",
-    buffer,
-  };
-};

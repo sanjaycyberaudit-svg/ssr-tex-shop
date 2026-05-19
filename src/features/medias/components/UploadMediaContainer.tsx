@@ -57,17 +57,26 @@ function UploadMediaContainer({
         body: formData,
       });
 
-      const data = (await response.json()) as string[];
+      const payload = (await response.json()) as
+        | string[]
+        | { message?: string; uploaded?: string[]; errors?: string[] };
 
-      if (data) {
+      const uploadedNames = Array.isArray(payload)
+        ? payload
+        : (payload.uploaded ?? []);
+
+      if (uploadedNames.length > 0) {
         refetch({ requestPolicy: "network-only" });
-
-        setUploadingImages(
-          uploadingImages.filter((item) => data.includes(item.path)),
+        setUploadingImages((prev) =>
+          prev.filter((item) => !uploadedNames.includes(item.name)),
         );
       }
+
+      if (!response.ok && !Array.isArray(payload) && payload.message) {
+        console.error(payload.message, payload.errors);
+      }
     } catch (error) {
-      // console.error("Error uploading files:", error)
+      console.error("Error uploading files:", error);
     }
   };
 
@@ -77,6 +86,8 @@ function UploadMediaContainer({
   }, []);
 
   const { getRootProps, getInputProps, open, isDragActive } = useDropzone({
+    accept: { "image/*": [] },
+    maxSize: 15 * 1024 * 1024,
     onDrop,
     multiple: true,
     noClick: true,

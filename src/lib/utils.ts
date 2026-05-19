@@ -23,7 +23,27 @@ export const getURL = () => {
 const DEMO_S3_BUCKET = "hiyori-backpack";
 const DEMO_S3_REGION = "us-west-2";
 
+/** Public bucket for Sakthi product/collection photos (Supabase Storage). */
+export const SUPABASE_MEDIA_BUCKET = "media";
+
+export function supabaseStoragePublicUrl(storagePath: string) {
+  const base = env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/, "");
+  return `${base}/storage/v1/object/public/${SUPABASE_MEDIA_BUCKET}/${storagePath}`;
+}
+
 export const keytoUrl = (key?: string) => {
+  if (!key) {
+    return `https://${DEMO_S3_BUCKET}.s3.${DEMO_S3_REGION}.amazonaws.com/public/bathroom-planning.jpg`;
+  }
+
+  if (key.startsWith("http://") || key.startsWith("https://")) {
+    return key;
+  }
+
+  if (key.startsWith("sakthi/")) {
+    return supabaseStoragePublicUrl(key);
+  }
+
   const bucket =
     env.NEXT_PUBLIC_S3_BUCKET === "placeholder"
       ? DEMO_S3_BUCKET
@@ -33,9 +53,7 @@ export const keytoUrl = (key?: string) => {
       ? DEMO_S3_REGION
       : env.NEXT_PUBLIC_S3_REGION;
 
-  return key
-    ? `https://${bucket}.s3.${region}.amazonaws.com/${key}`
-    : `https://${DEMO_S3_BUCKET}.s3.${DEMO_S3_REGION}.amazonaws.com/public/bathroom-planning.jpg`;
+  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
 };
 
 /** Store currency — Indian Rupee (₹) */
