@@ -1,10 +1,8 @@
-import { env } from "@/env.mjs";
 import { processUploadedImage } from "@/lib/image/processUpload";
-import { uploadImage } from "@/lib/s3";
+import { uploadMediaToSupabase } from "@/lib/storage/uploadMedia";
 import db from "@/lib/supabase/db";
 import { medias } from "@/lib/supabase/schema";
 import { mediaSchema } from "@/validations/medias";
-import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -25,22 +23,17 @@ export async function POST(request: NextRequest) {
 
     try {
       const processed = await processUploadedImage(file);
-      const key = `public/${nanoid()}.${processed.extension}`;
-
-      await uploadImage({
-        Bucket: env.NEXT_PUBLIC_S3_BUCKET,
-        Key: key,
-        Body: processed.buffer,
-        ContentType: processed.contentType,
-        CacheControl: "public, max-age=31536000, immutable",
-      });
+      const key = await uploadMediaToSupabase(
+        processed.buffer,
+        processed.contentType,
+        processed.extension,
+      );
 
       await db.insert(medias).values({ alt: file.name, key }).returning();
 
       uploadedPaths.push(file.name);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Upload failed.";
+      const message = err instanceof Error ? err.message : "Upload failed.";
       errors.push(`${file.name}: ${message}`);
     }
   }

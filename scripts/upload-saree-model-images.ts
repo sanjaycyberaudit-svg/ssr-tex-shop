@@ -9,16 +9,14 @@
 import { readdir, readFile } from "fs/promises";
 import { join, basename } from "path";
 import { asc, eq, like, or } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import sharp from "sharp";
 import db from "../src/lib/supabase/db";
 import * as schema from "../src/lib/supabase/schema";
-import { createServiceRoleClient } from "../src/lib/supabase/service";
+import { MAX_IMAGE_WIDTH, WEBP_QUALITY } from "../src/lib/image/processUpload";
 import {
-  MAX_IMAGE_WIDTH,
-  WEBP_QUALITY,
-} from "../src/lib/image/processUpload";
-import { SUPABASE_MEDIA_BUCKET } from "../src/lib/utils";
+  ensureMediaBucket,
+  uploadMediaToSupabase,
+} from "../src/lib/storage/uploadMedia";
 
 const DEFAULT_DIR = "C:\\Users\\sanjay_arun2\\Downloads\\Saree model";
 
@@ -29,25 +27,6 @@ const PLACEHOLDER_KEY_PATTERNS = [
   "public/bedroom-planning%",
 ];
 
-const supabase = createServiceRoleClient();
-
-async function ensureMediaBucket() {
-  const { data: buckets, error: listError } =
-    await supabase.storage.listBuckets();
-  if (listError) throw listError;
-
-  if (buckets?.some((b) => b.name === SUPABASE_MEDIA_BUCKET)) return;
-
-  const { error } = await supabase.storage.createBucket(SUPABASE_MEDIA_BUCKET, {
-    public: true,
-    fileSizeLimit: 15 * 1024 * 1024,
-  });
-  if (error && !error.message.includes("already exists")) {
-    throw error;
-  }
-  console.log(`Created public storage bucket: ${SUPABASE_MEDIA_BUCKET}`);
-}
-
 async function processFile(buffer: Buffer) {
   return sharp(buffer)
     .rotate()
@@ -56,19 +35,13 @@ async function processFile(buffer: Buffer) {
     .toBuffer();
 }
 
-async function uploadToSupabase(buffer: Buffer, alt: string) {
-  const storagePath = `sakthi/saree-${nanoid()}.webp`;
-
-  const { error: uploadError } = await supabase.storage
-    .from(SUPABASE_MEDIA_BUCKET)
-    .upload(storagePath, buffer, {
-      contentType: "image/webp",
-      cacheControl: "31536000",
-      upsert: false,
-    });
-
-  if (uploadError) throw uploadError;
-
+async function uploadSareeImage(buffer: Buffer, alt: string) {
+  const storagePath = await uploadMediaToSupabase(
+    buffer,
+    "image/webp",
+    "webp",
+    "saree",
+  );
   const [media] = await db
     .insert(schema.medias)
     .values({ key: storagePath, alt })
@@ -97,7 +70,10 @@ async function loadLocalImages(dir: string) {
     const name = basename(filePath);
     const raw = await readFile(filePath);
     const buffer = await processFile(raw);
-    const media = await uploadToSupabase(buffer, `Sakthi saree model — ${name}`);
+    const media = await uploadSareeImage(
+      buffer,
+      `Sakthi saree model — ${name}`,
+    );
     uploaded.push(media);
     console.log(`Uploaded: ${name} → ${media.key}`);
   }
@@ -110,7 +86,9 @@ async function main() {
   console.log(`Reading images from:\n  ${dir}\n`);
 
   const newMedias = await loadLocalImages(dir);
-  console.log(`\n${newMedias.length} images in Supabase Storage + medias table.\n`);
+  console.log(
+    `\n${newMedias.length} images in Supabase Storage + medias table.\n`,
+  );
 
   const allCollections = await db
     .select()
