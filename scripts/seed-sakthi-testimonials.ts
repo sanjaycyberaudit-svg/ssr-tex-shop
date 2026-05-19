@@ -105,8 +105,9 @@ const rows: Row[] = [
 
 async function main() {
   try {
-    const medias =
-      await sql<{ id: string }[]>`SELECT id FROM medias WHERE id IN ('m1','m2','m3','m4')`;
+    const medias = await sql<
+      { id: string }[]
+    >`SELECT id FROM medias WHERE id IN ('m1','m2','m3','m4')`;
     const mediaIds = new Set(medias.map((m) => m.id));
     console.log(
       "Medias found:",

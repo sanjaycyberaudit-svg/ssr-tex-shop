@@ -21,9 +21,12 @@ type Props = {
 };
 
 const arrowClass =
-  "absolute top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border-2 border-[#00542E]/20 bg-white/95 text-[#00542E] shadow-md hover:bg-white hover:border-[#00542E]/50 disabled:pointer-events-none disabled:opacity-35 sm:h-11 sm:w-11";
+  "absolute top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border-2 border-[#00542E]/20 bg-white/95 text-[#00542E] shadow-md transition-all duration-300 ease-out hover:bg-white hover:border-[#00542E]/50 disabled:pointer-events-none disabled:!opacity-0 sm:h-11 sm:w-11";
 
-/** Shared home carousel: autoplay + visible prev/next arrows. */
+const arrowRevealClass =
+  "pointer-events-none scale-90 opacity-0 group-hover/carousel:pointer-events-auto group-hover/carousel:scale-100 group-hover/carousel:opacity-100 group-focus-within/carousel:pointer-events-auto group-focus-within/carousel:scale-100 group-focus-within/carousel:opacity-100 focus-visible:pointer-events-auto focus-visible:scale-100 focus-visible:opacity-100";
+
+/** Shared home carousel: autoplay; arrows fade in on hover or focus. */
 export function HomeCarousel({
   children,
   loop = true,
@@ -32,7 +35,7 @@ export function HomeCarousel({
   showArrows = true,
 }: Props) {
   return (
-    <div className={cn("w-full min-w-0", className)}>
+    <div className={cn("group/carousel w-full min-w-0", className)}>
       <div className="relative w-full overflow-hidden rounded-2xl">
         <Carousel
           opts={{ align: "start", loop, containScroll: "trimSnaps" }}
@@ -45,17 +48,19 @@ export function HomeCarousel({
           ]}
           className="w-full max-w-full"
         >
-          <CarouselContent className="-ml-3 sm:-ml-4">{children}</CarouselContent>
+          <CarouselContent className="-ml-3 sm:-ml-4">
+            {children}
+          </CarouselContent>
           {showArrows ? (
             <>
               <CarouselPrevious
-                className={cn(arrowClass, "left-1 sm:left-2")}
+                className={cn(arrowClass, arrowRevealClass, "left-1 sm:left-2")}
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
               </CarouselPrevious>
               <CarouselNext
-                className={cn(arrowClass, "right-1 sm:right-2")}
+                className={cn(arrowClass, arrowRevealClass, "right-1 sm:right-2")}
                 aria-label="Next slide"
               >
                 <ChevronRight className="h-6 w-6" strokeWidth={2.5} />
@@ -64,11 +69,6 @@ export function HomeCarousel({
           ) : null}
         </Carousel>
       </div>
-      {showArrows ? (
-        <p className="mt-2 text-center text-[11px] text-muted-foreground sm:text-xs">
-          Use ← → arrows or swipe to browse
-        </p>
-      ) : null}
     </div>
   );
 }

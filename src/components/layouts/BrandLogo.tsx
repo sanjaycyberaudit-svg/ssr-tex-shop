@@ -1,12 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
+import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-/** Vertical oval logo — width : height ≈ 0.72 */
+/** Vertical oval logo — tight fit, minimal gap to wordmark */
 const sizeMap = {
-  sm: { box: "h-10 w-[30px]", text: "text-sm", w: 60, h: 84 },
-  md: { box: "h-12 w-9", text: "text-base", w: 72, h: 100 },
-  lg: { box: "h-16 w-11", text: "text-lg", w: 96, h: 134 },
+  sm: {
+    logo: "h-9",
+    text: "text-sm",
+    imgW: 54,
+    imgH: 76,
+  },
+  md: {
+    logo: "h-11",
+    text: "text-base",
+    imgW: 66,
+    imgH: 92,
+  },
+  lg: {
+    logo: "h-14",
+    text: "text-lg",
+    imgW: 84,
+    imgH: 118,
+  },
 } as const;
 
 type Props = {
@@ -30,39 +46,41 @@ export function BrandLogo({
     <Link
       href="/"
       className={cn(
-        "inline-flex min-w-0 max-w-full items-center gap-2.5",
+        "inline-flex w-fit max-w-full shrink-0 items-center gap-0.5",
         className,
       )}
     >
       <span
         className={cn(
-          "relative shrink-0",
-          s.box,
+          "relative block shrink-0 aspect-[11/16] w-auto",
+          s.logo,
           logoClassName,
         )}
       >
         <Image
           src="/images/sakthi-logo.png"
-          alt="Sakthi Textiles"
-          width={s.w}
-          height={s.h}
-          className="h-full w-full object-contain object-center"
+          alt={siteConfig.name}
+          width={s.imgW}
+          height={s.imgH}
+          className="size-full object-contain object-center"
           priority
-          sizes="(max-width: 768px) 30px, 44px"
+          sizes="(max-width: 768px) 28px, 40px"
         />
       </span>
       {showText ? (
         <span
           className={cn(
             s.text,
-            "truncate font-bold leading-tight tracking-tight",
+            "shrink-0 whitespace-nowrap font-bold leading-none tracking-tight -ml-0.5",
             "bg-gradient-to-b from-[#FFD700] via-[#E6B800] to-[#B8860B] bg-clip-text text-transparent",
             textClassName,
           )}
         >
-          Sakthi Textiles
+          {siteConfig.name}
         </span>
       ) : null}
     </Link>
   );
 }
+
+export default BrandLogo;

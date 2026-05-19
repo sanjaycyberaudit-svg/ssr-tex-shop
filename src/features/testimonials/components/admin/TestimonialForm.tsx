@@ -318,7 +318,9 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {kind === "video" ? "Poster image (optional)" : "Background image (optional)"}
+                  {kind === "video"
+                    ? "Poster image (optional)"
+                    : "Background image (optional)"}
                 </FormLabel>
                 <Suspense>
                   <ImageDialog
@@ -339,7 +341,11 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
         </div>
 
         <div className="flex items-center gap-x-5 py-8">
-          <Button disabled={isPending} variant="outline" form="testimonial-form">
+          <Button
+            disabled={isPending}
+            variant="outline"
+            form="testimonial-form"
+          >
             {testimonial ? "Update" : "Create"}
             {isPending ? (
               <Spinner className="ml-2 h-4 w-4 animate-spin" aria-hidden />

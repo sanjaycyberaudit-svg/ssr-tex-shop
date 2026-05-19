@@ -42,10 +42,10 @@ export function HomeCategoriesCarousel({ collections }: Props) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5 text-white">
-                  <p className="text-base sm:text-lg font-bold leading-tight">
+                  <p className="text-base font-bold leading-tight">
                     {node.label}
                   </p>
-                  <p className="text-xs sm:text-sm opacity-90 mt-0.5">
+                  <p className="mt-0.5 text-xs opacity-90">
                     Explore collection
                   </p>
                 </div>

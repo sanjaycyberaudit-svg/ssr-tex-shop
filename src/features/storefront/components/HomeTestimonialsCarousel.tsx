@@ -17,85 +17,72 @@ type Props = {
   testimonials: { node: TestimonialNode }[];
 };
 
-const cardShell =
-  "flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-[#00542E]/15 bg-muted/40 shadow-sm";
-const mediaAspect = "relative w-full aspect-[5/3] sm:aspect-[16/10]";
+/** Same shell as Product Categories cards */
+const cardClass =
+  "block h-full overflow-hidden rounded-2xl border border-[#00542E]/15 bg-muted/40 shadow-sm active:scale-[0.99] transition-transform";
+const mediaClass = "relative w-full aspect-[5/3] sm:aspect-[16/10]";
 
-function TestimonialMeta({
-  node,
-  compact,
-  onDark = true,
-}: {
-  node: TestimonialNode;
-  compact?: boolean;
-  onDark?: boolean;
-}) {
+function TestimonialMeta({ node }: { node: TestimonialNode }) {
   const subtitle = node.location
     ? `Verified customer · ${node.location}`
     : "Verified customer";
-  const starMuted = onDark ? "text-white/40" : "text-muted-foreground/50";
 
   return (
     <>
-      <div className="flex gap-0.5" aria-label={`${node.rating ?? 5} out of 5 stars`}>
+      <div
+        className="flex gap-0.5"
+        aria-label={`${node.rating ?? 5} out of 5 stars`}
+      >
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
             className={cn(
-              "h-3.5 w-3.5 sm:h-4 sm:w-4",
+              "h-3.5 w-3.5",
               i < (node.rating ?? 5)
                 ? "fill-[#FFD700] text-[#FFD700]"
-                : cn("fill-transparent", starMuted),
+                : "fill-transparent text-white/40",
             )}
           />
         ))}
       </div>
       {node.quote ? (
-        <p
-          className={cn(
-            "mt-2 font-medium leading-snug",
-            compact
-              ? "line-clamp-2 text-xs sm:text-sm"
-              : "line-clamp-4 text-sm sm:text-base",
-            onDark ? "text-white" : "text-foreground",
-          )}
-        >
+        <p className="mt-1.5 line-clamp-3 text-sm font-medium leading-snug">
           &ldquo;{node.quote}&rdquo;
         </p>
       ) : null}
-      <p
-        className={cn(
-          "mt-2 font-bold leading-tight",
-          compact ? "text-sm sm:text-base" : "text-base sm:text-lg",
-          onDark ? "text-white" : "text-foreground",
-        )}
-      >
+      <p className="mt-1.5 text-base font-bold leading-tight">
         {node.customer_name}
       </p>
-      <p
-        className={cn(
-          "mt-0.5 text-xs sm:text-sm",
-          onDark ? "text-white/90" : "text-muted-foreground",
-        )}
-      >
-        {subtitle}
-      </p>
+      <p className="mt-0.5 text-xs opacity-90">{subtitle}</p>
     </>
   );
 }
 
-function TextTestimonialCard({ node }: { node: TestimonialNode }) {
+function TestimonialCard({
+  node,
+  variant,
+}: {
+  node: TestimonialNode;
+  variant: "text" | "video";
+}) {
   const imageKey = node.featuredImage?.key;
+  const posterUrl = imageKey ? keytoUrl(imageKey) : null;
 
   return (
-    <article className={cardShell}>
-      <div className={cn(mediaAspect, "shrink-0")}>
-        {imageKey ? (
+    <article className={cardClass}>
+      <div className={mediaClass}>
+        {variant === "video" ? (
+          <TestimonialVideoPlayer
+            fill
+            showTapHint={false}
+            videoUrl={node.video_url ?? ""}
+            posterUrl={posterUrl}
+            customerName={node.customer_name}
+          />
+        ) : imageKey ? (
           <Image
             src={keytoUrl(imageKey)}
-            alt={
-              node.featuredImage?.alt || `Review from ${node.customer_name}`
-            }
+            alt={node.featuredImage?.alt || `Review from ${node.customer_name}`}
             fill
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 78vw, 400px"
             className="object-cover"
@@ -107,30 +94,10 @@ function TextTestimonialCard({ node }: { node: TestimonialNode }) {
             aria-hidden
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10" />
-        <div className="absolute inset-0 flex flex-col justify-end p-3 text-white sm:p-5">
-          <TestimonialMeta node={node} onDark />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 z-[2] flex flex-col justify-end p-3 text-white sm:p-4">
+          <TestimonialMeta node={node} />
         </div>
-      </div>
-    </article>
-  );
-}
-
-function VideoTestimonialCard({ node }: { node: TestimonialNode }) {
-  const posterUrl = node.featuredImage?.key
-    ? keytoUrl(node.featuredImage.key)
-    : null;
-
-  return (
-    <article className={cardShell}>
-      <TestimonialVideoPlayer
-        videoUrl={node.video_url ?? ""}
-        posterUrl={posterUrl}
-        customerName={node.customer_name}
-        className="w-full shrink-0"
-      />
-      <div className="shrink-0 bg-gradient-to-br from-[#00542E] to-[#003d22] p-3 text-white sm:p-4">
-        <TestimonialMeta node={node} compact onDark />
       </div>
     </article>
   );
@@ -151,12 +118,14 @@ export function HomeTestimonialsCarousel({ testimonials }: Props) {
           const isVideo =
             node.kind === "video" && Boolean(node.video_url?.trim());
           return (
-            <CarouselItem key={node.id} className={homeCarouselItemClass}>
-              {isVideo ? (
-                <VideoTestimonialCard node={node} />
-              ) : (
-                <TextTestimonialCard node={node} />
-              )}
+            <CarouselItem
+              key={node.id}
+              className={cn(homeCarouselItemClass, "h-full")}
+            >
+              <TestimonialCard
+                node={node}
+                variant={isVideo ? "video" : "text"}
+              />
             </CarouselItem>
           );
         })}
