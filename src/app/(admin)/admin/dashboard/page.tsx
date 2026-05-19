@@ -22,9 +22,10 @@ export default async function DashboardPage() {
     console.error("[admin/dashboard] getDashboardStats failed:", err);
     const raw =
       err instanceof Error ? err.message : "Could not load dashboard data.";
-    statsError = raw.includes("ENOTFOUND db.")
-      ? "Database host is outdated. Ensure DATABASE_SERVICE_ROLE and Supabase URL are set on Vercel (dashboard now uses Supabase API)."
-      : raw;
+    statsError =
+      raw.includes("ENOTFOUND") && raw.includes("supabase")
+        ? "Database connection failed. On Vercel, set DATABASE_URL to the pooler URI (aws-1-ap-south-1, port 6543) or keep the legacy db.* URL — the app rewrites it automatically on deploy."
+        : raw;
   }
 
   return <DashboardView stats={stats} statsError={statsError} />;

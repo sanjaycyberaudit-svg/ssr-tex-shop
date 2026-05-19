@@ -29,7 +29,7 @@ if ($choice -eq "1") {
         [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
     )
     $encoded = [uri]::EscapeDataString($plain)
-    $url = "postgresql://postgres.qhtwwyqlsnckorndmhmt:${encoded}@aws-0-ap-south-1.pooler.supabase.com:6543/postgres"
+    $url = "postgresql://postgres.qhtwwyqlsnckorndmhmt:${encoded}@aws-1-ap-south-1.pooler.supabase.com:6543/postgres"
 }
 
 if (-not $url.StartsWith("postgresql://")) {
