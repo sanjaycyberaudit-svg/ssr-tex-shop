@@ -48,6 +48,10 @@ export const FetchCartQuery = gql(/* GraphQL */ `
 
 type UserCartSectionProps = { user: User };
 
+type CartEdge = NonNullable<
+  NonNullable<DocumentType<typeof FetchCartQuery>["cartsCollection"]>["edges"]
+>[number];
+
 function UserCartSection({ user }: UserCartSectionProps) {
   const [{ data, fetching, error }, reexecuteQuery] = useQuery({
     query: FetchCartQuery,
@@ -61,7 +65,8 @@ function UserCartSection({ user }: UserCartSectionProps) {
   const [, updateCartProduct] = useMutation(updateCartsMutation);
   const [, removeCart] = useMutation(RemoveCartsMutation);
 
-  const cart = data && data.cartsCollection ? data.cartsCollection.edges : [];
+  const cart: CartEdge[] =
+    data?.cartsCollection?.edges?.filter((edge) => edge.node.product) ?? [];
   const subtotal = useMemo(() => calcSubtotal(cart), [cart]);
   const productCount = useMemo(() => calcProductCount(cart), [cart]);
 
@@ -142,7 +147,9 @@ function UserCartSection({ user }: UserCartSectionProps) {
   ): CartItems => {
     const cart: CartItems = {};
     data.cartsCollection.edges.forEach((item) => {
-      cart[item.node.product.id] = {
+      const product = item.node.product;
+      if (!product) return;
+      cart[product.id] = {
         quantity: item.node.quantity,
       };
     });
@@ -151,17 +158,17 @@ function UserCartSection({ user }: UserCartSectionProps) {
 
   return (
     <>
-      {data.cartsCollection && data.cartsCollection.edges.length > 0 ? (
+      {data.cartsCollection && cart.length > 0 ? (
         <section
           aria-label="Cart Section"
           className="grid grid-cols-12 gap-x-6 gap-y-5"
         >
           <div className="col-span-12 md:col-span-9 max-h-[420px] overflow-y-auto">
-            {data.cartsCollection?.edges.map(({ node }) => (
+            {cart.map(({ node }) => (
               <CartItemCard
                 key={node.product_id}
                 id={node.product_id}
-                product={node.product}
+                product={node.product!}
                 quantity={node.quantity}
                 addOneHandler={() =>
                   addOneHandler(node.product_id, node.quantity)
@@ -236,15 +243,13 @@ const LoadingCartSection = () => (
   </section>
 );
 
-export const calcProductCount = (data: { node: { quantity: number } }[]) => {
+export const calcProductCount = (data: CartEdge[]) => {
   return data.reduce((acc, cur) => acc + cur.node.quantity, 0);
 };
 
-const calcSubtotal = (
-  data: { node: { quantity: number; product: { price: number } } }[],
-) => {
-  return data.reduce(
-    (acc, cur) => acc + cur.node.quantity * cur.node.product.price,
-    0,
-  );
+const calcSubtotal = (data: CartEdge[]) => {
+  return data.reduce((acc, cur) => {
+    const price = Number(cur.node.product?.price ?? 0);
+    return acc + cur.node.quantity * price;
+  }, 0);
 };
