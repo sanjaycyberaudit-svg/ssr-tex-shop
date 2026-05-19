@@ -29,6 +29,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "placehold.co",
       },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+      },
+      {
+        protocol: "https",
+        hostname: "vumbnail.com",
+      },
     ],
   },
   experimental: {

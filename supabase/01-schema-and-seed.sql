@@ -19,6 +19,7 @@ DROP TABLE IF EXISTS wishlist CASCADE;
 DROP TABLE IF EXISTS comments CASCADE;
 DROP TABLE IF EXISTS product_medias CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS testimonials CASCADE;
 DROP TABLE IF EXISTS collections CASCADE;
 DROP TABLE IF EXISTS address CASCADE;
 DROP TABLE IF EXISTS medias CASCADE;
@@ -34,6 +35,20 @@ CREATE TABLE medias (
   alt VARCHAR(255) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE testimonials (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL DEFAULT 'text' CHECK (kind IN ('text', 'video')),
+  customer_name VARCHAR(120) NOT NULL,
+  location VARCHAR(120),
+  quote TEXT,
+  video_url TEXT,
+  rating INTEGER NOT NULL DEFAULT 5 CHECK (rating >= 1 AND rating <= 5),
+  featured_image_id TEXT REFERENCES medias(id) ON DELETE SET NULL,
+  is_published BOOLEAN NOT NULL DEFAULT TRUE,
+  "order" INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE collections (
@@ -163,6 +178,7 @@ CREATE TRIGGER on_auth_user_created
 -- 4. Row Level Security (storefront can read products; users manage own cart)
 -- -----------------------------------------------------------------------------
 ALTER TABLE medias ENABLE ROW LEVEL SECURITY;
+ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -173,6 +189,7 @@ ALTER TABLE order_lines ENABLE ROW LEVEL SECURITY;
 
 -- Public read (shop pages)
 CREATE POLICY "public_read_medias" ON medias FOR SELECT USING (true);
+CREATE POLICY "public_read_testimonials" ON testimonials FOR SELECT USING (is_published = true);
 CREATE POLICY "public_read_collections" ON collections FOR SELECT USING (true);
 CREATE POLICY "public_read_products" ON products FOR SELECT USING (true);
 

@@ -36,6 +36,7 @@ import {
   Folder,
   LayoutDashboard,
   Receipt,
+  MessageSquareQuote,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -47,6 +48,7 @@ export const Icons = {
   folder: Folder,
   layoutDashboard: LayoutDashboard,
   receipt: Receipt,
+  messageSquare: MessageSquareQuote,
   spinner: Loader2,
   pending: CircleDashed,
   chevronLeft: ChevronLeft,

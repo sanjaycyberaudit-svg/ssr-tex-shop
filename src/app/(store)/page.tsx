@@ -6,8 +6,10 @@ import { ProductCardFragment } from "@/features/products";
 import {
   HomeHeroBanner,
   HomeCategoriesCarousel,
+  HomeTestimonialsCarousel,
   HomeFeaturedCarousel,
 } from "@/features/storefront/components";
+import { TestimonialCardFragment } from "@/features/testimonials";
 import { gql } from "@/gql";
 import { getClient } from "@/lib/urql";
 import { siteConfig } from "@/config/site";
@@ -57,6 +59,19 @@ const LandingRouteQuery = gql(/* GraphQL */ `
         }
       }
     }
+
+    homeTestimonials: testimonialsCollection(
+      filter: { is_published: { eq: true } }
+      first: 12
+      orderBy: [{ order: DescNullsLast }, { created_at: DescNullsLast }]
+    ) {
+      edges {
+        node {
+          id
+          ...TestimonialCardFragment
+        }
+      }
+    }
   }
 `);
 
@@ -73,6 +88,7 @@ export default async function Home() {
 
   const products = data?.products;
   const collectionScrollCards = data?.collectionScrollCards;
+  const homeTestimonials = data?.homeTestimonials;
 
   return (
     <main className="min-h-screen w-full min-w-0 overflow-x-hidden">
@@ -93,6 +109,10 @@ export default async function Home() {
 
         {collectionScrollCards?.edges?.length ? (
           <HomeCategoriesCarousel collections={collectionScrollCards.edges} />
+        ) : null}
+
+        {homeTestimonials?.edges?.length ? (
+          <HomeTestimonialsCarousel testimonials={homeTestimonials.edges} />
         ) : null}
 
         {products?.edges?.length ? (

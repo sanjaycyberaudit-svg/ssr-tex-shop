@@ -24,7 +24,7 @@ export type Scalars = {
   BigInt: any;
   /** An opaque string using for tracking a position in results during pagination */
   Cursor: any;
-  /** A date wihout time information */
+  /** A date without time information */
   Date: any;
   /** A date and time */
   Datetime: any;
@@ -50,6 +50,15 @@ export type BigFloatFilter = {
   neq?: InputMaybe<Scalars["BigFloat"]>;
 };
 
+/** Boolean expression comparing fields on type "BigFloatList" */
+export type BigFloatListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["BigFloat"]>>;
+  contains?: InputMaybe<Array<Scalars["BigFloat"]>>;
+  eq?: InputMaybe<Array<Scalars["BigFloat"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["BigFloat"]>>;
+};
+
 /** Boolean expression comparing fields on type "BigInt" */
 export type BigIntFilter = {
   eq?: InputMaybe<Scalars["BigInt"]>;
@@ -62,10 +71,28 @@ export type BigIntFilter = {
   neq?: InputMaybe<Scalars["BigInt"]>;
 };
 
+/** Boolean expression comparing fields on type "BigIntList" */
+export type BigIntListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["BigInt"]>>;
+  contains?: InputMaybe<Array<Scalars["BigInt"]>>;
+  eq?: InputMaybe<Array<Scalars["BigInt"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["BigInt"]>>;
+};
+
 /** Boolean expression comparing fields on type "Boolean" */
 export type BooleanFilter = {
   eq?: InputMaybe<Scalars["Boolean"]>;
   is?: InputMaybe<FilterIs>;
+};
+
+/** Boolean expression comparing fields on type "BooleanList" */
+export type BooleanListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["Boolean"]>>;
+  contains?: InputMaybe<Array<Scalars["Boolean"]>>;
+  eq?: InputMaybe<Array<Scalars["Boolean"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["Boolean"]>>;
 };
 
 /** Boolean expression comparing fields on type "Date" */
@@ -80,6 +107,15 @@ export type DateFilter = {
   neq?: InputMaybe<Scalars["Date"]>;
 };
 
+/** Boolean expression comparing fields on type "DateList" */
+export type DateListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["Date"]>>;
+  contains?: InputMaybe<Array<Scalars["Date"]>>;
+  eq?: InputMaybe<Array<Scalars["Date"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["Date"]>>;
+};
+
 /** Boolean expression comparing fields on type "Datetime" */
 export type DatetimeFilter = {
   eq?: InputMaybe<Scalars["Datetime"]>;
@@ -90,6 +126,15 @@ export type DatetimeFilter = {
   lt?: InputMaybe<Scalars["Datetime"]>;
   lte?: InputMaybe<Scalars["Datetime"]>;
   neq?: InputMaybe<Scalars["Datetime"]>;
+};
+
+/** Boolean expression comparing fields on type "DatetimeList" */
+export type DatetimeListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["Datetime"]>>;
+  contains?: InputMaybe<Array<Scalars["Datetime"]>>;
+  eq?: InputMaybe<Array<Scalars["Datetime"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["Datetime"]>>;
 };
 
 export enum FilterIs {
@@ -109,6 +154,15 @@ export type FloatFilter = {
   neq?: InputMaybe<Scalars["Float"]>;
 };
 
+/** Boolean expression comparing fields on type "FloatList" */
+export type FloatListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["Float"]>>;
+  contains?: InputMaybe<Array<Scalars["Float"]>>;
+  eq?: InputMaybe<Array<Scalars["Float"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["Float"]>>;
+};
+
 /** Boolean expression comparing fields on type "ID" */
 export type IdFilter = {
   eq?: InputMaybe<Scalars["ID"]>;
@@ -126,10 +180,18 @@ export type IntFilter = {
   neq?: InputMaybe<Scalars["Int"]>;
 };
 
+/** Boolean expression comparing fields on type "IntList" */
+export type IntListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["Int"]>>;
+  contains?: InputMaybe<Array<Scalars["Int"]>>;
+  eq?: InputMaybe<Array<Scalars["Int"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["Int"]>>;
+};
+
 /** The root type for creating and mutating data */
 export type Mutation = {
   __typename?: "Mutation";
-  custom_access_token_hook?: Maybe<Scalars["JSON"]>;
   /** Deletes zero or more records from the `address` collection */
   deleteFromaddressCollection: AddressDeleteResponse;
   /** Deletes zero or more records from the `carts` collection */
@@ -150,6 +212,8 @@ export type Mutation = {
   deleteFromproductsCollection: ProductsDeleteResponse;
   /** Deletes zero or more records from the `profiles` collection */
   deleteFromprofilesCollection: ProfilesDeleteResponse;
+  /** Deletes zero or more records from the `testimonials` collection */
+  deleteFromtestimonialsCollection: TestimonialsDeleteResponse;
   /** Deletes zero or more records from the `wishlist` collection */
   deleteFromwishlistCollection: WishlistDeleteResponse;
   /** Adds one or more `address` records to the collection */
@@ -172,6 +236,8 @@ export type Mutation = {
   insertIntoproductsCollection?: Maybe<ProductsInsertResponse>;
   /** Adds one or more `profiles` records to the collection */
   insertIntoprofilesCollection?: Maybe<ProfilesInsertResponse>;
+  /** Adds one or more `testimonials` records to the collection */
+  insertIntotestimonialsCollection?: Maybe<TestimonialsInsertResponse>;
   /** Adds one or more `wishlist` records to the collection */
   insertIntowishlistCollection?: Maybe<WishlistInsertResponse>;
   /** Updates zero or more records in the `address` collection */
@@ -194,13 +260,10 @@ export type Mutation = {
   updateproductsCollection: ProductsUpdateResponse;
   /** Updates zero or more records in the `profiles` collection */
   updateprofilesCollection: ProfilesUpdateResponse;
+  /** Updates zero or more records in the `testimonials` collection */
+  updatetestimonialsCollection: TestimonialsUpdateResponse;
   /** Updates zero or more records in the `wishlist` collection */
   updatewishlistCollection: WishlistUpdateResponse;
-};
-
-/** The root type for creating and mutating data */
-export type MutationCustom_Access_Token_HookArgs = {
-  event?: InputMaybe<Scalars["JSON"]>;
 };
 
 /** The root type for creating and mutating data */
@@ -264,6 +327,12 @@ export type MutationDeleteFromprofilesCollectionArgs = {
 };
 
 /** The root type for creating and mutating data */
+export type MutationDeleteFromtestimonialsCollectionArgs = {
+  atMost?: Scalars["Int"];
+  filter?: InputMaybe<TestimonialsFilter>;
+};
+
+/** The root type for creating and mutating data */
 export type MutationDeleteFromwishlistCollectionArgs = {
   atMost?: Scalars["Int"];
   filter?: InputMaybe<WishlistFilter>;
@@ -317,6 +386,11 @@ export type MutationInsertIntoproductsCollectionArgs = {
 /** The root type for creating and mutating data */
 export type MutationInsertIntoprofilesCollectionArgs = {
   objects: Array<ProfilesInsertInput>;
+};
+
+/** The root type for creating and mutating data */
+export type MutationInsertIntotestimonialsCollectionArgs = {
+  objects: Array<TestimonialsInsertInput>;
 };
 
 /** The root type for creating and mutating data */
@@ -395,6 +469,13 @@ export type MutationUpdateprofilesCollectionArgs = {
 };
 
 /** The root type for creating and mutating data */
+export type MutationUpdatetestimonialsCollectionArgs = {
+  atMost?: Scalars["Int"];
+  filter?: InputMaybe<TestimonialsFilter>;
+  set: TestimonialsUpdateInput;
+};
+
+/** The root type for creating and mutating data */
 export type MutationUpdatewishlistCollectionArgs = {
   atMost?: Scalars["Int"];
   filter?: InputMaybe<WishlistFilter>;
@@ -457,6 +538,8 @@ export type Query = {
   productsCollection?: Maybe<ProductsConnection>;
   /** A pagable collection of type `profiles` */
   profilesCollection?: Maybe<ProfilesConnection>;
+  /** A pagable collection of type `testimonials` */
+  testimonialsCollection?: Maybe<TestimonialsConnection>;
   /** A pagable collection of type `wishlist` */
   wishlistCollection?: Maybe<WishlistConnection>;
 };
@@ -468,6 +551,7 @@ export type QueryAddressCollectionArgs = {
   filter?: InputMaybe<AddressFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<AddressOrderBy>>;
 };
 
@@ -478,6 +562,7 @@ export type QueryCartsCollectionArgs = {
   filter?: InputMaybe<CartsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<CartsOrderBy>>;
 };
 
@@ -488,6 +573,7 @@ export type QueryCollectionsCollectionArgs = {
   filter?: InputMaybe<CollectionsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<CollectionsOrderBy>>;
 };
 
@@ -498,6 +584,7 @@ export type QueryCommentsCollectionArgs = {
   filter?: InputMaybe<CommentsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<CommentsOrderBy>>;
 };
 
@@ -508,6 +595,7 @@ export type QueryMediasCollectionArgs = {
   filter?: InputMaybe<MediasFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<MediasOrderBy>>;
 };
 
@@ -523,6 +611,7 @@ export type QueryOrder_LinesCollectionArgs = {
   filter?: InputMaybe<Order_LinesFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<Order_LinesOrderBy>>;
 };
 
@@ -533,6 +622,7 @@ export type QueryOrdersCollectionArgs = {
   filter?: InputMaybe<OrdersFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<OrdersOrderBy>>;
 };
 
@@ -543,6 +633,7 @@ export type QueryProduct_MediasCollectionArgs = {
   filter?: InputMaybe<Product_MediasFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<Product_MediasOrderBy>>;
 };
 
@@ -553,6 +644,7 @@ export type QueryProductsCollectionArgs = {
   filter?: InputMaybe<ProductsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<ProductsOrderBy>>;
 };
 
@@ -563,7 +655,19 @@ export type QueryProfilesCollectionArgs = {
   filter?: InputMaybe<ProfilesFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<ProfilesOrderBy>>;
+};
+
+/** The root type for querying data */
+export type QueryTestimonialsCollectionArgs = {
+  after?: InputMaybe<Scalars["Cursor"]>;
+  before?: InputMaybe<Scalars["Cursor"]>;
+  filter?: InputMaybe<TestimonialsFilter>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
+  orderBy?: InputMaybe<Array<TestimonialsOrderBy>>;
 };
 
 /** The root type for querying data */
@@ -573,6 +677,7 @@ export type QueryWishlistCollectionArgs = {
   filter?: InputMaybe<WishlistFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<WishlistOrderBy>>;
 };
 
@@ -593,6 +698,15 @@ export type StringFilter = {
   startsWith?: InputMaybe<Scalars["String"]>;
 };
 
+/** Boolean expression comparing fields on type "StringList" */
+export type StringListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["String"]>>;
+  contains?: InputMaybe<Array<Scalars["String"]>>;
+  eq?: InputMaybe<Array<Scalars["String"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["String"]>>;
+};
+
 /** Boolean expression comparing fields on type "Time" */
 export type TimeFilter = {
   eq?: InputMaybe<Scalars["Time"]>;
@@ -605,12 +719,30 @@ export type TimeFilter = {
   neq?: InputMaybe<Scalars["Time"]>;
 };
 
+/** Boolean expression comparing fields on type "TimeList" */
+export type TimeListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["Time"]>>;
+  contains?: InputMaybe<Array<Scalars["Time"]>>;
+  eq?: InputMaybe<Array<Scalars["Time"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["Time"]>>;
+};
+
 /** Boolean expression comparing fields on type "UUID" */
 export type UuidFilter = {
   eq?: InputMaybe<Scalars["UUID"]>;
   in?: InputMaybe<Array<Scalars["UUID"]>>;
   is?: InputMaybe<FilterIs>;
   neq?: InputMaybe<Scalars["UUID"]>;
+};
+
+/** Boolean expression comparing fields on type "UUIDList" */
+export type UuidListFilter = {
+  containedBy?: InputMaybe<Array<Scalars["UUID"]>>;
+  contains?: InputMaybe<Array<Scalars["UUID"]>>;
+  eq?: InputMaybe<Array<Scalars["UUID"]>>;
+  is?: InputMaybe<FilterIs>;
+  overlaps?: InputMaybe<Array<Scalars["UUID"]>>;
 };
 
 export type Address = Node & {
@@ -721,7 +853,7 @@ export type Carts = Node & {
   /** Globally Unique Record Identifier */
   nodeId: Scalars["ID"];
   product_id: Scalars["String"];
-  products: Products;
+  products?: Maybe<Products>;
   quantity: Scalars["Int"];
   user_id: Scalars["UUID"];
 };
@@ -803,7 +935,7 @@ export type Collections = Node & {
   featured_image_id: Scalars["String"];
   id: Scalars["String"];
   label: Scalars["String"];
-  medias: Medias;
+  medias?: Maybe<Medias>;
   /** Globally Unique Record Identifier */
   nodeId: Scalars["ID"];
   order?: Maybe<Scalars["Int"]>;
@@ -818,6 +950,7 @@ export type CollectionsProductsCollectionArgs = {
   filter?: InputMaybe<ProductsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<ProductsOrderBy>>;
 };
 
@@ -911,9 +1044,9 @@ export type Comments = Node & {
   id: Scalars["String"];
   /** Globally Unique Record Identifier */
   nodeId: Scalars["ID"];
-  product: Products;
+  product?: Maybe<Products>;
   productId: Scalars["String"];
-  profile: Profiles;
+  profile?: Maybe<Profiles>;
   profileId: Scalars["UUID"];
 };
 
@@ -1003,6 +1136,7 @@ export type Medias = Node & {
   nodeId: Scalars["ID"];
   product_mediasCollection?: Maybe<Product_MediasConnection>;
   productsCollection?: Maybe<ProductsConnection>;
+  testimonialsCollection?: Maybe<TestimonialsConnection>;
   updated_at?: Maybe<Scalars["Datetime"]>;
 };
 
@@ -1012,6 +1146,7 @@ export type MediasCollectionsCollectionArgs = {
   filter?: InputMaybe<CollectionsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<CollectionsOrderBy>>;
 };
 
@@ -1021,6 +1156,7 @@ export type MediasProduct_MediasCollectionArgs = {
   filter?: InputMaybe<Product_MediasFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<Product_MediasOrderBy>>;
 };
 
@@ -1030,7 +1166,18 @@ export type MediasProductsCollectionArgs = {
   filter?: InputMaybe<ProductsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<ProductsOrderBy>>;
+};
+
+export type MediasTestimonialsCollectionArgs = {
+  after?: InputMaybe<Scalars["Cursor"]>;
+  before?: InputMaybe<Scalars["Cursor"]>;
+  filter?: InputMaybe<TestimonialsFilter>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
+  orderBy?: InputMaybe<Array<TestimonialsOrderBy>>;
 };
 
 export type MediasConnection = {
@@ -1114,11 +1261,11 @@ export type Order_Lines = Node & {
   id: Scalars["String"];
   /** Globally Unique Record Identifier */
   nodeId: Scalars["ID"];
-  order: Orders;
+  order?: Maybe<Orders>;
   orderId: Scalars["String"];
   price: Scalars["BigFloat"];
   product_id: Scalars["String"];
-  products: Products;
+  products?: Maybe<Products>;
   quantity: Scalars["Int"];
 };
 
@@ -1227,6 +1374,7 @@ export type OrdersOrder_LinesCollectionArgs = {
   filter?: InputMaybe<Order_LinesFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<Order_LinesOrderBy>>;
 };
 
@@ -1336,12 +1484,12 @@ export type OrdersUpdateResponse = {
 export type Product_Medias = Node & {
   __typename?: "product_medias";
   id: Scalars["String"];
-  media: Medias;
+  media?: Maybe<Medias>;
   mediaId: Scalars["String"];
   /** Globally Unique Record Identifier */
   nodeId: Scalars["ID"];
   priority?: Maybe<Scalars["Int"]>;
-  product: Products;
+  product?: Maybe<Products>;
   productId: Scalars["String"];
 };
 
@@ -1429,7 +1577,7 @@ export type Products = Node & {
   featured_image_id: Scalars["String"];
   id: Scalars["String"];
   images: Scalars["JSON"];
-  medias: Medias;
+  medias?: Maybe<Medias>;
   name: Scalars["String"];
   /** Globally Unique Record Identifier */
   nodeId: Scalars["ID"];
@@ -1450,6 +1598,7 @@ export type ProductsCartsCollectionArgs = {
   filter?: InputMaybe<CartsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<CartsOrderBy>>;
 };
 
@@ -1459,6 +1608,7 @@ export type ProductsCommentsCollectionArgs = {
   filter?: InputMaybe<CommentsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<CommentsOrderBy>>;
 };
 
@@ -1468,6 +1618,7 @@ export type ProductsOrder_LinesCollectionArgs = {
   filter?: InputMaybe<Order_LinesFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<Order_LinesOrderBy>>;
 };
 
@@ -1477,6 +1628,7 @@ export type ProductsProduct_MediasCollectionArgs = {
   filter?: InputMaybe<Product_MediasFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<Product_MediasOrderBy>>;
 };
 
@@ -1486,6 +1638,7 @@ export type ProductsWishlistCollectionArgs = {
   filter?: InputMaybe<WishlistFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<WishlistOrderBy>>;
 };
 
@@ -1620,6 +1773,7 @@ export type ProfilesAddressCollectionArgs = {
   filter?: InputMaybe<AddressFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<AddressOrderBy>>;
 };
 
@@ -1629,6 +1783,7 @@ export type ProfilesCommentsCollectionArgs = {
   filter?: InputMaybe<CommentsFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<CommentsOrderBy>>;
 };
 
@@ -1638,6 +1793,7 @@ export type ProfilesOrdersCollectionArgs = {
   filter?: InputMaybe<OrdersFilter>;
   first?: InputMaybe<Scalars["Int"]>;
   last?: InputMaybe<Scalars["Int"]>;
+  offset?: InputMaybe<Scalars["Int"]>;
   orderBy?: InputMaybe<Array<OrdersOrderBy>>;
 };
 
@@ -1716,13 +1872,130 @@ export type ProfilesUpdateResponse = {
   records: Array<Profiles>;
 };
 
+export type Testimonials = Node & {
+  __typename?: "testimonials";
+  created_at: Scalars["Datetime"];
+  customer_name: Scalars["String"];
+  featured_image_id?: Maybe<Scalars["String"]>;
+  id: Scalars["String"];
+  is_published: Scalars["Boolean"];
+  kind: Scalars["String"];
+  location?: Maybe<Scalars["String"]>;
+  medias?: Maybe<Medias>;
+  /** Globally Unique Record Identifier */
+  nodeId: Scalars["ID"];
+  order?: Maybe<Scalars["Int"]>;
+  quote?: Maybe<Scalars["String"]>;
+  rating: Scalars["Int"];
+  video_url?: Maybe<Scalars["String"]>;
+};
+
+export type TestimonialsConnection = {
+  __typename?: "testimonialsConnection";
+  edges: Array<TestimonialsEdge>;
+  pageInfo: PageInfo;
+};
+
+export type TestimonialsDeleteResponse = {
+  __typename?: "testimonialsDeleteResponse";
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars["Int"];
+  /** Array of records impacted by the mutation */
+  records: Array<Testimonials>;
+};
+
+export type TestimonialsEdge = {
+  __typename?: "testimonialsEdge";
+  cursor: Scalars["String"];
+  node: Testimonials;
+};
+
+export type TestimonialsFilter = {
+  /** Returns true only if all its inner filters are true, otherwise returns false */
+  and?: InputMaybe<Array<TestimonialsFilter>>;
+  created_at?: InputMaybe<DatetimeFilter>;
+  customer_name?: InputMaybe<StringFilter>;
+  featured_image_id?: InputMaybe<StringFilter>;
+  id?: InputMaybe<StringFilter>;
+  is_published?: InputMaybe<BooleanFilter>;
+  kind?: InputMaybe<StringFilter>;
+  location?: InputMaybe<StringFilter>;
+  nodeId?: InputMaybe<IdFilter>;
+  /** Negates a filter */
+  not?: InputMaybe<TestimonialsFilter>;
+  /** Returns true if at least one of its inner filters is true, otherwise returns false */
+  or?: InputMaybe<Array<TestimonialsFilter>>;
+  order?: InputMaybe<IntFilter>;
+  quote?: InputMaybe<StringFilter>;
+  rating?: InputMaybe<IntFilter>;
+  video_url?: InputMaybe<StringFilter>;
+};
+
+export type TestimonialsInsertInput = {
+  created_at?: InputMaybe<Scalars["Datetime"]>;
+  customer_name?: InputMaybe<Scalars["String"]>;
+  featured_image_id?: InputMaybe<Scalars["String"]>;
+  id?: InputMaybe<Scalars["String"]>;
+  is_published?: InputMaybe<Scalars["Boolean"]>;
+  kind?: InputMaybe<Scalars["String"]>;
+  location?: InputMaybe<Scalars["String"]>;
+  order?: InputMaybe<Scalars["Int"]>;
+  quote?: InputMaybe<Scalars["String"]>;
+  rating?: InputMaybe<Scalars["Int"]>;
+  video_url?: InputMaybe<Scalars["String"]>;
+};
+
+export type TestimonialsInsertResponse = {
+  __typename?: "testimonialsInsertResponse";
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars["Int"];
+  /** Array of records impacted by the mutation */
+  records: Array<Testimonials>;
+};
+
+export type TestimonialsOrderBy = {
+  created_at?: InputMaybe<OrderByDirection>;
+  customer_name?: InputMaybe<OrderByDirection>;
+  featured_image_id?: InputMaybe<OrderByDirection>;
+  id?: InputMaybe<OrderByDirection>;
+  is_published?: InputMaybe<OrderByDirection>;
+  kind?: InputMaybe<OrderByDirection>;
+  location?: InputMaybe<OrderByDirection>;
+  order?: InputMaybe<OrderByDirection>;
+  quote?: InputMaybe<OrderByDirection>;
+  rating?: InputMaybe<OrderByDirection>;
+  video_url?: InputMaybe<OrderByDirection>;
+};
+
+export type TestimonialsUpdateInput = {
+  created_at?: InputMaybe<Scalars["Datetime"]>;
+  customer_name?: InputMaybe<Scalars["String"]>;
+  featured_image_id?: InputMaybe<Scalars["String"]>;
+  id?: InputMaybe<Scalars["String"]>;
+  is_published?: InputMaybe<Scalars["Boolean"]>;
+  kind?: InputMaybe<Scalars["String"]>;
+  location?: InputMaybe<Scalars["String"]>;
+  order?: InputMaybe<Scalars["Int"]>;
+  quote?: InputMaybe<Scalars["String"]>;
+  rating?: InputMaybe<Scalars["Int"]>;
+  video_url?: InputMaybe<Scalars["String"]>;
+};
+
+export type TestimonialsUpdateResponse = {
+  __typename?: "testimonialsUpdateResponse";
+  /** Count of the records impacted by the mutation */
+  affectedCount: Scalars["Int"];
+  /** Array of records impacted by the mutation */
+  records: Array<Testimonials>;
+};
+
 export type Wishlist = Node & {
   __typename?: "wishlist";
   created_at: Scalars["Datetime"];
   /** Globally Unique Record Identifier */
   nodeId: Scalars["ID"];
   product_id: Scalars["String"];
-  products: Products;
+  products?: Maybe<Products>;
   user_id: Scalars["UUID"];
 };
 
@@ -1889,18 +2162,70 @@ export type AdminProductsPageQueryQuery = {
         badge?: string | null;
         price: any;
         featured?: boolean | null;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
         collections?: {
           __typename?: "collections";
           id: string;
           label: string;
           slug: string;
         } | null;
+      };
+    }>;
+  } | null;
+};
+
+export type EditTestimonialPageQueryQueryVariables = Exact<{
+  testimonialId?: InputMaybe<Scalars["String"]>;
+}>;
+
+export type EditTestimonialPageQueryQuery = {
+  __typename?: "Query";
+  testimonialsCollection?: {
+    __typename?: "testimonialsConnection";
+    edges: Array<{
+      __typename?: "testimonialsEdge";
+      node: {
+        __typename: "testimonials";
+        id: string;
+        kind: string;
+        customer_name: string;
+        location?: string | null;
+        quote?: string | null;
+        rating: number;
+        video_url?: string | null;
+        featured_image_id?: string | null;
+        is_published: boolean;
+        order?: number | null;
+      };
+    }>;
+  } | null;
+};
+
+export type AdminTestimonialsPageQueryQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminTestimonialsPageQueryQuery = {
+  __typename?: "Query";
+  testimonialsCollection?: {
+    __typename?: "testimonialsConnection";
+    edges: Array<{
+      __typename?: "testimonialsEdge";
+      node: {
+        __typename: "testimonials";
+        id: string;
+        kind: string;
+        customer_name: string;
+        location?: string | null;
+        quote?: string | null;
+        rating: number;
+        is_published: boolean;
+        order?: number | null;
       };
     }>;
   } | null;
@@ -1937,12 +2262,12 @@ export type CollectionRouteQueryQuery = {
               slug: string;
               badge?: string | null;
               price: any;
-              featuredImage: {
+              featuredImage?: {
                 __typename?: "medias";
                 id: string;
                 key: string;
                 alt: string;
-              };
+              } | null;
               collections?: {
                 __typename?: "collections";
                 id: string;
@@ -1952,12 +2277,12 @@ export type CollectionRouteQueryQuery = {
             };
           }>;
         } | null;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
       };
     }>;
   } | null;
@@ -1976,7 +2301,11 @@ export type AllCollectionsQueryQuery = {
         id: string;
         label: string;
         slug: string;
-        featuredImage: { __typename?: "medias"; key: string; alt: string };
+        featuredImage?: {
+          __typename?: "medias";
+          key: string;
+          alt: string;
+        } | null;
       };
     }>;
   } | null;
@@ -2006,7 +2335,7 @@ export type OrderPageQueryQuery = {
             node: {
               __typename?: "order_lines";
               id: string;
-              products: {
+              products?: {
                 __typename?: "products";
                 id: string;
                 featured?: boolean | null;
@@ -2014,13 +2343,13 @@ export type OrderPageQueryQuery = {
                 name: string;
                 slug: string;
                 description?: string | null;
-                featuredImage: {
+                featuredImage?: {
                   __typename?: "medias";
                   id: string;
                   key: string;
                   alt: string;
-                };
-              };
+                } | null;
+              } | null;
             };
           }>;
         } | null;
@@ -2039,12 +2368,12 @@ export type OrderPageQueryQuery = {
         name: string;
         slug: string;
         description?: string | null;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
       };
     }>;
   } | null;
@@ -2069,12 +2398,12 @@ export type LandingRouteQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
         collections?: {
           __typename?: "collections";
           id: string;
@@ -2107,7 +2436,32 @@ export type LandingRouteQueryQuery = {
         id: string;
         label: string;
         slug: string;
-        featuredImage: { __typename?: "medias"; key: string; alt: string };
+        featuredImage?: {
+          __typename?: "medias";
+          key: string;
+          alt: string;
+        } | null;
+      };
+    }>;
+  } | null;
+  homeTestimonials?: {
+    __typename?: "testimonialsConnection";
+    edges: Array<{
+      __typename?: "testimonialsEdge";
+      node: {
+        __typename?: "testimonials";
+        id: string;
+        kind: string;
+        customer_name: string;
+        location?: string | null;
+        quote?: string | null;
+        rating: number;
+        video_url?: string | null;
+        featuredImage?: {
+          __typename?: "medias";
+          key: string;
+          alt: string;
+        } | null;
       };
     }>;
   } | null;
@@ -2140,7 +2494,10 @@ export type ProductDetailPageQueryQuery = {
               __typename?: "comments";
               id: string;
               comment: string;
-              profile: { __typename?: "profiles"; name?: string | null };
+              profile?: {
+                __typename?: "profiles";
+                name?: string | null;
+              } | null;
             };
           }>;
         } | null;
@@ -2150,24 +2507,24 @@ export type ProductDetailPageQueryQuery = {
           label: string;
           slug: string;
         } | null;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
         images?: {
           __typename?: "product_mediasConnection";
           edges: Array<{
             __typename?: "product_mediasEdge";
             node: {
               __typename?: "product_medias";
-              media: {
+              media?: {
                 __typename?: "medias";
                 id: string;
                 key: string;
                 alt: string;
-              };
+              } | null;
             };
           }>;
         } | null;
@@ -2187,12 +2544,12 @@ export type ProductDetailPageQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
         collections?: {
           __typename?: "collections";
           id: string;
@@ -2211,12 +2568,12 @@ export type CartItemCardFragmentFragment = {
   name: string;
   price: any;
   description?: string | null;
-  featuredImage: {
+  featuredImage?: {
     __typename?: "medias";
     id: string;
     key: string;
     alt: string;
-  };
+  } | null;
 };
 
 export type FetchGuestCartQueryQueryVariables = Exact<{
@@ -2238,12 +2595,12 @@ export type FetchGuestCartQueryQuery = {
         name: string;
         price: any;
         description?: string | null;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
       };
     }>;
   } | null;
@@ -2266,20 +2623,20 @@ export type FetchCartQueryQuery = {
         product_id: string;
         user_id: any;
         quantity: number;
-        product: {
+        product?: {
           __typename?: "products";
           id: string;
           slug: string;
           name: string;
           price: any;
           description?: string | null;
-          featuredImage: {
+          featuredImage?: {
             __typename?: "medias";
             id: string;
             key: string;
             alt: string;
-          };
-        };
+          } | null;
+        } | null;
       };
     }>;
   } | null;
@@ -2301,20 +2658,20 @@ export type CreateCartMutationMutation = {
       product_id: string;
       user_id: any;
       quantity: number;
-      product: {
+      product?: {
         __typename?: "products";
         id: string;
         slug: string;
         name: string;
         price: any;
         description?: string | null;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
-      };
+        } | null;
+      } | null;
     }>;
   } | null;
 };
@@ -2349,20 +2706,20 @@ export type UpdateCartsMutationMutation = {
       product_id: string;
       user_id: any;
       quantity: number;
-      product: {
+      product?: {
         __typename?: "products";
         id: string;
         slug: string;
         name: string;
         price: any;
         description?: string | null;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
-      };
+        } | null;
+      } | null;
     }>;
   };
 };
@@ -2392,12 +2749,12 @@ export type CollectionBannerFragmentFragment = {
   id: string;
   label: string;
   slug: string;
-  featuredImage: {
+  featuredImage?: {
     __typename?: "medias";
     id: string;
     key: string;
     alt: string;
-  };
+  } | null;
 };
 
 export type CollectionCardFragmentFragment = {
@@ -2405,7 +2762,7 @@ export type CollectionCardFragmentFragment = {
   id: string;
   label: string;
   slug: string;
-  featuredImage: { __typename?: "medias"; key: string; alt: string };
+  featuredImage?: { __typename?: "medias"; key: string; alt: string } | null;
 };
 
 export type CollectionColumnsFragmentFragment = {
@@ -2467,7 +2824,7 @@ export type ProductCommentsSectionFragmentFragment = {
   __typename?: "comments";
   id: string;
   comment: string;
-  profile: { __typename?: "profiles"; name?: string | null };
+  profile?: { __typename?: "profiles"; name?: string | null } | null;
 };
 
 export type ImageGridFragmentFragment = {
@@ -2524,12 +2881,12 @@ export type BuyAgainCardFragmentFragment = {
     name: string;
     slug: string;
     description?: string | null;
-    featuredImage: {
+    featuredImage?: {
       __typename?: "medias";
       id: string;
       key: string;
       alt: string;
-    };
+    } | null;
   };
 };
 
@@ -2548,7 +2905,7 @@ export type OrdersListFragmentFragment = {
         node: {
           __typename?: "order_lines";
           id: string;
-          products: {
+          products?: {
             __typename?: "products";
             id: string;
             featured?: boolean | null;
@@ -2556,13 +2913,13 @@ export type OrdersListFragmentFragment = {
             name: string;
             slug: string;
             description?: string | null;
-            featuredImage: {
+            featuredImage?: {
               __typename?: "medias";
               id: string;
               key: string;
               alt: string;
-            };
-          };
+            } | null;
+          } | null;
         };
       }>;
     } | null;
@@ -2592,12 +2949,12 @@ export type ProductCardFragmentFragment = {
   slug: string;
   badge?: string | null;
   price: any;
-  featuredImage: {
+  featuredImage?: {
     __typename?: "medias";
     id: string;
     key: string;
     alt: string;
-  };
+  } | null;
   collections?: {
     __typename?: "collections";
     id: string;
@@ -2609,19 +2966,24 @@ export type ProductCardFragmentFragment = {
 export type ProductImageShowcaseFragmentFragment = {
   __typename?: "products";
   id: string;
-  featuredImage: {
+  featuredImage?: {
     __typename?: "medias";
     id: string;
     key: string;
     alt: string;
-  };
+  } | null;
   images?: {
     __typename?: "product_mediasConnection";
     edges: Array<{
       __typename?: "product_mediasEdge";
       node: {
         __typename?: "product_medias";
-        media: { __typename?: "medias"; id: string; key: string; alt: string };
+        media?: {
+          __typename?: "medias";
+          id: string;
+          key: string;
+          alt: string;
+        } | null;
       };
     }>;
   } | null;
@@ -2632,7 +2994,7 @@ export type CarouselImagesFragmentFragment = {
   node: {
     __typename?: "product_medias";
     id: string;
-    media: { __typename?: "medias"; key: string; alt: string };
+    media?: { __typename?: "medias"; key: string; alt: string } | null;
   };
 };
 
@@ -2655,12 +3017,12 @@ export type RecomendationProductsQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
         collections?: {
           __typename?: "collections";
           id: string;
@@ -2695,12 +3057,12 @@ export type ProductColumnFragmentFragment = {
   badge?: string | null;
   price: any;
   featured?: boolean | null;
-  featuredImage: {
+  featuredImage?: {
     __typename?: "medias";
     id: string;
     key: string;
     alt: string;
-  };
+  } | null;
   collections?: {
     __typename?: "collections";
     id: string;
@@ -2729,12 +3091,12 @@ export type FeaturedProductsQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
         collections?: {
           __typename?: "collections";
           id: string;
@@ -2776,12 +3138,12 @@ export type SearchQuery = {
         slug: string;
         badge?: string | null;
         price: any;
-        featuredImage: {
+        featuredImage?: {
           __typename?: "medias";
           id: string;
           key: string;
           alt: string;
-        };
+        } | null;
         collections?: {
           __typename?: "collections";
           id: string;
@@ -2795,6 +3157,88 @@ export type SearchQuery = {
       hasNextPage: boolean;
       endCursor?: string | null;
     };
+  } | null;
+};
+
+export type TestimonialCardFragmentFragment = {
+  __typename?: "testimonials";
+  id: string;
+  kind: string;
+  customer_name: string;
+  location?: string | null;
+  quote?: string | null;
+  rating: number;
+  video_url?: string | null;
+  featuredImage?: { __typename?: "medias"; key: string; alt: string } | null;
+};
+
+export type TestimonialColumnsFragmentFragment = {
+  __typename?: "testimonials";
+  id: string;
+  kind: string;
+  customer_name: string;
+  location?: string | null;
+  quote?: string | null;
+  rating: number;
+  is_published: boolean;
+  order?: number | null;
+};
+
+export type TestimonialFormFragmentFragment = {
+  __typename?: "testimonials";
+  id: string;
+  kind: string;
+  customer_name: string;
+  location?: string | null;
+  quote?: string | null;
+  rating: number;
+  video_url?: string | null;
+  featured_image_id?: string | null;
+  is_published: boolean;
+  order?: number | null;
+};
+
+export type UpdateTestimonialMutationMutationVariables = Exact<{
+  id?: InputMaybe<Scalars["String"]>;
+  kind?: InputMaybe<Scalars["String"]>;
+  customerName?: InputMaybe<Scalars["String"]>;
+  location?: InputMaybe<Scalars["String"]>;
+  quote?: InputMaybe<Scalars["String"]>;
+  rating?: InputMaybe<Scalars["Int"]>;
+  videoUrl?: InputMaybe<Scalars["String"]>;
+  featuredImageId?: InputMaybe<Scalars["String"]>;
+  isPublished?: InputMaybe<Scalars["Boolean"]>;
+  order?: InputMaybe<Scalars["Int"]>;
+}>;
+
+export type UpdateTestimonialMutationMutation = {
+  __typename?: "Mutation";
+  updatetestimonialsCollection: {
+    __typename?: "testimonialsUpdateResponse";
+    affectedCount: number;
+    records: Array<{ __typename: "testimonials"; nodeId: string }>;
+  };
+};
+
+export type CreateTestimonialMutationMutationVariables = Exact<{
+  id?: InputMaybe<Scalars["String"]>;
+  kind?: InputMaybe<Scalars["String"]>;
+  customerName?: InputMaybe<Scalars["String"]>;
+  location?: InputMaybe<Scalars["String"]>;
+  quote?: InputMaybe<Scalars["String"]>;
+  rating?: InputMaybe<Scalars["Int"]>;
+  videoUrl?: InputMaybe<Scalars["String"]>;
+  featuredImageId?: InputMaybe<Scalars["String"]>;
+  isPublished?: InputMaybe<Scalars["Boolean"]>;
+  order?: InputMaybe<Scalars["Int"]>;
+}>;
+
+export type CreateTestimonialMutationMutation = {
+  __typename?: "Mutation";
+  insertIntotestimonialsCollection?: {
+    __typename?: "testimonialsInsertResponse";
+    affectedCount: number;
+    records: Array<{ __typename: "testimonials" }>;
   } | null;
 };
 
@@ -3520,6 +3964,97 @@ export const ProductColumnFragmentFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ProductColumnFragmentFragment, unknown>;
+export const TestimonialCardFragmentFragmentDoc = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "TestimonialCardFragment" },
+      typeCondition: {
+        kind: "NamedType",
+        name: { kind: "Name", value: "testimonials" },
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "customer_name" } },
+          { kind: "Field", name: { kind: "Name", value: "location" } },
+          { kind: "Field", name: { kind: "Name", value: "quote" } },
+          { kind: "Field", name: { kind: "Name", value: "rating" } },
+          { kind: "Field", name: { kind: "Name", value: "video_url" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "featuredImage" },
+            name: { kind: "Name", value: "medias" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "key" } },
+                { kind: "Field", name: { kind: "Name", value: "alt" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TestimonialCardFragmentFragment, unknown>;
+export const TestimonialColumnsFragmentFragmentDoc = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "TestimonialColumnsFragment" },
+      typeCondition: {
+        kind: "NamedType",
+        name: { kind: "Name", value: "testimonials" },
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "customer_name" } },
+          { kind: "Field", name: { kind: "Name", value: "location" } },
+          { kind: "Field", name: { kind: "Name", value: "quote" } },
+          { kind: "Field", name: { kind: "Name", value: "rating" } },
+          { kind: "Field", name: { kind: "Name", value: "is_published" } },
+          { kind: "Field", name: { kind: "Name", value: "order" } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TestimonialColumnsFragmentFragment, unknown>;
+export const TestimonialFormFragmentFragmentDoc = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "TestimonialFormFragment" },
+      typeCondition: {
+        kind: "NamedType",
+        name: { kind: "Name", value: "testimonials" },
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "customer_name" } },
+          { kind: "Field", name: { kind: "Name", value: "location" } },
+          { kind: "Field", name: { kind: "Name", value: "quote" } },
+          { kind: "Field", name: { kind: "Name", value: "rating" } },
+          { kind: "Field", name: { kind: "Name", value: "video_url" } },
+          { kind: "Field", name: { kind: "Name", value: "featured_image_id" } },
+          { kind: "Field", name: { kind: "Name", value: "is_published" } },
+          { kind: "Field", name: { kind: "Name", value: "order" } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TestimonialFormFragmentFragment, unknown>;
 export const Update_Collection_Page_QueryDocument = {
   kind: "Document",
   definitions: [
@@ -3996,6 +4531,244 @@ export const AdminProductsPageQueryDocument = {
 } as unknown as DocumentNode<
   AdminProductsPageQueryQuery,
   AdminProductsPageQueryQueryVariables
+>;
+export const EditTestimonialPageQueryDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "EditTestimonialPageQuery" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "testimonialId" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "testimonialsCollection" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "filter" },
+                value: {
+                  kind: "ObjectValue",
+                  fields: [
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "id" },
+                      value: {
+                        kind: "ObjectValue",
+                        fields: [
+                          {
+                            kind: "ObjectField",
+                            name: { kind: "Name", value: "eq" },
+                            value: {
+                              kind: "Variable",
+                              name: { kind: "Name", value: "testimonialId" },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "first" },
+                value: { kind: "IntValue", value: "1" },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "edges" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "node" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "__typename" },
+                            },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "id" },
+                            },
+                            {
+                              kind: "FragmentSpread",
+                              name: {
+                                kind: "Name",
+                                value: "TestimonialFormFragment",
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "TestimonialFormFragment" },
+      typeCondition: {
+        kind: "NamedType",
+        name: { kind: "Name", value: "testimonials" },
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "customer_name" } },
+          { kind: "Field", name: { kind: "Name", value: "location" } },
+          { kind: "Field", name: { kind: "Name", value: "quote" } },
+          { kind: "Field", name: { kind: "Name", value: "rating" } },
+          { kind: "Field", name: { kind: "Name", value: "video_url" } },
+          { kind: "Field", name: { kind: "Name", value: "featured_image_id" } },
+          { kind: "Field", name: { kind: "Name", value: "is_published" } },
+          { kind: "Field", name: { kind: "Name", value: "order" } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  EditTestimonialPageQueryQuery,
+  EditTestimonialPageQueryQueryVariables
+>;
+export const AdminTestimonialsPageQueryDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "AdminTestimonialsPageQuery" },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "testimonialsCollection" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "orderBy" },
+                value: {
+                  kind: "ListValue",
+                  values: [
+                    {
+                      kind: "ObjectValue",
+                      fields: [
+                        {
+                          kind: "ObjectField",
+                          name: { kind: "Name", value: "order" },
+                          value: { kind: "EnumValue", value: "DescNullsLast" },
+                        },
+                      ],
+                    },
+                    {
+                      kind: "ObjectValue",
+                      fields: [
+                        {
+                          kind: "ObjectField",
+                          name: { kind: "Name", value: "created_at" },
+                          value: { kind: "EnumValue", value: "DescNullsLast" },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "edges" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "node" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "__typename" },
+                            },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "id" },
+                            },
+                            {
+                              kind: "FragmentSpread",
+                              name: {
+                                kind: "Name",
+                                value: "TestimonialColumnsFragment",
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "TestimonialColumnsFragment" },
+      typeCondition: {
+        kind: "NamedType",
+        name: { kind: "Name", value: "testimonials" },
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "customer_name" } },
+          { kind: "Field", name: { kind: "Name", value: "location" } },
+          { kind: "Field", name: { kind: "Name", value: "quote" } },
+          { kind: "Field", name: { kind: "Name", value: "rating" } },
+          { kind: "Field", name: { kind: "Name", value: "is_published" } },
+          { kind: "Field", name: { kind: "Name", value: "order" } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AdminTestimonialsPageQueryQuery,
+  AdminTestimonialsPageQueryQueryVariables
 >;
 export const CollectionRouteQueryDocument = {
   kind: "Document",
@@ -5023,6 +5796,104 @@ export const LandingRouteQueryDocument = {
               ],
             },
           },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "homeTestimonials" },
+            name: { kind: "Name", value: "testimonialsCollection" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "filter" },
+                value: {
+                  kind: "ObjectValue",
+                  fields: [
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "is_published" },
+                      value: {
+                        kind: "ObjectValue",
+                        fields: [
+                          {
+                            kind: "ObjectField",
+                            name: { kind: "Name", value: "eq" },
+                            value: { kind: "BooleanValue", value: true },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "first" },
+                value: { kind: "IntValue", value: "12" },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "orderBy" },
+                value: {
+                  kind: "ListValue",
+                  values: [
+                    {
+                      kind: "ObjectValue",
+                      fields: [
+                        {
+                          kind: "ObjectField",
+                          name: { kind: "Name", value: "order" },
+                          value: { kind: "EnumValue", value: "DescNullsLast" },
+                        },
+                      ],
+                    },
+                    {
+                      kind: "ObjectValue",
+                      fields: [
+                        {
+                          kind: "ObjectField",
+                          name: { kind: "Name", value: "created_at" },
+                          value: { kind: "EnumValue", value: "DescNullsLast" },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "edges" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "node" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "id" },
+                            },
+                            {
+                              kind: "FragmentSpread",
+                              name: {
+                                kind: "Name",
+                                value: "TestimonialCardFragment",
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -5084,6 +5955,38 @@ export const LandingRouteQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "id" } },
           { kind: "Field", name: { kind: "Name", value: "label" } },
           { kind: "Field", name: { kind: "Name", value: "slug" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "featuredImage" },
+            name: { kind: "Name", value: "medias" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "key" } },
+                { kind: "Field", name: { kind: "Name", value: "alt" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "TestimonialCardFragment" },
+      typeCondition: {
+        kind: "NamedType",
+        name: { kind: "Name", value: "testimonials" },
+      },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "customer_name" } },
+          { kind: "Field", name: { kind: "Name", value: "location" } },
+          { kind: "Field", name: { kind: "Name", value: "quote" } },
+          { kind: "Field", name: { kind: "Name", value: "rating" } },
+          { kind: "Field", name: { kind: "Name", value: "video_url" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -7673,6 +8576,450 @@ export const SearchDocument = {
     },
   ],
 } as unknown as DocumentNode<SearchQuery, SearchQueryVariables>;
+export const UpdateTestimonialMutationDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "UpdateTestimonialMutation" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "customerName" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "location" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "quote" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "rating" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Int" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "videoUrl" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "featuredImageId" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "isPublished" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "order" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Int" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "updatetestimonialsCollection" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "filter" },
+                value: {
+                  kind: "ObjectValue",
+                  fields: [
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "id" },
+                      value: {
+                        kind: "ObjectValue",
+                        fields: [
+                          {
+                            kind: "ObjectField",
+                            name: { kind: "Name", value: "eq" },
+                            value: {
+                              kind: "Variable",
+                              name: { kind: "Name", value: "id" },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "set" },
+                value: {
+                  kind: "ObjectValue",
+                  fields: [
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "kind" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "kind" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "customer_name" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "customerName" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "location" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "location" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "quote" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "quote" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "rating" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "rating" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "video_url" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "videoUrl" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "featured_image_id" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "featuredImageId" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "is_published" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "isPublished" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "order" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "order" },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "affectedCount" },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "records" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "__typename" },
+                      },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "nodeId" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateTestimonialMutationMutation,
+  UpdateTestimonialMutationMutationVariables
+>;
+export const CreateTestimonialMutationDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "CreateTestimonialMutation" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "customerName" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "location" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "quote" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "rating" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Int" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "videoUrl" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "featuredImageId" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "isPublished" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: {
+            kind: "Variable",
+            name: { kind: "Name", value: "order" },
+          },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Int" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "insertIntotestimonialsCollection" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "objects" },
+                value: {
+                  kind: "ObjectValue",
+                  fields: [
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "id" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "id" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "kind" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "kind" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "customer_name" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "customerName" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "location" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "location" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "quote" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "quote" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "rating" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "rating" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "video_url" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "videoUrl" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "featured_image_id" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "featuredImageId" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "is_published" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "isPublished" },
+                      },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "order" },
+                      value: {
+                        kind: "Variable",
+                        name: { kind: "Name", value: "order" },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "affectedCount" },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "records" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "__typename" },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateTestimonialMutationMutation,
+  CreateTestimonialMutationMutationVariables
+>;
 export const AddProductToWishListDocument = {
   kind: "Document",
   definitions: [

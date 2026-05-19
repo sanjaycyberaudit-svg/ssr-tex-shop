@@ -30,6 +30,8 @@ const policySql = [
   `CREATE POLICY "public_read_products" ON products FOR SELECT TO anon, authenticated USING (true)`,
   `CREATE POLICY "public_read_collections" ON collections FOR SELECT TO anon, authenticated USING (true)`,
   `CREATE POLICY "public_read_medias" ON medias FOR SELECT TO anon, authenticated USING (true)`,
+  `DROP POLICY IF EXISTS "public_read_testimonials" ON testimonials`,
+  `CREATE POLICY "public_read_testimonials" ON testimonials FOR SELECT TO anon, authenticated USING (is_published = true)`,
   `DROP POLICY IF EXISTS "carts_all_own" ON carts`,
   `CREATE POLICY "carts_all_own" ON carts FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
   `DROP POLICY IF EXISTS "wishlist_all_own" ON wishlist`,

@@ -15,6 +15,17 @@ input BigFloatFilter {
   neq: BigFloat
 }
 
+"""
+Boolean expression comparing fields on type "BigFloatList"
+"""
+input BigFloatListFilter {
+  containedBy: [BigFloat!]
+  contains: [BigFloat!]
+  eq: [BigFloat!]
+  is: FilterIs
+  overlaps: [BigFloat!]
+}
+
 """An arbitrary size integer represented as a string"""
 scalar BigInt
 
@@ -33,6 +44,17 @@ input BigIntFilter {
 }
 
 """
+Boolean expression comparing fields on type "BigIntList"
+"""
+input BigIntListFilter {
+  containedBy: [BigInt!]
+  contains: [BigInt!]
+  eq: [BigInt!]
+  is: FilterIs
+  overlaps: [BigInt!]
+}
+
+"""
 Boolean expression comparing fields on type "Boolean"
 """
 input BooleanFilter {
@@ -41,11 +63,22 @@ input BooleanFilter {
 }
 
 """
+Boolean expression comparing fields on type "BooleanList"
+"""
+input BooleanListFilter {
+  containedBy: [Boolean!]
+  contains: [Boolean!]
+  eq: [Boolean!]
+  is: FilterIs
+  overlaps: [Boolean!]
+}
+
+"""
 An opaque string using for tracking a position in results during pagination
 """
 scalar Cursor
 
-"""A date wihout time information"""
+"""A date without time information"""
 scalar Date
 
 """
@@ -60,6 +93,17 @@ input DateFilter {
   lt: Date
   lte: Date
   neq: Date
+}
+
+"""
+Boolean expression comparing fields on type "DateList"
+"""
+input DateListFilter {
+  containedBy: [Date!]
+  contains: [Date!]
+  eq: [Date!]
+  is: FilterIs
+  overlaps: [Date!]
 }
 
 """A date and time"""
@@ -79,6 +123,17 @@ input DatetimeFilter {
   neq: Datetime
 }
 
+"""
+Boolean expression comparing fields on type "DatetimeList"
+"""
+input DatetimeListFilter {
+  containedBy: [Datetime!]
+  contains: [Datetime!]
+  eq: [Datetime!]
+  is: FilterIs
+  overlaps: [Datetime!]
+}
+
 enum FilterIs {
   NULL
   NOT_NULL
@@ -96,6 +151,17 @@ input FloatFilter {
   lt: Float
   lte: Float
   neq: Float
+}
+
+"""
+Boolean expression comparing fields on type "FloatList"
+"""
+input FloatListFilter {
+  containedBy: [Float!]
+  contains: [Float!]
+  eq: [Float!]
+  is: FilterIs
+  overlaps: [Float!]
 }
 
 """
@@ -119,13 +185,22 @@ input IntFilter {
   neq: Int
 }
 
+"""
+Boolean expression comparing fields on type "IntList"
+"""
+input IntListFilter {
+  containedBy: [Int!]
+  contains: [Int!]
+  eq: [Int!]
+  is: FilterIs
+  overlaps: [Int!]
+}
+
 """A Javascript Object Notation value serialized as a string"""
 scalar JSON
 
 """The root type for creating and mutating data"""
 type Mutation {
-  custom_access_token_hook(event: JSON): JSON
-
   """Deletes zero or more records from the `address` collection"""
   deleteFromaddressCollection(
     """Restricts the mutation's impact to records matching the criteria"""
@@ -236,6 +311,17 @@ type Mutation {
     atMost: Int! = 1
   ): profilesDeleteResponse!
 
+  """Deletes zero or more records from the `testimonials` collection"""
+  deleteFromtestimonialsCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: testimonialsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): testimonialsDeleteResponse!
+
   """Deletes zero or more records from the `wishlist` collection"""
   deleteFromwishlistCollection(
     """Restricts the mutation's impact to records matching the criteria"""
@@ -276,6 +362,9 @@ type Mutation {
 
   """Adds one or more `profiles` records to the collection"""
   insertIntoprofilesCollection(objects: [profilesInsertInput!]!): profilesInsertResponse
+
+  """Adds one or more `testimonials` records to the collection"""
+  insertIntotestimonialsCollection(objects: [testimonialsInsertInput!]!): testimonialsInsertResponse
 
   """Adds one or more `wishlist` records to the collection"""
   insertIntowishlistCollection(objects: [wishlistInsertInput!]!): wishlistInsertResponse
@@ -440,6 +529,22 @@ type Mutation {
     atMost: Int! = 1
   ): profilesUpdateResponse!
 
+  """Updates zero or more records in the `testimonials` collection"""
+  updatetestimonialsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: testimonialsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: testimonialsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): testimonialsUpdateResponse!
+
   """Updates zero or more records in the `wishlist` collection"""
   updatewishlistCollection(
     """
@@ -511,6 +616,11 @@ type Query {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: addressFilter
 
@@ -531,6 +641,11 @@ type Query {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: cartsFilter
@@ -553,6 +668,11 @@ type Query {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: collectionsFilter
 
@@ -574,6 +694,11 @@ type Query {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: commentsFilter
 
@@ -594,6 +719,11 @@ type Query {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: mediasFilter
@@ -622,6 +752,11 @@ type Query {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: order_linesFilter
 
@@ -642,6 +777,11 @@ type Query {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: ordersFilter
@@ -664,6 +804,11 @@ type Query {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: product_mediasFilter
 
@@ -684,6 +829,11 @@ type Query {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: productsFilter
@@ -706,12 +856,43 @@ type Query {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: profilesFilter
 
     """Sort order to apply to the collection"""
     orderBy: [profilesOrderBy!]
   ): profilesConnection
+
+  """A pagable collection of type `testimonials`"""
+  testimonialsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: testimonialsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [testimonialsOrderBy!]
+  ): testimonialsConnection
 
   """A pagable collection of type `wishlist`"""
   wishlistCollection(
@@ -726,6 +907,11 @@ type Query {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: wishlistFilter
@@ -754,6 +940,17 @@ input StringFilter {
   startsWith: String
 }
 
+"""
+Boolean expression comparing fields on type "StringList"
+"""
+input StringListFilter {
+  containedBy: [String!]
+  contains: [String!]
+  eq: [String!]
+  is: FilterIs
+  overlaps: [String!]
+}
+
 """A time without date information"""
 scalar Time
 
@@ -771,6 +968,17 @@ input TimeFilter {
   neq: Time
 }
 
+"""
+Boolean expression comparing fields on type "TimeList"
+"""
+input TimeListFilter {
+  containedBy: [Time!]
+  contains: [Time!]
+  eq: [Time!]
+  is: FilterIs
+  overlaps: [Time!]
+}
+
 """A universally unique identifier"""
 scalar UUID
 
@@ -782,6 +990,17 @@ input UUIDFilter {
   in: [UUID!]
   is: FilterIs
   neq: UUID
+}
+
+"""
+Boolean expression comparing fields on type "UUIDList"
+"""
+input UUIDListFilter {
+  containedBy: [UUID!]
+  contains: [UUID!]
+  eq: [UUID!]
+  is: FilterIs
+  overlaps: [UUID!]
 }
 
 type address implements Node {
@@ -897,7 +1116,7 @@ type carts implements Node {
   product_id: String!
   user_id: UUID!
   created_at: Datetime!
-  products: products!
+  products: products
 }
 
 type cartsConnection {
@@ -982,11 +1201,11 @@ type collections implements Node {
   id: String!
   label: String!
   slug: String!
+  title: String!
+  description: String!
   order: Int
   featured_image_id: String!
-  description: String!
-  title: String!
-  medias: medias!
+  medias: medias
   productsCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -999,6 +1218,11 @@ type collections implements Node {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: productsFilter
@@ -1030,10 +1254,10 @@ input collectionsFilter {
   id: StringFilter
   label: StringFilter
   slug: StringFilter
+  title: StringFilter
+  description: StringFilter
   order: IntFilter
   featured_image_id: StringFilter
-  description: StringFilter
-  title: StringFilter
   nodeId: IDFilter
 
   """
@@ -1054,10 +1278,10 @@ input collectionsInsertInput {
   id: String
   label: String
   slug: String
+  title: String
+  description: String
   order: Int
   featured_image_id: String
-  description: String
-  title: String
 }
 
 type collectionsInsertResponse {
@@ -1072,20 +1296,20 @@ input collectionsOrderBy {
   id: OrderByDirection
   label: OrderByDirection
   slug: OrderByDirection
+  title: OrderByDirection
+  description: OrderByDirection
   order: OrderByDirection
   featured_image_id: OrderByDirection
-  description: OrderByDirection
-  title: OrderByDirection
 }
 
 input collectionsUpdateInput {
   id: String
   label: String
   slug: String
+  title: String
+  description: String
   order: Int
   featured_image_id: String
-  description: String
-  title: String
 }
 
 type collectionsUpdateResponse {
@@ -1104,8 +1328,8 @@ type comments implements Node {
   profileId: UUID!
   comment: String!
   created_at: Datetime!
-  product: products!
-  profile: profiles!
+  product: products
+  profile: profiles
 }
 
 type commentsConnection {
@@ -1196,25 +1420,6 @@ type medias implements Node {
   alt: String!
   created_at: Datetime
   updated_at: Datetime
-  productsCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: productsFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [productsOrderBy!]
-  ): productsConnection
   collectionsCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -1227,6 +1432,11 @@ type medias implements Node {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: collectionsFilter
@@ -1247,12 +1457,65 @@ type medias implements Node {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: product_mediasFilter
 
     """Sort order to apply to the collection"""
     orderBy: [product_mediasOrderBy!]
   ): product_mediasConnection
+  productsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: productsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [productsOrderBy!]
+  ): productsConnection
+  testimonialsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: testimonialsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [testimonialsOrderBy!]
+  ): testimonialsConnection
 }
 
 type mediasConnection {
@@ -1344,8 +1607,8 @@ type order_lines implements Node {
   quantity: Int!
   price: BigFloat!
   created_at: Datetime!
-  products: products!
-  order: orders!
+  products: products
+  order: orders
 }
 
 type order_linesConnection {
@@ -1460,6 +1723,11 @@ type orders implements Node {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: order_linesFilter
@@ -1584,8 +1852,8 @@ type product_medias implements Node {
   productId: String!
   mediaId: String!
   priority: Int
-  product: products!
-  media: medias!
+  product: products
+  media: medias
 }
 
 type product_mediasConnection {
@@ -1675,15 +1943,15 @@ type products implements Node {
   badge: String
   rating: BigFloat!
   tags: JSON!
+  images: JSON!
   price: BigFloat!
   totalComments: Int!
   created_at: Datetime!
   stock: Int
   collection_id: String
   featured_image_id: String!
-  images: JSON!
-  medias: medias!
   collections: collections
+  medias: medias
   cartsCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -1697,12 +1965,41 @@ type products implements Node {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: cartsFilter
 
     """Sort order to apply to the collection"""
     orderBy: [cartsOrderBy!]
   ): cartsConnection
+  commentsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: commentsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [commentsOrderBy!]
+  ): commentsConnection
   order_linesCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -1715,6 +2012,11 @@ type products implements Node {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: order_linesFilter
@@ -1735,6 +2037,11 @@ type products implements Node {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: product_mediasFilter
 
@@ -1754,31 +2061,17 @@ type products implements Node {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: wishlistFilter
 
     """Sort order to apply to the collection"""
     orderBy: [wishlistOrderBy!]
   ): wishlistConnection
-  commentsCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: commentsFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [commentsOrderBy!]
-  ): commentsConnection
 }
 
 type productsConnection {
@@ -1838,13 +2131,13 @@ input productsInsertInput {
   badge: String
   rating: BigFloat
   tags: JSON
+  images: JSON
   price: BigFloat
   totalComments: Int
   created_at: Datetime
   stock: Int
   collection_id: String
   featured_image_id: String
-  images: JSON
 }
 
 type productsInsertResponse {
@@ -1880,13 +2173,13 @@ input productsUpdateInput {
   badge: String
   rating: BigFloat
   tags: JSON
+  images: JSON
   price: BigFloat
   totalComments: Int
   created_at: Datetime
   stock: Int
   collection_id: String
   featured_image_id: String
-  images: JSON
 }
 
 type productsUpdateResponse {
@@ -1902,28 +2195,9 @@ type profiles implements Node {
   nodeId: ID!
   id: UUID!
   name: String
+  is_admin: Boolean
   email: String
   created_at: Datetime!
-  is_admin: Boolean
-  ordersCollection(
-    """Query the first `n` records in the collection"""
-    first: Int
-
-    """Query the last `n` records in the collection"""
-    last: Int
-
-    """Query values in the collection before the provided cursor"""
-    before: Cursor
-
-    """Query values in the collection after the provided cursor"""
-    after: Cursor
-
-    """Filters to apply to the results set when querying from the collection"""
-    filter: ordersFilter
-
-    """Sort order to apply to the collection"""
-    orderBy: [ordersOrderBy!]
-  ): ordersConnection
   addressCollection(
     """Query the first `n` records in the collection"""
     first: Int
@@ -1936,6 +2210,11 @@ type profiles implements Node {
 
     """Query values in the collection after the provided cursor"""
     after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
 
     """Filters to apply to the results set when querying from the collection"""
     filter: addressFilter
@@ -1956,12 +2235,41 @@ type profiles implements Node {
     """Query values in the collection after the provided cursor"""
     after: Cursor
 
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
     """Filters to apply to the results set when querying from the collection"""
     filter: commentsFilter
 
     """Sort order to apply to the collection"""
     orderBy: [commentsOrderBy!]
   ): commentsConnection
+  ordersCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: ordersFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [ordersOrderBy!]
+  ): ordersConnection
 }
 
 type profilesConnection {
@@ -1985,9 +2293,9 @@ type profilesEdge {
 input profilesFilter {
   id: UUIDFilter
   name: StringFilter
+  is_admin: BooleanFilter
   email: StringFilter
   created_at: DatetimeFilter
-  is_admin: BooleanFilter
   nodeId: IDFilter
 
   """
@@ -2007,9 +2315,9 @@ input profilesFilter {
 input profilesInsertInput {
   id: UUID
   name: String
+  is_admin: Boolean
   email: String
   created_at: Datetime
-  is_admin: Boolean
 }
 
 type profilesInsertResponse {
@@ -2023,17 +2331,17 @@ type profilesInsertResponse {
 input profilesOrderBy {
   id: OrderByDirection
   name: OrderByDirection
+  is_admin: OrderByDirection
   email: OrderByDirection
   created_at: OrderByDirection
-  is_admin: OrderByDirection
 }
 
 input profilesUpdateInput {
   id: UUID
   name: String
+  is_admin: Boolean
   email: String
   created_at: Datetime
-  is_admin: Boolean
 }
 
 type profilesUpdateResponse {
@@ -2044,13 +2352,134 @@ type profilesUpdateResponse {
   records: [profiles!]!
 }
 
+type testimonials implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: String!
+  customer_name: String!
+  location: String
+  quote: String
+  rating: Int!
+  featured_image_id: String
+  is_published: Boolean!
+  order: Int
+  created_at: Datetime!
+  kind: String!
+  video_url: String
+  medias: medias
+}
+
+type testimonialsConnection {
+  edges: [testimonialsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type testimonialsDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [testimonials!]!
+}
+
+type testimonialsEdge {
+  cursor: String!
+  node: testimonials!
+}
+
+input testimonialsFilter {
+  id: StringFilter
+  customer_name: StringFilter
+  location: StringFilter
+  quote: StringFilter
+  rating: IntFilter
+  featured_image_id: StringFilter
+  is_published: BooleanFilter
+  order: IntFilter
+  created_at: DatetimeFilter
+  kind: StringFilter
+  video_url: StringFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [testimonialsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [testimonialsFilter!]
+
+  """Negates a filter"""
+  not: testimonialsFilter
+}
+
+input testimonialsInsertInput {
+  id: String
+  customer_name: String
+  location: String
+  quote: String
+  rating: Int
+  featured_image_id: String
+  is_published: Boolean
+  order: Int
+  created_at: Datetime
+  kind: String
+  video_url: String
+}
+
+type testimonialsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [testimonials!]!
+}
+
+input testimonialsOrderBy {
+  id: OrderByDirection
+  customer_name: OrderByDirection
+  location: OrderByDirection
+  quote: OrderByDirection
+  rating: OrderByDirection
+  featured_image_id: OrderByDirection
+  is_published: OrderByDirection
+  order: OrderByDirection
+  created_at: OrderByDirection
+  kind: OrderByDirection
+  video_url: OrderByDirection
+}
+
+input testimonialsUpdateInput {
+  id: String
+  customer_name: String
+  location: String
+  quote: String
+  rating: Int
+  featured_image_id: String
+  is_published: Boolean
+  order: Int
+  created_at: Datetime
+  kind: String
+  video_url: String
+}
+
+type testimonialsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [testimonials!]!
+}
+
 type wishlist implements Node {
   """Globally Unique Record Identifier"""
   nodeId: ID!
   product_id: String!
   user_id: UUID!
   created_at: Datetime!
-  products: products!
+  products: products
 }
 
 type wishlistConnection {

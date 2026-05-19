@@ -25,6 +25,12 @@ export const dashboardConfig: DashboardConfig = {
       items: [],
     },
     {
+      title: "Testimonials",
+      href: "/admin/testimonials",
+      icon: "messageSquare",
+      items: [],
+    },
+    {
       title: "Medias",
       href: "/admin/medias",
       icon: "image",

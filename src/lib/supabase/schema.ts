@@ -419,6 +419,45 @@ export const medias = pgTable("medias", {
 export type SelectMedia = InferSelectModel<typeof medias>;
 export type InsertMedia = InferInsertModel<typeof medias>;
 
+export type TestimonialKind = "text" | "video";
+
+export const testimonials = pgTable(
+  "testimonials",
+  {
+    id: text("id")
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    kind: text("kind", { enum: ["text", "video"] }).notNull().default("text"),
+    customerName: varchar("customer_name", { length: 120 }).notNull(),
+    location: varchar("location", { length: 120 }),
+    quote: text("quote"),
+    videoUrl: text("video_url"),
+    rating: integer("rating").notNull().default(5),
+    featuredImageId: text("featured_image_id").references(() => medias.id, {
+      onDelete: "set null",
+    }),
+    isPublished: boolean("is_published").notNull().default(true),
+    order: integer("order"),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    featuredImage: foreignKey({
+      columns: [table.featuredImageId],
+      foreignColumns: [medias.id],
+      name: "testimonial_featured_image",
+    }),
+  }),
+);
+
+export type SelectTestimonial = InferSelectModel<typeof testimonials>;
+export type InsertTestimonial = InferInsertModel<typeof testimonials>;
+
 // https://stackoverflow.com/questions/24923469/modeling-product-variants
 
 // export const skuValues = pgTable(
