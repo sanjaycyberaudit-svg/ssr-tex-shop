@@ -20,10 +20,11 @@ export default async function DashboardPage() {
     stats = await getDashboardStats();
   } catch (err) {
     console.error("[admin/dashboard] getDashboardStats failed:", err);
-    statsError =
-      err instanceof Error
-        ? err.message
-        : "Could not load dashboard data. Check database connection.";
+    const raw =
+      err instanceof Error ? err.message : "Could not load dashboard data.";
+    statsError = raw.includes("ENOTFOUND db.")
+      ? "Database host is outdated. Ensure DATABASE_SERVICE_ROLE and Supabase URL are set on Vercel (dashboard now uses Supabase API)."
+      : raw;
   }
 
   return <DashboardView stats={stats} statsError={statsError} />;

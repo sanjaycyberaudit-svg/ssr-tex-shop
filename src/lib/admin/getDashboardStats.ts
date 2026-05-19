@@ -1,12 +1,4 @@
-import db from "@/lib/supabase/db";
-import {
-  collections,
-  orderLines,
-  orders,
-  products,
-  profiles,
-} from "@/lib/supabase/schema";
-import { and, count, desc, eq, gte, lt } from "drizzle-orm";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 
 const MONTH_LABELS = [
   "Jan",
@@ -80,6 +72,38 @@ export type DashboardStats = {
   ordersByPayment: { status: string; count: number }[];
 };
 
+type OrderRow = {
+  id: string;
+  amount: string | number;
+  currency: string;
+  email: string | null;
+  name: string | null;
+  payment_status: string;
+  order_status: string | null;
+  created_at: string;
+};
+
+type ProductRow = {
+  id: string;
+  name: string;
+  featured: boolean | null;
+  stock: number | null;
+};
+
+type OrderLineRow = {
+  product_id: string;
+  quantity: number;
+  price: string | number;
+  products: { name: string } | { name: string }[] | null;
+};
+
+function productNameFromLine(row: OrderLineRow): string {
+  const p = row.products;
+  if (!p) return "Product";
+  if (Array.isArray(p)) return p[0]?.name ?? "Product";
+  return p.name;
+}
+
 function monthStart(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
@@ -90,7 +114,7 @@ function pctChange(current: number, previous: number): number | null {
 }
 
 function buildMonthlyRevenue(
-  paidOrders: { amount: string; createdAt: Date }[],
+  paidOrders: { amount: string | number; created_at: string }[],
 ): MonthlyRevenuePoint[] {
   const now = new Date();
   const points: MonthlyRevenuePoint[] = [];
@@ -106,7 +130,7 @@ function buildMonthlyRevenue(
   }
 
   for (const order of paidOrders) {
-    const d = toDate(order.createdAt);
+    const d = toDate(order.created_at);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const point = points.find((p) => p.monthKey === key);
     if (point) point.total += Number(order.amount);
@@ -156,15 +180,70 @@ function toDate(value: Date | string): Date {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  try {
-    return await loadDashboardStats();
-  } catch (err) {
-    console.error("[getDashboardStats]", err);
-    throw err;
+  const supabase = createServiceRoleClient();
+
+  const [ordersRes, productsRes, collectionsRes, profilesRes, orderLinesRes] =
+    await Promise.all([
+      supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false }),
+      supabase.from("products").select("id, name, featured, stock"),
+      supabase.from("collections").select("id", { count: "exact", head: true }),
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase
+        .from("order_lines")
+        .select("product_id, quantity, price, products ( name )"),
+    ]);
+
+  const firstError =
+    ordersRes.error ||
+    productsRes.error ||
+    collectionsRes.error ||
+    profilesRes.error ||
+    orderLinesRes.error;
+
+  if (firstError) {
+    throw new Error(firstError.message);
   }
+
+  const allOrders = (ordersRes.data ?? []) as OrderRow[];
+  const productRows = (productsRes.data ?? []) as ProductRow[];
+  const topProductRows = (orderLinesRes.data ?? []) as OrderLineRow[];
+
+  const lowStockRows = productRows.filter(
+    (p) => (p.stock ?? 0) >= 1 && (p.stock ?? 0) < 5,
+  );
+  const outOfStockRows = productRows.filter((p) => (p.stock ?? 0) === 0);
+
+  return computeStats({
+    allOrders,
+    productRows,
+    collectionCount: collectionsRes.count ?? 0,
+    customerCount: profilesRes.count ?? 0,
+    lowStockRows,
+    outOfStockRows,
+    topProductRows,
+  });
 }
 
-async function loadDashboardStats(): Promise<DashboardStats> {
+function computeStats({
+  allOrders,
+  productRows,
+  collectionCount,
+  customerCount,
+  lowStockRows,
+  outOfStockRows,
+  topProductRows,
+}: {
+  allOrders: OrderRow[];
+  productRows: ProductRow[];
+  collectionCount: number;
+  customerCount: number;
+  lowStockRows: ProductRow[];
+  outOfStockRows: ProductRow[];
+  topProductRows: OrderLineRow[];
+}): DashboardStats {
   const now = new Date();
   const thisMonthStart = monthStart(now);
   const lastMonthStart = monthStart(
@@ -174,60 +253,28 @@ async function loadDashboardStats(): Promise<DashboardStats> {
     new Date(now.getFullYear(), now.getMonth() - 11, 1),
   );
 
-  const [
-    allOrders,
-    productRows,
-    collectionCount,
-    customerCount,
-    lowStockRows,
-    outOfStockRows,
-    topProductRows,
-  ] = await Promise.all([
-    db.select().from(orders).orderBy(desc(orders.createdAt)),
-    db.select().from(products),
-    db.select({ count: count() }).from(collections),
-    db.select({ count: count() }).from(profiles),
-    db
-      .select({ id: products.id, name: products.name, stock: products.stock })
-      .from(products)
-      .where(and(lt(products.stock, 5), gte(products.stock, 1))),
-    db
-      .select({ id: products.id, name: products.name, stock: products.stock })
-      .from(products)
-      .where(eq(products.stock, 0)),
-    db
-      .select({
-        productId: orderLines.productId,
-        name: products.name,
-        quantity: orderLines.quantity,
-        price: orderLines.price,
-      })
-      .from(orderLines)
-      .innerJoin(products, eq(orderLines.productId, products.id)),
-  ]);
-
   const paidOrders = allOrders.filter((o) => o.payment_status === "paid");
   const paidInRange = paidOrders.filter(
-    (o) => toDate(o.createdAt) >= twelveMonthsAgo,
+    (o) => toDate(o.created_at) >= twelveMonthsAgo,
   );
 
   const totalRevenue = paidOrders.reduce((s, o) => s + Number(o.amount), 0);
 
   const ordersThisMonth = allOrders.filter(
-    (o) => toDate(o.createdAt) >= thisMonthStart,
+    (o) => toDate(o.created_at) >= thisMonthStart,
   );
   const ordersLastMonth = allOrders.filter((o) => {
-    const created = toDate(o.createdAt);
+    const created = toDate(o.created_at);
     return created >= lastMonthStart && created < thisMonthStart;
   });
 
   const revenueThisMonth = paidOrders
-    .filter((o) => toDate(o.createdAt) >= thisMonthStart)
+    .filter((o) => toDate(o.created_at) >= thisMonthStart)
     .reduce((s, o) => s + Number(o.amount), 0);
 
   const revenueLastMonth = paidOrders
     .filter((o) => {
-      const created = toDate(o.createdAt);
+      const created = toDate(o.created_at);
       return created >= lastMonthStart && created < thisMonthStart;
     })
     .reduce((s, o) => s + Number(o.amount), 0);
@@ -296,16 +343,17 @@ async function loadDashboardStats(): Promise<DashboardStats> {
     { productId: string; name: string; quantity: number; revenue: number }
   >();
   for (const row of topProductRows) {
+    const name = productNameFromLine(row);
     const qty = row.quantity;
     const rev = Number(row.price) * qty;
-    const existing = productAgg.get(row.productId);
+    const existing = productAgg.get(row.product_id);
     if (existing) {
       existing.quantity += qty;
       existing.revenue += rev;
     } else {
-      productAgg.set(row.productId, {
-        productId: row.productId,
-        name: row.name,
+      productAgg.set(row.product_id, {
+        productId: row.product_id,
+        name,
         quantity: qty,
         revenue: rev,
       });
@@ -328,8 +376,8 @@ async function loadDashboardStats(): Promise<DashboardStats> {
     featuredProducts: productRows.filter((p) => p.featured).length,
     lowStockCount: lowStockRows.length,
     outOfStockCount: outOfStockRows.length,
-    totalCollections: Number(collectionCount[0]?.count ?? 0),
-    totalCustomers: Number(customerCount[0]?.count ?? 0),
+    totalCollections: collectionCount,
+    totalCustomers: customerCount,
     paidOrdersCount: paidOrders.length,
     pendingOrdersCount: pending.length,
     monthlyRevenue: buildMonthlyRevenue(paidInRange),
@@ -341,7 +389,7 @@ async function loadDashboardStats(): Promise<DashboardStats> {
       currency: o.currency,
       payment_status: o.payment_status,
       order_status: o.order_status,
-      createdAt: toDate(o.createdAt),
+      createdAt: toDate(o.created_at),
     })),
     notifications: notifications.slice(0, 12),
     topProducts,

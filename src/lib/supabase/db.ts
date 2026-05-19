@@ -2,12 +2,15 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { env } from "@/env.mjs";
 import * as schema from "./schema";
+import { resolveDatabaseUrl } from "./resolve-database-url";
 
-if (!process.env.DATABASE_URL) {
+const connectionString = resolveDatabaseUrl(env.DATABASE_URL);
+
+if (!connectionString) {
   console.log("🔴 no database URL");
 }
 
-const client = postgres(env.DATABASE_URL, { prepare: false });
+const client = postgres(connectionString, { prepare: false });
 
 const db = drizzle(client, { schema });
 

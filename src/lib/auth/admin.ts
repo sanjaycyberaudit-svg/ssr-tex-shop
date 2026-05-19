@@ -1,8 +1,6 @@
-import db from "@/lib/supabase/db";
 import createServerClient from "@/lib/supabase/server";
-import { profiles } from "@/lib/supabase/schema";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { User } from "@supabase/supabase-js";
-import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 
 /** Read session in Server Components / layouts (not a server action). */
@@ -31,12 +29,14 @@ export async function isAdminUser(user: User | null): Promise<boolean> {
   if (isAdminFromMetadata(user)) return true;
 
   try {
-    const row = await db
-      .select({ is_admin: profiles.is_admin })
-      .from(profiles)
-      .where(eq(profiles.id, user.id))
-      .limit(1);
-    return row[0]?.is_admin === true;
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (error) throw error;
+    return data?.is_admin === true;
   } catch (err) {
     console.error("[auth] isAdminUser DB check failed:", err);
     return isAdminFromMetadata(user);
