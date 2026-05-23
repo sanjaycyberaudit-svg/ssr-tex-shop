@@ -10,21 +10,82 @@ import {
 } from "@/components/ui/sheet";
 import { siteConfig } from "@/config/site";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Check, Menu } from "lucide-react";
+import { useEffect, useState } from "react";
 import { BrandLogo } from "./BrandLogo";
 import SocialMedias from "./SocialMedias";
 import { cn } from "@/lib/utils";
 
-const navLinkClass =
-  "rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-[#00542E]/10 active:bg-[#00542E]/15";
+const navLinkBase =
+  "flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors";
+
+type NavItem = { title: string; href: string };
+
+const primaryNav: NavItem[] = [
+  { title: "Home", href: "/" },
+  { title: "Shop", href: "/shop" },
+  ...siteConfig.mainNav.map(({ title, href }) => ({ title, href })),
+  { title: "Wishlist", href: "/wish-list" },
+  { title: "Cart", href: "/cart" },
+];
+
+function isNavActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 type SideMenuProps = {
   triggerClassName?: string;
 };
 
-export function SideMenu({ triggerClassName }: SideMenuProps) {
+function SideNavLink({
+  item,
+  pathname,
+  onNavigate,
+}: {
+  item: NavItem;
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  const active = isNavActive(pathname, item.href);
+
   return (
-    <Sheet>
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        navLinkBase,
+        active
+          ? "border-l-[3px] border-[#00542E] bg-[#00542E]/12 pl-[calc(0.75rem-3px)] font-semibold text-[#00542E]"
+          : "border-l-[3px] border-transparent text-foreground hover:bg-[#00542E]/10",
+      )}
+    >
+      <span className="flex-1">{item.title}</span>
+      {active ? (
+        <Check
+          className="h-4 w-4 shrink-0 text-[#00542E]"
+          strokeWidth={2.5}
+          aria-hidden
+        />
+      ) : null}
+    </Link>
+  );
+}
+
+export function SideMenu({ triggerClassName }: SideMenuProps) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  const closeMenu = () => setOpen(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -49,27 +110,21 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
           <p className="text-[11px] font-semibold uppercase tracking-widest text-[#00542E]/80">
             Menu
           </p>
-          <BrandLogo size="lg" className="w-full max-w-full" />
+          <BrandLogo size="lg" />
         </SheetHeader>
 
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-4 py-4">
-          <Link href="/" className={navLinkClass}>
-            Home
-          </Link>
-          <Link href="/shop" className={navLinkClass}>
-            Shop
-          </Link>
-          {siteConfig.mainNav.map(({ title, href }, index) => (
-            <Link key={index} href={href} className={navLinkClass}>
-              {title}
-            </Link>
+        <nav
+          className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-4 py-4"
+          aria-label="Main"
+        >
+          {primaryNav.map((item) => (
+            <SideNavLink
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              onNavigate={closeMenu}
+            />
           ))}
-          <Link href="/wish-list" className={navLinkClass}>
-            Wishlist
-          </Link>
-          <Link href="/cart" className={navLinkClass}>
-            Cart
-          </Link>
         </nav>
 
         <div className="shrink-0 border-t border-[#00542E]/15 bg-muted/30 px-4 py-4 text-xs leading-relaxed text-muted-foreground">
@@ -91,8 +146,8 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
               {siteConfig.email}
             </Link>
           </p>
-          <div className="mt-4 pt-3 border-t border-[#00542E]/10">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#00542E]/70 mb-2">
+          <div className="mt-4 border-t border-[#00542E]/10 pt-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#00542E]/70">
               Follow us
             </p>
             <SocialMedias variant="compact" />
