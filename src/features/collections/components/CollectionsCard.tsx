@@ -1,10 +1,9 @@
-import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { gql, DocumentType } from "@/gql";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { keytoUrl } from "@/lib/utils";
+import { CollectionCardSurface } from "./CollectionCardSurface";
 
 export const CollectionCardFragment = gql(/* GraphQL */ `
   fragment CollectionCardFragment on collections {
@@ -26,30 +25,22 @@ function CollectionsCard({
   const { slug, label, featuredImage } = collection;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl">
-      <figure className="shrink-0">
-        <Link
-          href={`/collections/${slug}`}
-          className="relative block overflow-hidden rounded-xl"
-        >
-          <Image
-            src={keytoUrl(featuredImage.key)}
-            height={200}
-            width={350}
-            className="aspect-[16/9] w-full object-cover opacity-65 transition-all duration-500 hover:scale-[1.02] hover:opacity-80"
-            alt={featuredImage.alt}
-          />
-          <figcaption className="absolute bottom-3 left-3 text-sm md:text-lg font-medium text-foreground">
-            {label}
-          </figcaption>
-        </Link>
-      </figure>
-    </div>
+    <Link
+      href={`/collections/${slug}`}
+      className="group block overflow-hidden rounded-2xl border border-[#00542E]/15 bg-muted/30 shadow-sm transition-shadow hover:shadow-md active:scale-[0.99]"
+    >
+      <CollectionCardSurface
+        label={label}
+        imageSrc={keytoUrl(featuredImage.key)}
+        imageAlt={featuredImage.alt || label}
+        sizes="(max-width: 640px) 48vw, (max-width: 1024px) 31vw, 260px"
+      />
+    </Link>
   );
 }
 
 export default CollectionsCard;
 
 export const CollectionsCardSkeleton = () => (
-  <Skeleton className="relative h-[200px] w-full overflow-hidden rounded-xl" />
+  <Skeleton className="aspect-[4/5] w-full rounded-2xl sm:aspect-[5/4] lg:aspect-[16/10]" />
 );

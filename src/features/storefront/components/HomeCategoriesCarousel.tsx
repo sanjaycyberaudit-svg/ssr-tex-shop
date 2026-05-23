@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { DocumentType } from "@/gql";
 import { CollectionCardFragment } from "@/features/collections";
+import { CollectionCardSurface } from "@/features/collections/components/CollectionCardSurface";
 import { CarouselItem } from "@/components/ui/carousel";
 import { keytoUrl } from "@/lib/utils";
 import { HomeSectionHeader } from "./HomeSectionHeader";
@@ -30,26 +30,15 @@ export function HomeCategoriesCarousel({ collections }: Props) {
           <CarouselItem key={node.id} className={homeCarouselItemClass}>
             <Link
               href={`/collections/${node.slug}`}
-              className="block h-full rounded-2xl overflow-hidden border bg-muted/40 shadow-sm active:scale-[0.99] transition-transform"
+              className="group block h-full overflow-hidden rounded-2xl border border-[#00542E]/15 bg-muted/30 shadow-sm transition-shadow hover:shadow-md active:scale-[0.99]"
             >
-              <div className="relative w-full aspect-[5/3] sm:aspect-[16/10]">
-                <Image
-                  src={keytoUrl(node.featuredImage.key)}
-                  alt={node.featuredImage.alt || node.label}
-                  fill
-                  sizes="(max-width: 640px) 92vw, (max-width: 1024px) 78vw, 400px"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5 text-white">
-                  <p className="text-base font-bold leading-tight">
-                    {node.label}
-                  </p>
-                  <p className="mt-0.5 text-xs opacity-90">
-                    Explore collection
-                  </p>
-                </div>
-              </div>
+              <CollectionCardSurface
+                label={node.label}
+                imageSrc={keytoUrl(node.featuredImage.key)}
+                imageAlt={node.featuredImage.alt || node.label}
+                aspectClass="aspect-[5/3] sm:aspect-[16/10]"
+                sizes="(max-width: 640px) 92vw, (max-width: 1024px) 78vw, 400px"
+              />
             </Link>
           </CarouselItem>
         ))}

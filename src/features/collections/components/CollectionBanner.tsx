@@ -23,17 +23,29 @@ function CollectionBanner({
 }) {
   const { label, featuredImage } = collectionBannerData;
   return (
-    <div className="relative w-full md:container-2xl mx-auto h-[220px] md:h-[280px] overflow-hidden object-center object-cover mb-8">
+    <div className="relative mx-auto mb-8 h-[220px] w-full overflow-hidden md:container md:h-[280px]">
       <Image
         src={keytoUrl(featuredImage.key)}
-        alt={featuredImage.alt}
-        width={720}
-        height={400}
-        className="object-center object-cover w-full h-[290px] opacity-50"
+        alt={featuredImage.alt || label}
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
       />
-      <h1 className="z-8 absolute bottom-8 left-8 text-2xl md:text-5xl font-medium">
-        {label}
-      </h1>
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-[#002818]/90 via-[#002818]/40 to-black/20"
+        aria-hidden
+      />
+      <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">
+        <div className="border-l-[4px] border-[#C5A059] pl-3 sm:pl-4">
+          <h1 className="font-[family-name:var(--font-hero-serif)] text-2xl font-semibold leading-tight text-white drop-shadow-md md:text-5xl">
+            {label}
+          </h1>
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#E8D5A3] sm:text-sm">
+            Sakthi Textiles collection
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

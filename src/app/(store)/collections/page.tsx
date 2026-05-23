@@ -46,7 +46,7 @@ export default async function AllCollectionsPage() {
           No collections yet. Check back soon.
         </p>
       ) : (
-        <section className="grid grid-cols-2 gap-4 py-6 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+        <section className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {collections.map(({ node }) => (
             <CollectionsCard key={node.id} collection={node} />
           ))}
