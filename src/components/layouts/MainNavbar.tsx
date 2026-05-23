@@ -25,7 +25,7 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
           {/* Menu & branding */}
           <div className="flex gap-x-3 items-center">
             <SideMenu />
-            <Branding />
+            <Branding showEmblem size="md" />
           </div>
 
           {adminLayout ? (

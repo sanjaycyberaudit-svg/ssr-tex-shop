@@ -1,0 +1,154 @@
+"use client";
+
+import Autoplay from "embla-carousel-autoplay";
+import Image from "next/image";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import { heroSlides } from "@/config/heroSlides";
+import { cn } from "@/lib/utils";
+
+const heroArrowClass =
+  "absolute top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-sm border-0 bg-white/95 text-neutral-900 shadow-md transition hover:bg-white sm:h-12 sm:w-12";
+
+export function HomeHeroCarousel() {
+  const [api, setApi] = useState<CarouselApi>();
+  const [active, setActive] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setActive(api.selectedScrollSnap());
+    setProgress(0);
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    onSelect();
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api, onSelect]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((p) => (p >= 100 ? 0 : p + 2));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [active]);
+
+  return (
+    <section
+      className="relative w-full min-w-0 overflow-hidden bg-neutral-900"
+      aria-label="Featured collections"
+    >
+      <Carousel
+        setApi={setApi}
+        opts={{ loop: true, align: "center" }}
+        plugins={[
+          Autoplay({
+            delay: 5500,
+            stopOnInteraction: true,
+            stopOnMouseEnter: true,
+          }),
+        ]}
+        className="w-full"
+      >
+        <CarouselContent className="-ml-0">
+          {heroSlides.map((slide) => (
+            <CarouselItem key={slide.id} className="basis-full pl-0">
+              <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] md:aspect-[21/9] md:max-h-[min(72vh,520px)]">
+                <Image
+                  src={slide.image}
+                  alt={slide.imageAlt}
+                  fill
+                  priority={slide.id === heroSlides[0].id}
+                  sizes="100vw"
+                  className="object-cover object-[center_20%] sm:object-center"
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/15"
+                  aria-hidden
+                />
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center px-6 pb-14 pt-16 text-center sm:px-10 sm:pb-16">
+                  <h2 className="font-[family-name:var(--font-hero-serif)] text-3xl font-medium tracking-wide text-white sm:text-4xl md:text-5xl">
+                    {slide.title}
+                  </h2>
+                  <div
+                    className="my-3 flex w-28 items-center gap-2 sm:my-4 sm:w-36"
+                    aria-hidden
+                  >
+                    <span className="h-px flex-1 bg-[#C5A059]/80" />
+                    <span className="text-[#C5A059]">◆</span>
+                    <span className="h-px flex-1 bg-[#C5A059]/80" />
+                  </div>
+                  <p className="max-w-md text-sm leading-relaxed text-white/90 sm:max-w-xl sm:text-base md:text-lg">
+                    {slide.subtitle}
+                  </p>
+                  <Link
+                    href={slide.href}
+                    className="mt-6 inline-flex min-h-[44px] items-center justify-center bg-[#00542E] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#004225] sm:mt-8 sm:px-10 sm:text-sm"
+                  >
+                    {slide.cta}
+                  </Link>
+                </div>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+
+        <button
+          type="button"
+          className={cn(heroArrowClass, "left-2 sm:left-4")}
+          aria-label="Previous slide"
+          onClick={() => api?.scrollPrev()}
+        >
+          <ChevronLeft className="h-6 w-6" strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          className={cn(heroArrowClass, "right-2 sm:right-4")}
+          aria-label="Next slide"
+          onClick={() => api?.scrollNext()}
+        >
+          <ChevronRight className="h-6 w-6" strokeWidth={2} />
+        </button>
+      </Carousel>
+
+      <div
+        className="absolute bottom-0 left-0 right-0 z-20 flex h-1 gap-px"
+        role="tablist"
+        aria-label="Hero slides"
+      >
+        {heroSlides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className="h-full flex-1 bg-white/25"
+            role="presentation"
+          >
+            <div
+              className="h-full bg-white/95 transition-[width] duration-100 ease-linear"
+              style={{
+                width:
+                  index < active
+                    ? "100%"
+                    : index === active
+                      ? `${progress}%`
+                      : "0%",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

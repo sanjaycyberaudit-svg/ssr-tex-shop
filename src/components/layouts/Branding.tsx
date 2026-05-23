@@ -3,13 +3,17 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
-  size?: "sm" | "md" | "lg";
-  showText?: boolean;
+  size?: "sm" | "md" | "lg" | "nav";
+  showEmblem?: boolean;
 };
 
-function Branding({ className, size = "md", showText = true }: Props) {
+function Branding({ className, size = "nav", showEmblem = false }: Props) {
   return (
-    <BrandLogo size={size} showText={showText} className={cn(className)} />
+    <BrandLogo
+      size={size}
+      showEmblem={showEmblem}
+      className={cn(className)}
+    />
   );
 }
 

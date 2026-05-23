@@ -8,11 +8,11 @@ type Props = { adminLayout: boolean };
 
 function MobileNavbar({ adminLayout }: Props) {
   return (
-    <div className="grid h-14 min-h-14 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2 md:hidden">
+    <div className="grid h-[3.75rem] min-h-[3.75rem] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-2 md:hidden">
       <SideMenu triggerClassName="justify-self-start" />
 
       <div className="flex min-w-0 justify-center overflow-hidden px-1">
-        <Branding size="sm" className="max-w-full justify-center" />
+        <Branding size="nav" className="mx-auto" />
       </div>
 
       <div className="flex justify-end">

@@ -4,7 +4,7 @@ import { Icons } from "@/components/layouts/icons";
 import { CollectionCardFragment } from "@/features/collections";
 import { ProductCardFragment } from "@/features/products";
 import {
-  HomeHeroBanner,
+  HomeHeroCarousel,
   HomeCategoriesCarousel,
   HomeTestimonialsCarousel,
   HomeFeaturedCarousel,
@@ -92,7 +92,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen w-full min-w-0 overflow-x-hidden">
-      <HomeHeroBanner />
+      <HomeHeroCarousel />
 
       <Shell>
         {error ? (
