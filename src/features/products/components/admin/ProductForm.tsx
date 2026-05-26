@@ -101,11 +101,7 @@ function ProductFrom({ product }: ProductsFormProps) {
     defaultValues: { ...product },
   });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-  } = form;
+  const { register, control, handleSubmit } = form;
 
   const inBulkMode = !product && createMode === "bulk";
   const canSubmitBulk = useMemo(
@@ -197,8 +193,7 @@ function ProductFrom({ product }: ProductsFormProps) {
       } catch (error) {
         toast({
           title: "Bulk create failed",
-          description:
-            error instanceof Error ? error.message : "Please retry.",
+          description: error instanceof Error ? error.message : "Please retry.",
           variant: "destructive",
         });
       }
