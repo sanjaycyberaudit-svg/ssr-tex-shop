@@ -39,6 +39,8 @@
     --announcement-bar-height: 2.25rem;
     --store-nav-height-mobile: 3.75rem;
     --store-nav-height-desktop: 3.125rem;
+    /* Peacock emblem inset inside header (top + bottom); does not change nav bar height */
+    --store-emblem-clearance: 0.375rem;
     --store-header-offset-mobile: calc(
       var(--announcement-bar-height) + var(--store-nav-height-mobile)
     );

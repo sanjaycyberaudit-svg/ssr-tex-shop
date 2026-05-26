@@ -19,13 +19,22 @@ const trackingMap = {
   lg: "tracking-[0.08em]",
 } as const;
 
-/** Peacock emblem box (px) — text sizes stay in sizeMap; only this image scales per variant. */
+/**
+ * Header nav/md: emblem fits inside existing bar height with clearance (no top/bottom touch).
+ * Other variants: fixed px boxes unchanged.
+ */
+const headerEmblemFit =
+  "h-[calc(var(--store-nav-height-mobile)-2*var(--store-emblem-clearance))] w-[calc((var(--store-nav-height-mobile)-2*var(--store-emblem-clearance))*54/68)]";
+
+const headerEmblemFitDesktop =
+  "h-[calc(4.875rem-2*var(--store-emblem-clearance))] w-[calc((4.875rem-2*var(--store-emblem-clearance))*54/68)]";
+
 const emblemSizeMap = {
-  nav: "h-[68px] w-[54px]",
+  nav: headerEmblemFit,
   sidebar: "h-[63px] w-[51px]",
   footer: "h-[60px] w-[48px]",
   sm: "h-[66px] w-[53px]",
-  md: "h-[78px] w-[63px]",
+  md: headerEmblemFitDesktop,
   lg: "h-[84px] w-[68px]",
 } as const;
 
@@ -67,15 +76,22 @@ export function SakthiWordmark({ className, size = "md" }: Props) {
       aria-label="Sakthi Textile registered trademark"
     >
       <span
-        className={cn("relative shrink-0", emblemSizeMap[size])}
+        className={cn(
+          "relative shrink-0",
+          (size === "nav" || size === "md") && "overflow-hidden",
+          emblemSizeMap[size],
+        )}
         aria-hidden
       >
         <Image
           src="/images/sakthi-st-emblem.png"
           alt=""
           fill
-          sizes="(max-width: 768px) 68px, 78px"
-          className="object-contain object-center"
+          sizes="(max-width: 768px) 48px, 66px"
+          className={cn(
+            "object-contain object-center",
+            (size === "nav" || size === "md") && "scale-[1.25]",
+          )}
           priority={size === "nav" || size === "sidebar" || size === "md"}
         />
       </span>

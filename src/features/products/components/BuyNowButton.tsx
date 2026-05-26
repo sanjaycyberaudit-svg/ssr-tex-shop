@@ -26,7 +26,8 @@ function BuyNowButton({ productId, quantity = 1 }: BuyNowButtonProps) {
       user?.email
         ? {
             email: user.email,
-            fullName: (user.user_metadata?.full_name as string | undefined) ?? "",
+            fullName:
+              (user.user_metadata?.full_name as string | undefined) ?? "",
           }
         : undefined,
     [user?.email, user?.user_metadata?.full_name],
