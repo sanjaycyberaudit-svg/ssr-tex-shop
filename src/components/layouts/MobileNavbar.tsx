@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cn } from "@/lib/utils";
 import Branding from "./Branding";
 import { SideMenu } from "./SideMenu";
 import Link from "next/link";
@@ -8,7 +9,14 @@ type Props = { adminLayout: boolean };
 
 function MobileNavbar({ adminLayout }: Props) {
   return (
-    <div className="grid h-[3.75rem] min-h-[3.75rem] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 pl-0 pr-1 md:hidden">
+    <div
+      className={cn(
+        "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 pl-0 pr-1 md:hidden",
+        adminLayout
+          ? "h-[var(--admin-header-height-mobile)] min-h-[var(--admin-header-height-mobile)]"
+          : "h-[var(--store-nav-height-mobile)] min-h-[var(--store-nav-height-mobile)]",
+      )}
+    >
       <SideMenu triggerClassName="justify-self-start -ml-0.5" />
 
       <div className="flex min-w-0 justify-center overflow-visible px-0.5">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { Icons } from "@/components/layouts/icons";
 import { useStorefrontSocial } from "@/providers/SocialLinksProvider";
-import useCartStore from "@/features/carts/hooks/useCartStore";
+import { useCartCount } from "@/features/carts/hooks/useCartCount";
 import { useMobileMenu } from "./MobileMenuContext";
 
 function CartBadge({ count }: { count: number }) {
@@ -20,11 +20,7 @@ function CartBadge({ count }: { count: number }) {
 export function StoreFloatingActions() {
   const social = useStorefrontSocial();
   const { isOpen: menuOpen } = useMobileMenu();
-  const cart = useCartStore((s) => s.cart);
-  const cartCount = Object.values(cart).reduce(
-    (sum, item) => sum + item.quantity,
-    0,
-  );
+  const cartCount = useCartCount();
 
   if (menuOpen) return null;
 

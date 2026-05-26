@@ -27,12 +27,15 @@ function GuestCartSection() {
   const addProductToCart = useCartStore((s) => s.addProductToCart);
   const removeProduct = useCartStore((s) => s.removeProduct);
 
+  const cartProductIds = Object.keys(cartItems);
+
   const [{ data, fetching, error }, _] = useQuery({
     query: FetchGuestCartQuery,
     variables: {
-      cartItems: Object.keys(cartItems).map((key) => key),
+      cartItems: cartProductIds,
       first: 8,
     },
+    pause: cartProductIds.length === 0,
   });
 
   const subtotal = useMemo(
@@ -44,8 +47,14 @@ function GuestCartSection() {
     () => calcProductCountStorage(cartItems),
     [cartItems],
   );
+  if (cartProductIds.length === 0) return <EmptyCart />;
   if (fetching) return LoadingCartSection();
   if (error) return <div>Error</div>;
+  if (!data?.productsCollection?.edges?.length) return <EmptyCart />;
+
+  const cartLines = data.productsCollection.edges.filter(
+    ({ node }) => cartItems[node.id],
+  );
 
   const addOneHandler = (productId: string, quantity: number) => {
     if (quantity < 8) {
@@ -68,18 +77,18 @@ function GuestCartSection() {
 
   return (
     <>
-      {Object.keys(cartItems).length > 0 ? (
+      {cartLines.length > 0 ? (
         <section
           aria-label="Cart Section"
           className="grid grid-cols-12 gap-x-6 gap-y-5"
         >
           <div className="col-span-12 md:col-span-9 max-h-[420px] md:max-h-[640px] overflow-y-auto">
-            {data.productsCollection.edges.map(({ node }) => (
+            {cartLines.map(({ node }) => (
               <CartItemCard
                 key={node.id}
                 id={node.id}
                 product={node}
-                quantity={cartItems[node.id].quantity}
+                quantity={cartItems[node.id]?.quantity ?? 0}
                 addOneHandler={() =>
                   addOneHandler(node.id, cartItems[node.id].quantity)
                 }
@@ -162,10 +171,11 @@ const calcSubtotal = ({
 
   if (!productPrices.length) return 0;
 
-  return productPrices.reduce(
-    (acc, cur) => acc + quantity[cur.node.id].quantity * cur.node.price,
-    0,
-  );
+  return productPrices.reduce((acc, cur) => {
+    const item = quantity[cur.node.id];
+    if (!item) return acc;
+    return acc + item.quantity * cur.node.price;
+  }, 0);
 };
 
 const FetchGuestCartQuery = gql(/* GraphQL */ `

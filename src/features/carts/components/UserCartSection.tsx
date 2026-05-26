@@ -128,15 +128,15 @@ function UserCartSection({ user }: UserCartSectionProps) {
     setIsLoading(true);
 
     const res = await removeCart({ productId, userId: user.id });
-    reexecuteQuery({ requestPolicy: "network-only" });
-
-    toast({ title: "Removed a Product." });
 
     if (res.error) {
       toast({
         title: "Error",
         description: expectedErrorsHandler({ error: res.error }),
       });
+    } else {
+      toast({ title: "Removed a Product." });
+      reexecuteQuery({ requestPolicy: "network-only" });
     }
 
     setIsLoading(false);

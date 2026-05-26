@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Heart, Search, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import useCartStore from "@/features/carts/hooks/useCartStore";
+import { useCartCount } from "@/features/carts/hooks/useCartCount";
 import useWishlistStore from "@/features/wishlists/useWishlistStore";
 
 function NavBadge({ count }: { count: number }) {
@@ -23,13 +23,8 @@ function NavBadge({ count }: { count: number }) {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const cart = useCartStore((s) => s.cart);
+  const cartCount = useCartCount();
   const wishlist = useWishlistStore((s) => s.wishlist);
-
-  const cartCount = Object.values(cart).reduce(
-    (sum, item) => sum + item.quantity,
-    0,
-  );
   const wishCount = Object.keys(wishlist).length;
 
   const itemClass = (active: boolean) =>

@@ -38,8 +38,10 @@ function useCartActions(user: User | null, productId: string) {
           userId: user.id,
           newQuantity: existedProduct.node.quantity + quantity,
         });
+        refetch({ requestPolicy: "network-only" });
       }
-      if (res) toast({ title: "Success, Added a Product to the Cart." });
+      if (res && !res.error)
+        toast({ title: "Success, Added a Product to the Cart." });
     } catch (err) {
       toast({ title: "Error, Unexpected Error occurred." });
     }

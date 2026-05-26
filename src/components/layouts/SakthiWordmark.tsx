@@ -19,14 +19,14 @@ const trackingMap = {
   lg: "tracking-[0.08em]",
 } as const;
 
-/** Fixed emblem dimensions (px) */
+/** Peacock emblem box (px). nav/md are 1.5× prior header sizes; bar height includes clearance. */
 const emblemSizeMap = {
-  nav: "h-[68px] w-[54px]",
-  sidebar: "h-[63px] w-[51px]",
-  footer: "h-[60px] w-[48px]",
-  sm: "h-[66px] w-[53px]",
-  md: "h-[78px] w-[63px]",
-  lg: "h-[84px] w-[68px]",
+  nav: "h-[102px] w-[81px]",
+  sidebar: "h-[95px] w-[77px]",
+  footer: "h-[90px] w-[72px]",
+  sm: "h-[99px] w-[80px]",
+  md: "h-[117px] w-[95px]",
+  lg: "h-[126px] w-[102px]",
 } as const;
 
 const regMarkClassMap = {
@@ -74,7 +74,7 @@ export function SakthiWordmark({ className, size = "md" }: Props) {
           src="/images/sakthi-st-emblem.png"
           alt=""
           fill
-          sizes="144px"
+          sizes="(max-width: 768px) 102px, 117px"
           className="object-contain object-center"
           priority={size === "nav" || size === "sidebar" || size === "md"}
         />

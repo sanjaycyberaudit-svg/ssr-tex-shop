@@ -1,7 +1,5 @@
 import { create } from "zustand";
 import { persistNSync } from "persist-and-sync";
-import { useMutation } from "@urql/next";
-import { createCartMutation, updateCartsMutation } from "./query";
 
 export type CartItem = {
   quantity: number;
@@ -21,13 +19,21 @@ const useCartStore = create<CartStore>(
   persistNSync(
     (set) => ({
       cart: {},
-      addProductToCart: async (id, quantity) => {
+      addProductToCart: (id, quantity) => {
         set((state) => {
           const existingProduct = state.cart[id];
+          if (!existingProduct && quantity <= 0) return state;
 
           const newQuantity = existingProduct
             ? existingProduct.quantity + quantity
-            : 1;
+            : quantity;
+
+          if (newQuantity <= 0) {
+            const updatedCart = { ...state.cart };
+            delete updatedCart[id];
+            return { cart: updatedCart };
+          }
+
           return {
             cart: {
               ...state.cart,
