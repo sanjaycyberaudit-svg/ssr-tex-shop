@@ -1,8 +1,6 @@
 "use client";
 
-import useCartStore, {
-  type CartItems,
-} from "@/features/carts/useCartStore";
+import useCartStore, { type CartItems } from "@/features/carts/useCartStore";
 import { useToast } from "@/components/ui/use-toast";
 import { AuthUser, Session } from "@supabase/supabase-js";
 import { nanoid } from "nanoid";
