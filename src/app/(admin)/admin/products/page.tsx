@@ -2,7 +2,6 @@ import AdminShell from "@/components/admin/AdminShell";
 import { buttonVariants } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/features/cms";
 import {
-  BulkDraftProductUpload,
   ProductsColumns,
   ProductsDataTable,
 } from "@/features/products";
@@ -42,8 +41,6 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
       heading="Products"
       description={"Edit products from the dashboard. "}
     >
-      <BulkDraftProductUpload />
-
       <section className="flex justify-end items-center pb-5 w-full">
         <Link href="/admin/products/new" className={cn(buttonVariants())}>
           New Product

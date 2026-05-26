@@ -45,6 +45,17 @@ type DraftSourceMedia = {
   originalFileName: string;
 };
 
+export type BulkDraftSharedData = {
+  baseName?: string;
+  description?: string;
+  isDraft?: boolean;
+  collectionId?: string | null;
+  badge?: InsertProducts["badge"] | null;
+  rating?: string;
+  price?: string;
+  tags?: string[];
+};
+
 export type BulkDraftCreateResult = {
   id: string;
   productCode: string;
@@ -61,6 +72,7 @@ function getFileNameBase(fileName: string) {
 
 export async function createDraftProductsFromMedia(
   mediaItems: DraftSourceMedia[],
+  shared?: BulkDraftSharedData,
 ): Promise<BulkDraftCreateResult[]> {
   if (mediaItems.length === 0) return [];
 
@@ -87,7 +99,8 @@ export async function createDraftProductsFromMedia(
       const productCode = `ST${String(currentNumber).padStart(6, "0")}`;
       const slug = slugify(`product-${productCode}`);
       const fileNameBase = getFileNameBase(mediaItems[index].originalFileName);
-      const productName = `${fileNameBase} ${productCode}`;
+      const nameBase = (shared?.baseName || fileNameBase).trim();
+      const productName = `${nameBase} ${productCode}`;
 
       const [created] = await tx
         .insert(products)
@@ -95,9 +108,14 @@ export async function createDraftProductsFromMedia(
           name: productName,
           slug,
           productCode,
-          isDraft: true,
+          isDraft: shared?.isDraft ?? true,
           featuredImageId: mediaItems[index].mediaId,
-          description: "",
+          description: shared?.description ?? "",
+          collectionId: shared?.collectionId ?? null,
+          badge: shared?.badge ?? null,
+          rating: shared?.rating ?? "4",
+          price: shared?.price ?? "0",
+          tags: shared?.tags ?? [],
         })
         .returning({
           id: products.id,

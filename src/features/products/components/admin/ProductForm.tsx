@@ -34,13 +34,41 @@ import { useQuery } from "@urql/next";
 import { createInsertSchema } from "drizzle-zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, useTransition } from "react";
+import { Suspense, useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { gql } from "urql";
 
 type ProductsFormProps = {
   product?: SelectProducts;
 };
+
+type BulkCreateMode = "single" | "bulk";
+
+type CreatedDraftProduct = {
+  id: string;
+  productCode: string;
+  name: string;
+  slug: string;
+};
+
+type BulkDraftResponse = {
+  message?: string;
+  created: CreatedDraftProduct[];
+  errors: string[];
+};
+
+const MAX_BULK_FILES = 50;
+const BULK_SHARED_FIELDS = [
+  "name",
+  "description",
+  "isDraft",
+  "collectionId",
+  "badge",
+  "rating",
+  "tags",
+  "price",
+] as const;
+
 export const ProductFormQuery = gql(/* GraphQL */ `
   query ProductFormQuery {
     collectionsCollection(orderBy: [{ label: AscNullsLast }]) {
@@ -59,6 +87,10 @@ function ProductFrom({ product }: ProductsFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
+  const [createMode, setCreateMode] = useState<BulkCreateMode>("single");
+  const [bulkFiles, setBulkFiles] = useState<File[]>([]);
+  const [bulkCreated, setBulkCreated] = useState<CreatedDraftProduct[]>([]);
+  const [bulkErrors, setBulkErrors] = useState<string[]>([]);
 
   const [{ data }] = useQuery({
     query: ProductFormQuery,
@@ -73,10 +105,15 @@ function ProductFrom({ product }: ProductsFormProps) {
     register,
     control,
     handleSubmit,
-    formState: { errors },
   } = form;
 
-  const onSubmit = handleSubmit(async (data: InsertProducts) => {
+  const inBulkMode = !product && createMode === "bulk";
+  const canSubmitBulk = useMemo(
+    () => bulkFiles.length > 0 && bulkFiles.length <= MAX_BULK_FILES,
+    [bulkFiles.length],
+  );
+
+  const onSingleSubmit = async (data: InsertProducts) => {
     startTransition(async () => {
       try {
         product
@@ -91,12 +128,92 @@ function ProductFrom({ product }: ProductsFormProps) {
           description: `${data.name}`,
         });
       } catch (err) {
-        // console.log("unexpected Error Occured")
+        toast({
+          title: "Unable to save product",
+          description: "Please retry.",
+          variant: "destructive",
+        });
       }
     });
-  });
+  };
 
-  console.log("!!data", data);
+  const onBulkSubmit = async () => {
+    if (!canSubmitBulk) {
+      toast({
+        title: "Select images",
+        description: `Please select 1 to ${MAX_BULK_FILES} images.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const isValid = await form.trigger(BULK_SHARED_FIELDS);
+    if (!isValid) {
+      toast({
+        title: "Fix form errors",
+        description: "Complete the required fields before bulk create.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const values = form.getValues();
+    const shared = {
+      name: String(values.name ?? "").trim(),
+      description: String(values.description ?? ""),
+      isDraft: Boolean(values.isDraft),
+      collectionId: values.collectionId ?? null,
+      badge: values.badge ?? null,
+      rating: String(values.rating ?? "4"),
+      price: String(values.price ?? "0"),
+      tags: Array.isArray(values.tags) ? values.tags : [],
+    };
+
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        bulkFiles.forEach((file) => formData.append("files", file));
+        formData.append("shared", JSON.stringify(shared));
+
+        const res = await fetch("/api/admin/products/bulk-draft", {
+          method: "POST",
+          body: formData,
+        });
+
+        const payload = (await res.json()) as BulkDraftResponse;
+        setBulkCreated(payload.created ?? []);
+        setBulkErrors(payload.errors ?? []);
+
+        if (!res.ok && (payload.created?.length ?? 0) === 0) {
+          throw new Error(payload.message || "Bulk create failed");
+        }
+
+        toast({
+          title: "Bulk create finished",
+          description: `${payload.created?.length ?? 0} products created.`,
+        });
+        setBulkFiles([]);
+        router.refresh();
+      } catch (error) {
+        toast({
+          title: "Bulk create failed",
+          description:
+            error instanceof Error ? error.message : "Please retry.",
+          variant: "destructive",
+        });
+      }
+    });
+  };
+
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (inBulkMode) {
+      void onBulkSubmit();
+      return;
+    }
+    void handleSubmit(onSingleSubmit)();
+  };
+
   return (
     <Form {...form}>
       <form
@@ -105,6 +222,34 @@ function ProductFrom({ product }: ProductsFormProps) {
         onSubmit={onSubmit}
       >
         <div className="flex flex-col gap-y-5 max-w-[500px]">
+          {!product ? (
+            <FormItem>
+              <FormLabel className="text-sm">Create mode</FormLabel>
+              <FormControl>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={createMode === "single" ? "default" : "outline"}
+                    onClick={() => setCreateMode("single")}
+                  >
+                    Single Product
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={createMode === "bulk" ? "default" : "outline"}
+                    onClick={() => setCreateMode("bulk")}
+                  >
+                    Bulk from images
+                  </Button>
+                </div>
+              </FormControl>
+              <FormDescription>
+                Bulk mode reuses shared details and creates one product per
+                image.
+              </FormDescription>
+            </FormItem>
+          ) : null}
+
           <FormItem>
             <FormLabel className="text-sm">Product Code</FormLabel>
             <FormControl>
@@ -153,18 +298,34 @@ function ProductFrom({ product }: ProductsFormProps) {
             <FormMessage />
           </FormItem>
 
-          <FormItem>
-            <FormLabel className="text-sm">Slug*</FormLabel>
-            <FormControl>
-              <Input
-                defaultValue={product?.slug}
-                aria-invalid={!!form.formState.errors.slug}
-                placeholder="Type Product slug."
-                {...register("slug")}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+          {!inBulkMode ? (
+            <FormItem>
+              <FormLabel className="text-sm">Slug*</FormLabel>
+              <FormControl>
+                <Input
+                  defaultValue={product?.slug}
+                  aria-invalid={!!form.formState.errors.slug}
+                  placeholder="Type Product slug."
+                  {...register("slug")}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          ) : (
+            <FormItem>
+              <FormLabel className="text-sm">Slug</FormLabel>
+              <FormControl>
+                <Input
+                  readOnly
+                  value="Auto-generated: product-stXXXXXX"
+                  aria-readonly
+                />
+              </FormControl>
+              <FormDescription>
+                Bulk mode auto-generates slug per product code.
+              </FormDescription>
+            </FormItem>
+          )}
 
           <FormItem>
             <FormLabel className="text-sm">Description*</FormLabel>
@@ -275,33 +436,91 @@ function ProductFrom({ product }: ProductsFormProps) {
             <FormMessage />
           </FormItem>
 
-          <FormField
-            control={form.control}
-            name="featuredImageId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Featured Image*</FormLabel>
-                <Suspense>
-                  <ImageDialog
-                    defaultValue={product?.featuredImageId}
-                    onChange={field.onChange}
-                    value={field.value}
-                  />
-                </Suspense>
+          {inBulkMode ? (
+            <FormItem>
+              <FormLabel>Bulk Images*</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(event) =>
+                    setBulkFiles(Array.from(event.target.files ?? []))
+                  }
+                />
+              </FormControl>
+              <FormDescription>
+                Select up to {MAX_BULK_FILES} images. Each image becomes one
+                product using the shared details above.
+              </FormDescription>
+              <FormMessage />
+              <p className="text-xs text-muted-foreground">
+                Selected files: {bulkFiles.length}
+                {bulkFiles.length > MAX_BULK_FILES
+                  ? ` (maximum ${MAX_BULK_FILES}; remove some files)`
+                  : ""}
+              </p>
+            </FormItem>
+          ) : (
+            <FormField
+              control={form.control}
+              name="featuredImageId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Featured Image*</FormLabel>
+                  <Suspense>
+                    <ImageDialog
+                      defaultValue={product?.featuredImageId}
+                      onChange={field.onChange}
+                      value={field.value}
+                    />
+                  </Suspense>
 
-                <FormDescription>
-                  Drag n Drop the image to above section or click the button to
-                  select from Image gallery.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormDescription>
+                    Drag n Drop the image to above section or click the button
+                    to select from Image gallery.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {bulkCreated.length > 0 ? (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Created products</h4>
+              <ul className="space-y-1 text-sm">
+                {bulkCreated.map((created) => (
+                  <li key={created.id}>
+                    <Link
+                      href={`/admin/products/${created.id}`}
+                      className="text-primary hover:underline"
+                    >
+                      {created.productCode} - {created.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {bulkErrors.length > 0 ? (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-destructive">
+                Upload issues
+              </h4>
+              <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                {bulkErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
 
         <div className="py-8 flex gap-x-5 items-center">
           <Button disabled={isPending} variant={"outline"} form="project-form">
-            {product ? "Update" : "Create"}
+            {product ? "Update" : inBulkMode ? "Create Bulk" : "Create"}
             {isPending && (
               <Spinner
                 className="mr-2 h-4 w-4 animate-spin"

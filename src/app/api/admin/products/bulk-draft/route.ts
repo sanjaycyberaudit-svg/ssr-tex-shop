@@ -1,12 +1,33 @@
-import { createDraftProductsFromMedia } from "@/_actions/products";
+import { BulkDraftSharedData, createDraftProductsFromMedia } from "@/_actions/products";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import { processUploadedImage } from "@/lib/image/processUpload";
 import { uploadMediaToSupabase } from "@/lib/storage/uploadMedia";
 import db from "@/lib/supabase/db";
 import { medias } from "@/lib/supabase/schema";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const MAX_BULK_FILES = 50;
+
+const bulkSharedSchema = z.object({
+  name: z.string().trim().min(2, "Name is required for bulk mode."),
+  description: z.string().default(""),
+  isDraft: z.boolean().default(true),
+  collectionId: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+  badge: z
+    .enum(["new_product", "best_sale", "featured"])
+    .optional()
+    .nullable()
+    .transform((value) => value ?? null),
+  rating: z.string().trim().min(1).default("4"),
+  price: z.string().trim().min(1).default("0"),
+  tags: z.array(z.string()).default([]),
+});
 
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
@@ -19,6 +40,38 @@ export async function POST(request: NextRequest) {
   const files = formData
     .getAll("files")
     .filter((value): value is File => value instanceof File);
+  const sharedRaw = formData.get("shared");
+
+  let shared: BulkDraftSharedData | undefined;
+  if (typeof sharedRaw === "string" && sharedRaw.trim().length > 0) {
+    let sharedJson: unknown;
+    try {
+      sharedJson = JSON.parse(sharedRaw);
+    } catch {
+      return NextResponse.json(
+        { message: "Invalid shared bulk product details." },
+        { status: 400 },
+      );
+    }
+
+    const parsedShared = bulkSharedSchema.safeParse(sharedJson);
+    if (!parsedShared.success) {
+      return NextResponse.json(
+        { message: "Invalid shared bulk product details." },
+        { status: 400 },
+      );
+    }
+    shared = {
+      baseName: parsedShared.data.name,
+      description: parsedShared.data.description,
+      isDraft: parsedShared.data.isDraft,
+      collectionId: parsedShared.data.collectionId,
+      badge: parsedShared.data.badge,
+      rating: parsedShared.data.rating,
+      price: parsedShared.data.price,
+      tags: parsedShared.data.tags,
+    };
+  }
 
   if (files.length === 0) {
     return NextResponse.json(
@@ -79,7 +132,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const createdProducts = await createDraftProductsFromMedia(uploadedMedias);
+    const createdProducts = await createDraftProductsFromMedia(
+      uploadedMedias,
+      shared,
+    );
 
     if (uploadErrors.length > 0) {
       return NextResponse.json(
