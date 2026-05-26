@@ -16,7 +16,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import supabaseClient from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { getNameInitials } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -25,7 +25,7 @@ function UserNav() {
   const { user } = useAuth();
 
   const logout = () => {
-    supabaseClient.auth.signOut();
+    createClient().auth.signOut();
     router.refresh();
   };
 

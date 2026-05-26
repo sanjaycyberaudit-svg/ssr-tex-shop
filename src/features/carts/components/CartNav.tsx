@@ -1,7 +1,7 @@
 "use client";
 import { useMemo } from "react";
 import { useAuth } from "@/providers/AuthProvider";
-import { User } from "@supabase/auth-helpers-nextjs";
+import type { User } from "@supabase/supabase-js";
 import { useQuery } from "@urql/next";
 import CartLink from "./CartLink";
 import { FetchCartQuery } from "./UserCartSection";
@@ -33,8 +33,8 @@ const UserCartNav = ({ currentUser }: { currentUser: User }) => {
   const carts = data?.cartsCollection;
 
   const productCount = useMemo(
-    () => (carts?.edges || []).reduce((acc, cur) => acc + cur.node.quantity, 0),
-    [carts.edges],
+    () => (carts?.edges ?? []).reduce((acc, cur) => acc + cur.node.quantity, 0),
+    [carts?.edges],
   );
 
   return (
