@@ -22,14 +22,12 @@ export default function Provider({ children }: React.PropsWithChildren) {
     const client = createClient({
       url: `https://${env.NEXT_PUBLIC_SUPABASE_PROJECT_REF}.supabase.co/graphql/v1`,
       exchanges: [
-        // devtoolsExchange,
         cacheExchange({
           resolvers: {
             Query: {
               mediasCollection: relayPagination(),
             },
           },
-
           keys: {
             carts: (data) => `${data.product_id}`,
           },
@@ -38,12 +36,12 @@ export default function Provider({ children }: React.PropsWithChildren) {
         fetchExchange,
       ],
       fetchOptions: () => {
-        const headers = {
+        const headers: Record<string, string> = {
           apikey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         };
 
-        if (session) {
-          headers["Authorization"] = `Bearer ${session.access_token}`;
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
         }
 
         return { headers };
@@ -52,7 +50,7 @@ export default function Provider({ children }: React.PropsWithChildren) {
     });
 
     return [client, ssr];
-  }, [session]);
+  }, [session?.access_token]);
 
   return (
     <UrqlProvider client={client} ssr={ssr}>

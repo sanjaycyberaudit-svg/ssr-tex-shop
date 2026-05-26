@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { AuthUser, Session } from "@supabase/supabase-js";
 import { nanoid } from "nanoid";
 import { createContext, useContext, useEffect, useState } from "react";
-import supabase from "../lib/supabase/client";
+import { createClient } from "../lib/supabase/client";
 import useWishlistStore from "@/features/wishlists/useWishlistStore";
 
 type SupabaseAuthContextType = {
@@ -37,102 +37,103 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    let subscription: { unsubscribe: () => void } | null = null;
 
-      switch (_event) {
-        case "INITIAL_SESSION":
-          supabase.auth.getUser().then(({ data }) => {
-            setUser(data.user);
-          });
-          break;
-        case "PASSWORD_RECOVERY":
-          supabase.auth.signOut();
-          setUser(null);
-          break;
+    try {
+      const supabase = createClient();
+      const authChange = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
 
-        case "SIGNED_IN":
-          supabase.auth.getUser().then(({ data }) => {
-            setUser(data.user);
+        switch (_event) {
+          case "INITIAL_SESSION":
+            supabase.auth.getUser().then(({ data }) => {
+              setUser(data.user);
+            });
+            break;
+          case "PASSWORD_RECOVERY":
+            supabase.auth.signOut();
+            setUser(null);
+            break;
 
-            if (!data.user) return;
+          case "SIGNED_IN":
+            supabase.auth.getUser().then(({ data }) => {
+              setUser(data.user);
 
-            try {
-              const raw = localStorage.getItem("cart");
-              if (raw) {
-                const parsed = JSON.parse(raw) as { cart?: CartItems };
-                const cart = parsed?.cart;
-                if (cart && typeof cart === "object") {
-                  const storageCarts = Object.entries(cart).map(
-                    ([productId, productValue]) => ({
-                      id: nanoid(),
-                      productId,
-                      quantity: productValue.quantity,
-                      userId: data.user!.id,
-                    }),
-                  );
+              if (!data.user) return;
 
-                  if (storageCarts.length > 0) {
-                    supabase.from("carts").insert(storageCarts);
+              try {
+                const raw = localStorage.getItem("cart");
+                if (raw) {
+                  const parsed = JSON.parse(raw) as { cart?: CartItems };
+                  const cart = parsed?.cart;
+                  if (cart && typeof cart === "object") {
+                    const storageCarts = Object.entries(cart).map(
+                      ([productId, productValue]) => ({
+                        id: nanoid(),
+                        productId,
+                        quantity: productValue.quantity,
+                        userId: data.user!.id,
+                      }),
+                    );
+
+                    if (storageCarts.length > 0) {
+                      supabase.from("carts").insert(storageCarts);
+                    }
                   }
                 }
+              } catch {
+                // Ignore invalid guest cart payload in localStorage.
               }
-            } catch {
-              // Ignore invalid guest cart payload in localStorage.
-            }
-          });
+            });
 
-          if (session?.user?.id) {
-            supabase
-              .from("wishlist")
-              .select()
-              .eq("user_id", session.user.id)
-              .then((data) => {
-                const wishlistItems: Parameters<typeof setWishlist>[0] = {};
+            if (session?.user?.id) {
+              supabase
+                .from("wishlist")
+                .select()
+                .eq("user_id", session.user.id)
+                .then((data) => {
+                  const wishlistItems: Parameters<typeof setWishlist>[0] = {};
 
-                data?.data?.forEach((item) => {
-                  wishlistItems[item.product_id] = {
-                    createdAt: new Date(item.created_at),
-                    updatedAt: new Date(item.created_at),
-                  };
+                  data?.data?.forEach((item) => {
+                    wishlistItems[item.product_id] = {
+                      createdAt: new Date(item.created_at),
+                      updatedAt: new Date(item.created_at),
+                    };
+                  });
+
+                  setWishlist(wishlistItems);
                 });
+            }
 
-                setWishlist(wishlistItems);
-              });
-          }
+            toast({
+              title: "Welcome Back.",
+              description: "Your are arleady signed in.",
+            });
+            break;
+          case "SIGNED_OUT":
+            setUser(null);
+            removeAllCartStorage();
+            break;
 
-          toast({
-            title: "Welcome Back.",
-            description: "Your are arleady signed in.",
-          });
-          break;
-        case "SIGNED_OUT":
-          setUser(null);
-          removeAllCartStorage();
-          break;
+          case "TOKEN_REFRESHED":
+          case "USER_UPDATED":
+          case "MFA_CHALLENGE_VERIFIED":
+            supabase.auth.getUser().then(({ data }) => {
+              setUser(data.user);
+            });
+            break;
+        }
+      });
 
-        case "TOKEN_REFRESHED":
-          supabase.auth.getUser().then(({ data }) => {
-            setUser(data.user);
-          });
-          break;
-        case "USER_UPDATED":
-          supabase.auth.getUser().then(({ data }) => {
-            setUser(data.user);
-          });
-          break;
-        case "MFA_CHALLENGE_VERIFIED":
-          supabase.auth.getUser().then(({ data }) => {
-            setUser(data.user);
-          });
-          break;
-      }
-    });
+      subscription = authChange.data.subscription;
+    } catch (error) {
+      console.error("[auth] Failed to initialize client auth provider", error);
+      setUser(null);
+      setSession(null);
+    }
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => subscription?.unsubscribe();
+  }, [removeAllCartStorage, setWishlist, toast]);
 
   return (
     <SupabaseAuthContext.Provider value={{ user, session }}>
