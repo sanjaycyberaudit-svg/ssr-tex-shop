@@ -1,9 +1,11 @@
-import { siteConfig } from "@/config/site";
+"use client";
+
+import { useStorefrontSocial } from "@/providers/SocialLinksProvider";
 import { Icons } from "./icons";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-type SocialKey = keyof typeof siteConfig.social;
+type SocialKey = keyof ReturnType<typeof useStorefrontSocial>;
 
 const SOCIAL_ITEMS: {
   key: SocialKey;
@@ -52,6 +54,7 @@ function SocialMedias({
   colored = false,
 }: Props) {
   const isCompact = variant === "compact";
+  const social = useStorefrontSocial();
 
   return (
     <nav
@@ -63,7 +66,8 @@ function SocialMedias({
       aria-label="Social media"
     >
       {SOCIAL_ITEMS.map(({ key, icon, label, iconColor }) => {
-        const href = siteConfig.social[key];
+        const href = social[key];
+        if (!href) return null;
         const Icon = Icons[icon];
 
         return (

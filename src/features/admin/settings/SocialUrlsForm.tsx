@@ -33,52 +33,55 @@ const DEFAULT_FORM: FormState = {
   whatsapp: "",
 };
 
+function normalizeSocialUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function applyPayload(payload: IntegrationsPayload): FormState {
+  const value = payload.storefrontSocial?.value ?? {};
+  return {
+    enabled: payload.storefrontSocial?.isEnabled ?? true,
+    instagram: String(value.instagram ?? ""),
+    youtube: String(value.youtube ?? ""),
+    facebook: String(value.facebook ?? ""),
+    whatsapp: String(value.whatsapp ?? ""),
+  };
+}
+
 export function SocialUrlsForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
 
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/admin/integrations", {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error("Could not load social URL settings");
+
+      const payload = (await res.json()) as IntegrationsPayload;
+      setForm(applyPayload(payload));
+    } catch (error) {
+      toast({
+        title: "Could not load settings",
+        description: error instanceof Error ? error.message : "Please retry",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch("/api/admin/integrations", {
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error("Could not load social URL settings");
-
-        const payload = (await res.json()) as IntegrationsPayload;
-        if (cancelled) return;
-
-        const value = payload.storefrontSocial?.value ?? {};
-
-        setForm({
-          enabled: payload.storefrontSocial?.isEnabled ?? true,
-          instagram: String(value.instagram ?? ""),
-          youtube: String(value.youtube ?? ""),
-          facebook: String(value.facebook ?? ""),
-          whatsapp: String(value.whatsapp ?? ""),
-        });
-      } catch (error) {
-        toast({
-          title: "Could not load settings",
-          description: error instanceof Error ? error.message : "Please retry",
-          variant: "destructive",
-        });
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    };
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [toast]);
+    void loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveDisabled = useMemo(
     () => isSaving || isLoading,
@@ -95,10 +98,10 @@ export function SocialUrlsForm() {
           key: "storefront_social",
           isEnabled: form.enabled,
           value: {
-            instagram: form.instagram.trim(),
-            youtube: form.youtube.trim(),
-            facebook: form.facebook.trim(),
-            whatsapp: form.whatsapp.trim(),
+            instagram: normalizeSocialUrl(form.instagram),
+            youtube: normalizeSocialUrl(form.youtube),
+            facebook: normalizeSocialUrl(form.facebook),
+            whatsapp: normalizeSocialUrl(form.whatsapp),
           },
         }),
       });
@@ -108,9 +111,12 @@ export function SocialUrlsForm() {
         throw new Error(text || "Save failed");
       }
 
+      await loadSettings();
+
       toast({
         title: "Social URLs saved",
-        description: "Contact page links will now use these values.",
+        description:
+          "Footer, menu, WhatsApp button, and contact page now use these links.",
       });
     } catch (error) {
       toast({
@@ -138,8 +144,13 @@ export function SocialUrlsForm() {
                 setForm((prev) => ({ ...prev, enabled: e.target.checked }))
               }
             />
-            Enable admin-managed social links
+            Use these URLs on the storefront (footer, side menu, WhatsApp
+            button, contact page)
           </label>
+          <p className="text-xs text-muted-foreground">
+            Leave a field empty to keep the default link from site settings for
+            that network.
+          </p>
           <div className="grid gap-2">
             <Label htmlFor="social-instagram">Instagram URL</Label>
             <Input

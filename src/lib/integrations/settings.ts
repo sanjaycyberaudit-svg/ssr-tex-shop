@@ -1,3 +1,4 @@
+import { siteConfig } from "@/config/site";
 import db from "@/lib/supabase/db";
 import { apiSettings, medias } from "@/lib/supabase/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -19,6 +20,40 @@ export type StorefrontSocialLinks = {
   facebook?: string;
   whatsapp?: string;
 };
+
+export type ResolvedStorefrontSocial = {
+  instagram: string;
+  youtube: string;
+  facebook: string;
+  whatsapp: string;
+};
+
+const defaultSocial = (): ResolvedStorefrontSocial => ({
+  instagram: siteConfig.social.instagram,
+  youtube: siteConfig.social.youtube,
+  facebook: siteConfig.social.facebook,
+  whatsapp: siteConfig.social.whatsapp,
+});
+
+/** Merges admin-managed URLs over site defaults for the whole storefront. */
+export async function resolveStorefrontSocial(): Promise<ResolvedStorefrontSocial> {
+  const base = defaultSocial();
+
+  try {
+    const admin = await getStorefrontSocialLinks();
+    if (!admin) return base;
+
+    return {
+      instagram: admin.instagram || base.instagram,
+      youtube: admin.youtube || base.youtube,
+      facebook: admin.facebook || base.facebook,
+      whatsapp: admin.whatsapp || base.whatsapp,
+    };
+  } catch (error) {
+    console.error("[settings] resolveStorefrontSocial failed:", error);
+    return base;
+  }
+}
 
 export type HomeBannerSlide = {
   id: string;
@@ -133,18 +168,23 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig | null> {
 }
 
 export async function getStorefrontSocialLinks(): Promise<StorefrontSocialLinks | null> {
-  const setting = await getIntegrationSetting(
-    INTEGRATION_KEYS.storefrontSocial,
-  );
-  if (!setting || !setting.isEnabled) return null;
+  try {
+    const setting = await getIntegrationSetting(
+      INTEGRATION_KEYS.storefrontSocial,
+    );
+    if (!setting || !setting.isEnabled) return null;
 
-  const value = setting.value as Record<string, unknown>;
-  return {
-    instagram: String(value.instagram ?? "").trim() || undefined,
-    youtube: String(value.youtube ?? "").trim() || undefined,
-    facebook: String(value.facebook ?? "").trim() || undefined,
-    whatsapp: String(value.whatsapp ?? "").trim() || undefined,
-  };
+    const value = setting.value as Record<string, unknown>;
+    return {
+      instagram: String(value.instagram ?? "").trim() || undefined,
+      youtube: String(value.youtube ?? "").trim() || undefined,
+      facebook: String(value.facebook ?? "").trim() || undefined,
+      whatsapp: String(value.whatsapp ?? "").trim() || undefined,
+    };
+  } catch (error) {
+    console.error("[settings] getStorefrontSocialLinks failed:", error);
+    return null;
+  }
 }
 
 export async function getHomeBannerSlides(): Promise<HomeBannerSlide[] | null> {

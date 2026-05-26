@@ -41,12 +41,12 @@ const regMarkClassMap = {
 } as const;
 
 const emblemGapMap = {
-  nav: "gap-[0.1875rem]",
-  sidebar: "gap-1",
-  footer: "gap-[0.1875rem]",
-  sm: "gap-[0.1875rem]",
-  md: "gap-[0.1875rem]",
-  lg: "gap-[0.1875rem]",
+  nav: "gap-[0.09375rem]",
+  sidebar: "gap-0.5",
+  footer: "gap-[0.09375rem]",
+  sm: "gap-[0.09375rem]",
+  md: "gap-[0.09375rem]",
+  lg: "gap-[0.09375rem]",
 } as const;
 
 type Props = {

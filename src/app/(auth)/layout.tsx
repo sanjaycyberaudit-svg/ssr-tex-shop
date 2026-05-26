@@ -1,9 +1,17 @@
 import { AuthStoreShell } from "@/components/layouts/AuthStoreShell";
+import { resolveStorefrontSocial } from "@/lib/integrations/settings";
+import { SocialLinksProvider } from "@/providers/SocialLinksProvider";
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AuthStoreShell>{children}</AuthStoreShell>;
+  const social = await resolveStorefrontSocial();
+
+  return (
+    <SocialLinksProvider social={social}>
+      <AuthStoreShell>{children}</AuthStoreShell>
+    </SocialLinksProvider>
+  );
 }

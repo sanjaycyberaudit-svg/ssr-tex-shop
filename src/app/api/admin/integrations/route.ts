@@ -4,6 +4,7 @@ import {
   upsertIntegrationSetting,
   getIntegrationSetting,
 } from "@/lib/integrations/settings";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -128,6 +129,15 @@ export async function POST(request: NextRequest) {
   }
 
   await upsertIntegrationSetting(key, mergedValue, isEnabled, user.id);
+
+  if (key === INTEGRATION_KEYS.storefrontSocial) {
+    revalidatePath("/", "layout");
+    revalidatePath("/contact");
+  }
+
+  if (key === INTEGRATION_KEYS.homeBannerSlides) {
+    revalidatePath("/");
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { Icons } from "@/components/layouts/icons";
-import { siteConfig } from "@/config/site";
+import { useStorefrontSocial } from "@/providers/SocialLinksProvider";
 import useCartStore from "@/features/carts/hooks/useCartStore";
 import { useMobileMenu } from "./MobileMenuContext";
 
@@ -18,6 +18,7 @@ function CartBadge({ count }: { count: number }) {
 }
 
 export function StoreFloatingActions() {
+  const social = useStorefrontSocial();
   const { isOpen: menuOpen } = useMobileMenu();
   const cart = useCartStore((s) => s.cart);
   const cartCount = Object.values(cart).reduce(
@@ -49,7 +50,7 @@ export function StoreFloatingActions() {
           Need Help?
         </span>
         <a
-          href={siteConfig.social.whatsapp}
+          href={social.whatsapp}
           target="_blank"
           rel="noopener noreferrer"
           className="animate-whatsapp-glow flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white ring-2 ring-[#25D366]/40 transition-transform hover:scale-105 active:scale-95"

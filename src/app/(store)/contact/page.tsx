@@ -1,6 +1,6 @@
 import InfoPage from "@/components/layouts/InfoPage";
 import { siteConfig } from "@/config/site";
-import { getStorefrontSocialLinks } from "@/lib/integrations/settings";
+import { resolveStorefrontSocial } from "@/lib/integrations/settings";
 import Link from "next/link";
 import { Metadata } from "next";
 
@@ -10,19 +10,10 @@ export const metadata: Metadata = {
     "Contact Sakthi Textile — phone, email, WhatsApp, and store address",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ContactPage() {
-  let socialFromAdmin = null;
-  try {
-    socialFromAdmin = await getStorefrontSocialLinks();
-  } catch {
-    socialFromAdmin = null;
-  }
-  const social = {
-    ...siteConfig.social,
-    ...(socialFromAdmin ?? {}),
-  };
+  const social = await resolveStorefrontSocial();
 
   return (
     <InfoPage
