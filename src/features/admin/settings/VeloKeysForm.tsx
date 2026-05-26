@@ -176,8 +176,8 @@ export function VeloKeysForm() {
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            Use this code in your other Velo app. It polls for newly paid orders and
-            carries customer mobile + full address + line items.
+            Use this code in your other Velo app. It polls for newly paid orders
+            and carries customer mobile + full address + line items.
           </p>
           <Textarea value={usageSnippet} readOnly className="min-h-[280px]" />
         </CardContent>
@@ -191,7 +191,9 @@ export function VeloKeysForm() {
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading keys...</p>
           ) : keys.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No keys created yet.</p>
+            <p className="text-sm text-muted-foreground">
+              No keys created yet.
+            </p>
           ) : (
             keys.map((key) => (
               <div
@@ -207,7 +209,8 @@ export function VeloKeysForm() {
                     Last used: {key.lastUsedAt ?? "Never"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Status: {key.isActive && !key.revokedAt ? "Active" : "Revoked"}
+                    Status:{" "}
+                    {key.isActive && !key.revokedAt ? "Active" : "Revoked"}
                   </p>
                 </div>
                 <Button

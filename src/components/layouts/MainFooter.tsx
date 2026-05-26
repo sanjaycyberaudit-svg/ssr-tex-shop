@@ -72,7 +72,9 @@ function MainFooter() {
                     <p key={line}>{line}</p>
                   ))}
                   <p className="pt-2">
-                    <span className="font-medium text-foreground/80">GSTIN: </span>
+                    <span className="font-medium text-foreground/80">
+                      GSTIN:{" "}
+                    </span>
                     {siteConfig.gstin}
                   </p>
                   <p>

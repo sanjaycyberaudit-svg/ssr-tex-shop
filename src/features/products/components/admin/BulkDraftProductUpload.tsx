@@ -80,8 +80,8 @@ export function BulkDraftProductUpload() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Upload up to {MAX_FILES} images. Each image creates one draft product with
-          auto code like <span className="font-medium">ST000001</span>.
+          Upload up to {MAX_FILES} images. Each image creates one draft product
+          with auto code like <span className="font-medium">ST000001</span>.
         </p>
         <Input
           type="file"
@@ -123,7 +123,9 @@ export function BulkDraftProductUpload() {
 
         {errors.length > 0 ? (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-destructive">Upload issues</h4>
+            <h4 className="text-sm font-medium text-destructive">
+              Upload issues
+            </h4>
             <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
               {errors.map((error) => (
                 <li key={error}>{error}</li>

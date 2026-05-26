@@ -66,9 +66,7 @@ function toPaise(amountInRupees: number) {
   return Math.round(amountInRupees * 100);
 }
 
-export async function createPhonePePayment(
-  params: CreatePhonePePaymentParams,
-) {
+export async function createPhonePePayment(params: CreatePhonePePaymentParams) {
   const config = await getPhonePeConfig();
   if (!config) return null;
 
@@ -94,18 +92,23 @@ export async function createPhonePePayment(
   const verifyRaw = `${payloadBase64}${PAY_ENDPOINT}${config.saltKey}`;
   const xVerify = `${sha256Hex(verifyRaw)}###${config.saltIndex}`;
 
-  const res = await fetch(`${normalizeBaseUrl(config.baseUrl)}${PAY_ENDPOINT}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-VERIFY": xVerify,
-      accept: "application/json",
+  const res = await fetch(
+    `${normalizeBaseUrl(config.baseUrl)}${PAY_ENDPOINT}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-VERIFY": xVerify,
+        accept: "application/json",
+      },
+      body: JSON.stringify({ request: payloadBase64 }),
+      cache: "no-store",
     },
-    body: JSON.stringify({ request: payloadBase64 }),
-    cache: "no-store",
-  });
+  );
 
-  const data = (await res.json().catch(() => null)) as PhonePePayResponse | null;
+  const data = (await res
+    .json()
+    .catch(() => null)) as PhonePePayResponse | null;
 
   if (!res.ok || !data?.success) {
     const reason = data?.message || data?.code || "PhonePe payment failed";
@@ -142,8 +145,9 @@ export async function fetchPhonePePaymentStatus(merchantTransactionId: string) {
     cache: "no-store",
   });
 
-  const data =
-    (await res.json().catch(() => null)) as PhonePeStatusResponse | null;
+  const data = (await res
+    .json()
+    .catch(() => null)) as PhonePeStatusResponse | null;
 
   if (!res.ok || !data?.success) {
     const reason = data?.message || data?.code || "PhonePe status check failed";

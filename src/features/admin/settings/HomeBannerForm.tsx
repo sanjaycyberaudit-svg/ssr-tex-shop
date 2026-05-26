@@ -62,7 +62,9 @@ export function HomeBannerForm() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/admin/integrations", { cache: "no-store" });
+        const res = await fetch("/api/admin/integrations", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Could not load home banner settings");
 
         const payload = (await res.json()) as IntegrationsPayload;
@@ -88,7 +90,8 @@ export function HomeBannerForm() {
 
         setForm({
           enabled: payload.homeBannerSlides?.isEnabled ?? true,
-          slides: parsedSlides.length > 0 ? parsedSlides : [createDefaultSlide(1)],
+          slides:
+            parsedSlides.length > 0 ? parsedSlides : [createDefaultSlide(1)],
         });
       } catch (error) {
         toast({
@@ -108,7 +111,10 @@ export function HomeBannerForm() {
     };
   }, [toast]);
 
-  const saveDisabled = useMemo(() => isSaving || isLoading, [isSaving, isLoading]);
+  const saveDisabled = useMemo(
+    () => isSaving || isLoading,
+    [isSaving, isLoading],
+  );
 
   const updateSlide = <K extends keyof SlideForm>(
     index: number,
@@ -128,7 +134,10 @@ export function HomeBannerForm() {
       const slides = [...prev.slides];
       const targetIndex = direction === "up" ? index - 1 : index + 1;
       if (targetIndex < 0 || targetIndex >= slides.length) return prev;
-      [slides[index], slides[targetIndex]] = [slides[targetIndex], slides[index]];
+      [slides[index], slides[targetIndex]] = [
+        slides[targetIndex],
+        slides[index],
+      ];
       return { ...prev, slides };
     });
   };
@@ -209,8 +218,8 @@ export function HomeBannerForm() {
             Enable admin-managed home banner slides
           </label>
           <p className="text-xs text-muted-foreground">
-            Current slides are shown below. Add, reorder, and update text or image per
-            slide.
+            Current slides are shown below. Add, reorder, and update text or
+            image per slide.
           </p>
         </CardContent>
       </Card>
@@ -263,7 +272,9 @@ export function HomeBannerForm() {
               <ImageDialog
                 value={slide.imageMediaId}
                 defaultValue={slide.imageMediaId}
-                onChange={(mediaId) => updateSlide(index, "imageMediaId", mediaId)}
+                onChange={(mediaId) =>
+                  updateSlide(index, "imageMediaId", mediaId)
+                }
               />
             </div>
 

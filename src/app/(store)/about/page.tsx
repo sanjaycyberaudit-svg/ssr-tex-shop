@@ -4,8 +4,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Our Story | Sakthi Textile",
-  description:
-    "About Sakthi Textile — authentic sarees from Salem, Tamil Nadu",
+  description: "About Sakthi Textile — authentic sarees from Salem, Tamil Nadu",
 };
 
 export default function AboutPage() {

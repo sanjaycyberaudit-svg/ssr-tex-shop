@@ -25,24 +25,26 @@ const secretFieldsByKey: Record<string, string[]> = {
   [INTEGRATION_KEYS.whatsapp]: ["accessToken"],
 };
 
-const homeBannerSlideSchema = z.object({
-  id: z.string().trim().min(1),
-  title: z.string().trim().min(1),
-  subtitle: z.string().trim().min(1),
-  href: z.string().trim().min(1),
-  cta: z.string().trim().min(1),
-  imageMediaId: z.string().trim().optional(),
-  image: z.string().trim().optional(),
-  imageAlt: z.string().trim().min(1),
-}).superRefine((value, ctx) => {
-  if (!value.imageMediaId?.trim() && !value.image?.trim()) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Each banner slide needs either imageMediaId or image URL.",
-      path: ["image"],
-    });
-  }
-});
+const homeBannerSlideSchema = z
+  .object({
+    id: z.string().trim().min(1),
+    title: z.string().trim().min(1),
+    subtitle: z.string().trim().min(1),
+    href: z.string().trim().min(1),
+    cta: z.string().trim().min(1),
+    imageMediaId: z.string().trim().optional(),
+    image: z.string().trim().optional(),
+    imageAlt: z.string().trim().min(1),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.imageMediaId?.trim() && !value.image?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Each banner slide needs either imageMediaId or image URL.",
+        path: ["image"],
+      });
+    }
+  });
 
 const homeBannerPayloadSchema = z.object({
   slides: z.array(homeBannerSlideSchema).min(1).max(12),
@@ -61,12 +63,13 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const [phonepe, whatsapp, storefrontSocial, homeBannerSlides] = await Promise.all([
-    getIntegrationSetting(INTEGRATION_KEYS.phonepe),
-    getIntegrationSetting(INTEGRATION_KEYS.whatsapp),
-    getIntegrationSetting(INTEGRATION_KEYS.storefrontSocial),
-    getIntegrationSetting(INTEGRATION_KEYS.homeBannerSlides),
-  ]);
+  const [phonepe, whatsapp, storefrontSocial, homeBannerSlides] =
+    await Promise.all([
+      getIntegrationSetting(INTEGRATION_KEYS.phonepe),
+      getIntegrationSetting(INTEGRATION_KEYS.whatsapp),
+      getIntegrationSetting(INTEGRATION_KEYS.storefrontSocial),
+      getIntegrationSetting(INTEGRATION_KEYS.homeBannerSlides),
+    ]);
 
   return NextResponse.json({
     phonepe: phonepe ?? null,
@@ -98,8 +101,9 @@ export async function POST(request: NextRequest) {
   if (key === INTEGRATION_KEYS.homeBannerSlides) {
     const homeParsed = homeBannerPayloadSchema.safeParse(incomingValue);
     if (!homeParsed.success) {
-      const homeParseError =
-        homeParsed as z.SafeParseError<z.infer<typeof homeBannerPayloadSchema>>;
+      const homeParseError = homeParsed as z.SafeParseError<
+        z.infer<typeof homeBannerPayloadSchema>
+      >;
       return NextResponse.json(
         {
           message: "Invalid home banner payload",

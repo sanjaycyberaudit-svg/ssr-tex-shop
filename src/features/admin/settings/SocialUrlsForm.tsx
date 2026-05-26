@@ -45,7 +45,9 @@ export function SocialUrlsForm() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/admin/integrations", { cache: "no-store" });
+        const res = await fetch("/api/admin/integrations", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Could not load social URL settings");
 
         const payload = (await res.json()) as IntegrationsPayload;
@@ -78,7 +80,10 @@ export function SocialUrlsForm() {
     };
   }, [toast]);
 
-  const saveDisabled = useMemo(() => isSaving || isLoading, [isSaving, isLoading]);
+  const saveDisabled = useMemo(
+    () => isSaving || isLoading,
+    [isSaving, isLoading],
+  );
 
   const onSave = async () => {
     setIsSaving(true);

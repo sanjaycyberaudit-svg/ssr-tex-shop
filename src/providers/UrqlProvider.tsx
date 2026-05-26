@@ -48,7 +48,7 @@ export default function Provider({ children }: React.PropsWithChildren) {
 
         return { headers };
       },
-      suspense: true,
+      suspense: false,
     });
 
     return [client, ssr];

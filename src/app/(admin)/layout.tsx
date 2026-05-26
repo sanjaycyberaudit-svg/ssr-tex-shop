@@ -1,10 +1,7 @@
 import { MobileMenuProvider } from "@/components/layouts/MobileMenuContext";
 import Navbar from "@/components/layouts/MainNavbar";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
-import {
-  ADMIN_POST_LOGIN_PATH,
-  appendFromToSignIn,
-} from "@/lib/auth/redirect";
+import { ADMIN_POST_LOGIN_PATH, appendFromToSignIn } from "@/lib/auth/redirect";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 
@@ -21,9 +18,7 @@ export default async function AdminLayout({ children }: Props) {
         }),
       );
     }
-    redirect(
-      "/?error=Admin access required. Sign in with an admin account.",
-    );
+    redirect("/?error=Admin access required. Sign in with an admin account.");
   }
 
   return (

@@ -60,12 +60,12 @@ function MarqueeStrip({
       aria-hidden={duplicate}
     >
       {items.map((item, index) => (
-        <span key={`${item.text}-${index}`} className="inline-flex items-center gap-10 sm:gap-14">
+        <span
+          key={`${item.text}-${index}`}
+          className="inline-flex items-center gap-10 sm:gap-14"
+        >
           {index > 0 ? (
-            <span
-              className="text-[#C5A059]/70 select-none"
-              aria-hidden
-            >
+            <span className="text-[#C5A059]/70 select-none" aria-hidden>
               ◆
             </span>
           ) : null}

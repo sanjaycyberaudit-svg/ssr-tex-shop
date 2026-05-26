@@ -13,7 +13,8 @@ export async function sendOrderSuccessWhatsApp(
   params: SendOrderSuccessWhatsAppParams,
 ) {
   const config = await getWhatsAppConfig();
-  if (!config) return { sent: false, reason: "whatsapp_not_configured" as const };
+  if (!config)
+    return { sent: false, reason: "whatsapp_not_configured" as const };
 
   const to = normalizeIndianMobile(params.mobile);
   if (!to) return { sent: false, reason: "invalid_mobile" as const };
@@ -82,7 +83,8 @@ export async function sendSellerOrderWhatsApp(
   params: SendSellerOrderWhatsAppParams,
 ) {
   const config = await getWhatsAppConfig();
-  if (!config) return { sent: false, reason: "whatsapp_not_configured" as const };
+  if (!config)
+    return { sent: false, reason: "whatsapp_not_configured" as const };
 
   const to = normalizeIndianMobile(params.mobile);
   if (!to) return { sent: false, reason: "invalid_mobile" as const };
@@ -123,7 +125,10 @@ export async function sendSellerWhatsAppBulk(params: {
 }) {
   const config = await getWhatsAppConfig();
   if (!config || !config.notifySeller || config.sellerMobiles.length === 0) {
-    return { sent: false as const, reason: "seller_notification_not_configured" };
+    return {
+      sent: false as const,
+      reason: "seller_notification_not_configured",
+    };
   }
 
   let sentCount = 0;

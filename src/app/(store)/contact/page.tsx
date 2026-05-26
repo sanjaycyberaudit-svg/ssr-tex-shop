@@ -10,8 +10,15 @@ export const metadata: Metadata = {
     "Contact Sakthi Textile — phone, email, WhatsApp, and store address",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ContactPage() {
-  const socialFromAdmin = await getStorefrontSocialLinks();
+  let socialFromAdmin = null;
+  try {
+    socialFromAdmin = await getStorefrontSocialLinks();
+  } catch {
+    socialFromAdmin = null;
+  }
   const social = {
     ...siteConfig.social,
     ...(socialFromAdmin ?? {}),

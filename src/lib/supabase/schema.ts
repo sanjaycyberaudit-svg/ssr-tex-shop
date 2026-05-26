@@ -62,37 +62,34 @@ export const apiSettings = pgTable(
 export type SelectApiSettings = InferSelectModel<typeof apiSettings>;
 export type InsertApiSettings = InferInsertModel<typeof apiSettings>;
 
-export const externalApiKeys = pgTable(
-  "external_api_keys",
-  {
-    id: text("id")
-      .notNull()
-      .primaryKey()
-      .$defaultFn(() => createId()),
-    provider: varchar("provider", { length: 64 }).notNull(),
-    clientName: varchar("client_name", { length: 191 }).notNull(),
-    keyPrefix: varchar("key_prefix", { length: 32 }).notNull(),
-    keyHash: text("key_hash").notNull().unique(),
-    isActive: boolean("is_active").notNull().default(true),
-    revokedAt: timestamp("revoked_at", {
-      withTimezone: true,
-      mode: "string",
-    }),
-    lastUsedAt: timestamp("last_used_at", {
-      withTimezone: true,
-      mode: "string",
-    }),
-    createdBy: uuid("created_by").references(() => profiles.id, {
-      onDelete: "set null",
-    }),
-    createdAt: timestamp("created_at", {
-      withTimezone: true,
-      mode: "string",
-    })
-      .defaultNow()
-      .notNull(),
-  },
-);
+export const externalApiKeys = pgTable("external_api_keys", {
+  id: text("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  provider: varchar("provider", { length: 64 }).notNull(),
+  clientName: varchar("client_name", { length: 191 }).notNull(),
+  keyPrefix: varchar("key_prefix", { length: 32 }).notNull(),
+  keyHash: text("key_hash").notNull().unique(),
+  isActive: boolean("is_active").notNull().default(true),
+  revokedAt: timestamp("revoked_at", {
+    withTimezone: true,
+    mode: "string",
+  }),
+  lastUsedAt: timestamp("last_used_at", {
+    withTimezone: true,
+    mode: "string",
+  }),
+  createdBy: uuid("created_by").references(() => profiles.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "string",
+  })
+    .defaultNow()
+    .notNull(),
+});
 
 export type SelectExternalApiKeys = InferSelectModel<typeof externalApiKeys>;
 export type InsertExternalApiKeys = InferInsertModel<typeof externalApiKeys>;

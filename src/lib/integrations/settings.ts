@@ -133,7 +133,9 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig | null> {
 }
 
 export async function getStorefrontSocialLinks(): Promise<StorefrontSocialLinks | null> {
-  const setting = await getIntegrationSetting(INTEGRATION_KEYS.storefrontSocial);
+  const setting = await getIntegrationSetting(
+    INTEGRATION_KEYS.storefrontSocial,
+  );
   if (!setting || !setting.isEnabled) return null;
 
   const value = setting.value as Record<string, unknown>;
@@ -146,14 +148,18 @@ export async function getStorefrontSocialLinks(): Promise<StorefrontSocialLinks 
 }
 
 export async function getHomeBannerSlides(): Promise<HomeBannerSlide[] | null> {
-  const setting = await getIntegrationSetting(INTEGRATION_KEYS.homeBannerSlides);
+  const setting = await getIntegrationSetting(
+    INTEGRATION_KEYS.homeBannerSlides,
+  );
   if (!setting || !setting.isEnabled) return null;
 
   const rawSlides = (setting.value as Record<string, unknown>).slides;
   if (!Array.isArray(rawSlides)) return null;
 
   const mediaIds = rawSlides
-    .map((slide) => String((slide as Record<string, unknown>).imageMediaId ?? "").trim())
+    .map((slide) =>
+      String((slide as Record<string, unknown>).imageMediaId ?? "").trim(),
+    )
     .filter(Boolean);
 
   const mediaLookup = new Map<string, string>();

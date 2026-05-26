@@ -1,11 +1,7 @@
 "use server";
 
 import db from "@/lib/supabase/db";
-import {
-  InsertProducts,
-  productMedias,
-  products,
-} from "@/lib/supabase/schema";
+import { InsertProducts, productMedias, products } from "@/lib/supabase/schema";
 import { eq, inArray, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { slugify } from "@/lib/utils";
@@ -69,7 +65,9 @@ export async function createDraftProductsFromMedia(
   if (mediaItems.length === 0) return [];
 
   return db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(${PRODUCT_CODE_LOCK_ID})`);
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(${PRODUCT_CODE_LOCK_ID})`,
+    );
 
     const lastCodeRows = await tx.execute<{ product_code: string | null }>(
       sql`select product_code

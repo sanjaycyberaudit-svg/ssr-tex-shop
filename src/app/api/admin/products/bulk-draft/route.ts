@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
   }
 
   const formData = await request.formData();
-  const files = formData.getAll("files").filter((value): value is File =>
-    value instanceof File,
-  );
+  const files = formData
+    .getAll("files")
+    .filter((value): value is File => value instanceof File);
 
   if (files.length === 0) {
     return NextResponse.json(
@@ -93,12 +93,18 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: "Draft products created.", created: createdProducts, errors: [] },
+      {
+        message: "Draft products created.",
+        created: createdProducts,
+        errors: [],
+      },
       { status: 201 },
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Could not create draft products.";
+      error instanceof Error
+        ? error.message
+        : "Could not create draft products.";
     return NextResponse.json(
       {
         message,

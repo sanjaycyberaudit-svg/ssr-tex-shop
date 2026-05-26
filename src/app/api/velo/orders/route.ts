@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
       email: row.email,
       mobile: row.customerMobile,
     },
-    address: row.addressId ? (addressById.get(row.addressId) ?? null) : null,
+    address: row.addressId ? addressById.get(row.addressId) ?? null : null,
     items: (linesByOrder.get(row.id) ?? []).map((line) => ({
       productId: line.productId,
       productName: line.productName ?? null,

@@ -70,7 +70,9 @@ export function ApiIntegrationsForm() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/admin/integrations", { cache: "no-store" });
+        const res = await fetch("/api/admin/integrations", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Could not load API settings");
 
         const payload = (await res.json()) as IntegrationsPayload;
@@ -88,7 +90,9 @@ export function ApiIntegrationsForm() {
             baseUrl: String(
               phonepeValue.baseUrl ?? "https://api.phonepe.com/apis/hermes",
             ),
-            merchantUserIdPrefix: String(phonepeValue.merchantUserIdPrefix ?? "USR"),
+            merchantUserIdPrefix: String(
+              phonepeValue.merchantUserIdPrefix ?? "USR",
+            ),
           },
           whatsapp: {
             enabled: payload.whatsapp?.isEnabled ?? false,
@@ -118,13 +122,19 @@ export function ApiIntegrationsForm() {
     };
   }, [toast]);
 
-  const saveDisabled = useMemo(() => isSaving || isLoading, [isSaving, isLoading]);
+  const saveDisabled = useMemo(
+    () => isSaving || isLoading,
+    [isSaving, isLoading],
+  );
 
   const updatePhonePe = <K extends keyof FormState["phonepe"]>(
     key: K,
     value: FormState["phonepe"][K],
   ) => {
-    setForm((prev) => ({ ...prev, phonepe: { ...prev.phonepe, [key]: value } }));
+    setForm((prev) => ({
+      ...prev,
+      phonepe: { ...prev.phonepe, [key]: value },
+    }));
   };
 
   const updateWhatsApp = <K extends keyof FormState["whatsapp"]>(
