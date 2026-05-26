@@ -1,7 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
+import {
+  mergeCheckoutAddressDefaults,
+  saveCheckoutAddressDraft,
+} from "../lib/checkoutAddressDraft";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -31,6 +36,10 @@ type Props = {
   onCancel: () => void;
   submitLabel?: string;
   defaultValues?: Partial<AddressFormValues>;
+  /** Remember fields in localStorage until checkout completes (survives refresh). */
+  persistDraft?: boolean;
+  /** When the parent dialog opens, reload any saved draft. */
+  dialogOpen?: boolean;
 };
 
 function RequiredLabel({ children }: { children: React.ReactNode }) {
@@ -50,23 +59,52 @@ export function AddAddressForm({
   onCancel,
   submitLabel = "Add Address",
   defaultValues,
+  persistDraft = false,
+  dialogOpen = true,
 }: Props) {
+  const initialValues = useMemo(
+    () =>
+      persistDraft
+        ? mergeCheckoutAddressDefaults(defaultValues)
+        : {
+            fullName: "",
+            email: "",
+            mobile: "",
+            line1: "",
+            line2: "",
+            city: "",
+            state: "",
+            postal_code: "",
+            ...defaultValues,
+          },
+    [persistDraft, defaultValues],
+  );
+
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressFormSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      mobile: "",
-      line1: "",
-      line2: "",
-      city: "",
-      state: "",
-      postal_code: "",
-      ...defaultValues,
-    },
+    defaultValues: initialValues,
   });
 
   const isSubmitting = form.formState.isSubmitting;
+
+  const wasDialogOpen = useRef(false);
+  useEffect(() => {
+    const justOpened = dialogOpen && !wasDialogOpen.current;
+    wasDialogOpen.current = dialogOpen;
+
+    if (!persistDraft || !justOpened) return;
+    form.reset(mergeCheckoutAddressDefaults(defaultValues));
+  }, [persistDraft, dialogOpen, defaultValues, form]);
+
+  useEffect(() => {
+    if (!persistDraft) return;
+
+    const subscription = form.watch((values) => {
+      saveCheckoutAddressDraft(values as AddressFormValues);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, persistDraft]);
 
   return (
     <Form {...form}>

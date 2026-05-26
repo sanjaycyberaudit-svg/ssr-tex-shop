@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import type { CartItems } from "@/features/carts";
 import { AddAddressDialog } from "@/features/addresses";
 import type { AddressFormValues } from "@/features/addresses";
 import { createShippingAddress } from "@/_actions/address";
+import { clearCheckoutAddressDraft } from "@/features/addresses/lib/checkoutAddressDraft";
 import { startCheckout } from "@/features/checkout/startCheckout";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -23,6 +24,17 @@ function CheckoutButton({ order, guest, ...props }: CheckoutButtonProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const accountDefaults = useMemo(
+    () =>
+      user?.email
+        ? {
+            email: user.email,
+            fullName: (user.user_metadata?.full_name as string | undefined) ?? "",
+          }
+        : undefined,
+    [user?.email, user?.user_metadata?.full_name],
+  );
+
   const handleAddressSubmit = async (values: AddressFormValues) => {
     setIsLoading(true);
     try {
@@ -35,6 +47,7 @@ function CheckoutButton({ order, guest, ...props }: CheckoutButtonProps) {
         guest,
         shipping: saved,
       });
+      clearCheckoutAddressDraft();
     } catch (err) {
       toast({
         title: "Checkout failed",
@@ -65,15 +78,9 @@ function CheckoutButton({ order, guest, ...props }: CheckoutButtonProps) {
         open={open}
         onOpenChange={setOpen}
         onSubmit={handleAddressSubmit}
+        persistDraft
         submitLabel="Continue to payment"
-        defaultValues={
-          user?.email
-            ? {
-                email: user.email,
-                fullName: user.user_metadata?.full_name ?? "",
-              }
-            : undefined
-        }
+        defaultValues={accountDefaults}
       />
     </>
   );

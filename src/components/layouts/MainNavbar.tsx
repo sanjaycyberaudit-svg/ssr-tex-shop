@@ -26,14 +26,7 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
               : "container",
           )}
         >
-          <div
-            className={cn(
-              "hidden w-full items-center justify-between gap-x-8 md:flex",
-              adminLayout
-                ? "h-[var(--admin-header-height-desktop)]"
-                : "h-[var(--store-nav-height-desktop)]",
-            )}
-          >
+          <div className="hidden w-full gap-x-8 items-center justify-between md:flex">
             <div className="flex gap-x-3 items-center">
               <SideMenu />
               <Branding size="md" />

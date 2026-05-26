@@ -15,6 +15,7 @@ type Props = {
   onSubmit: (values: AddressFormValues) => Promise<void>;
   submitLabel?: string;
   defaultValues?: Partial<AddressFormValues>;
+  persistDraft?: boolean;
 };
 
 export function AddAddressDialog({
@@ -23,6 +24,7 @@ export function AddAddressDialog({
   onSubmit,
   submitLabel,
   defaultValues,
+  persistDraft = false,
 }: Props) {
   const handleSubmit = async (values: AddressFormValues) => {
     try {
@@ -46,6 +48,8 @@ export function AddAddressDialog({
           onCancel={() => onOpenChange(false)}
           submitLabel={submitLabel}
           defaultValues={defaultValues}
+          persistDraft={persistDraft}
+          dialogOpen={open}
         />
       </DialogContent>
     </Dialog>

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { AddAddressDialog } from "@/features/addresses";
 import type { AddressFormValues } from "@/features/addresses";
 import { createShippingAddress } from "@/_actions/address";
+import { clearCheckoutAddressDraft } from "@/features/addresses/lib/checkoutAddressDraft";
 import { startCheckout } from "@/features/checkout/startCheckout";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -19,6 +20,17 @@ function BuyNowButton({ productId, quantity = 1 }: BuyNowButtonProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const accountDefaults = useMemo(
+    () =>
+      user?.email
+        ? {
+            email: user.email,
+            fullName: (user.user_metadata?.full_name as string | undefined) ?? "",
+          }
+        : undefined,
+    [user?.email, user?.user_metadata?.full_name],
+  );
 
   const handleAddressSubmit = async (values: AddressFormValues) => {
     setIsProcessing(true);
@@ -55,15 +67,9 @@ function BuyNowButton({ productId, quantity = 1 }: BuyNowButtonProps) {
         open={open}
         onOpenChange={setOpen}
         onSubmit={handleAddressSubmit}
+        persistDraft
         submitLabel="Continue to payment"
-        defaultValues={
-          user?.email
-            ? {
-                email: user.email,
-                fullName: user.user_metadata?.full_name ?? "",
-              }
-            : undefined
-        }
+        defaultValues={accountDefaults}
       />
     </>
   );
