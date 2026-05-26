@@ -57,46 +57,51 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
           supabase.auth.getUser().then(({ data }) => {
             setUser(data.user);
 
-            const { cart } = JSON.parse(localStorage.getItem("cart")) as {
-              cart: CartItems;
-            };
+            if (!data.user) return;
 
-            const storageCarts = Object.entries(cart).map(
-              ([productId, productValue]) => ({
-                id: nanoid(),
-                productId,
-                quantity: productValue.quantity,
-                userId: data.user.id,
-              }),
-            );
-            // console.log("!!! storageCart", storageCarts)
+            try {
+              const raw = localStorage.getItem("cart");
+              if (raw) {
+                const parsed = JSON.parse(raw) as { cart?: CartItems };
+                const cart = parsed?.cart;
+                if (cart && typeof cart === "object") {
+                  const storageCarts = Object.entries(cart).map(
+                    ([productId, productValue]) => ({
+                      id: nanoid(),
+                      productId,
+                      quantity: productValue.quantity,
+                      userId: data.user!.id,
+                    }),
+                  );
 
-            supabase
-              .from("carts")
-              .insert(storageCarts)
-              .then((data) => {
-                // console.log("sync Cart Data Res", data)
-              });
+                  if (storageCarts.length > 0) {
+                    supabase.from("carts").insert(storageCarts);
+                  }
+                }
+              }
+            } catch {
+              // Ignore invalid guest cart payload in localStorage.
+            }
           });
 
-          // Sync the wishlist with local storage
-          supabase
-            .from("wishlist")
-            .select()
-            .eq("user_id", session.user.id)
-            .then((data) => {
-              // console.log("wishlist!!!", data)
-              const wishlistItems = {};
+          if (session?.user?.id) {
+            supabase
+              .from("wishlist")
+              .select()
+              .eq("user_id", session.user.id)
+              .then((data) => {
+                const wishlistItems: Parameters<typeof setWishlist>[0] = {};
 
-              data?.data?.forEach((item) => {
-                wishlistItems[item.product_id] = {
-                  createdAt: item.created_at,
-                  updatedAt: item.create_at,
-                };
+                data?.data?.forEach((item) => {
+                  wishlistItems[item.product_id] = {
+                    createdAt: new Date(item.created_at),
+                    updatedAt: new Date(item.created_at),
+                  };
+                });
+
+                setWishlist(wishlistItems);
               });
-
-              setWishlist(wishlistItems);
-            });
+          }
 
           toast({
             title: "Welcome Back.",

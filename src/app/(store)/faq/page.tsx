@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FAQ | Sakthi Textiles",
-  description: "Frequently asked questions about Sakthi Textiles sarees",
+  title: "FAQ | Sakthi Textile",
+  description: "Frequently asked questions about Sakthi Textile sarees",
 };
 
 const faqs = [
@@ -35,7 +35,7 @@ export default function FaqPage() {
   return (
     <InfoPage
       heading="FAQ"
-      description="Answers to common questions about shopping with Sakthi Textiles."
+      description="Answers to common questions about shopping with Sakthi Textile."
     >
       <ul className="space-y-6">
         {faqs.map(({ q, a }) => (
@@ -52,7 +52,10 @@ export default function FaqPage() {
           Contact us
         </Link>{" "}
         or call{" "}
-        <Link href={siteConfig.phoneHref} className="text-primary hover:underline">
+        <Link
+          href={siteConfig.phoneHref}
+          className="text-primary hover:underline"
+        >
           {siteConfig.phone}
         </Link>
         .

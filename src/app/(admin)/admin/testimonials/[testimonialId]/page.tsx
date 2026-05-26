@@ -2,7 +2,10 @@ import AdminShell from "@/components/admin/AdminShell";
 import { gql } from "@/gql";
 import { getClient } from "@/lib/urql";
 import { notFound } from "next/navigation";
-import { TestimonialForm, TestimonialFormFragment } from "@/features/testimonials";
+import {
+  TestimonialForm,
+  TestimonialFormFragment,
+} from "@/features/testimonials";
 
 type Props = {
   params: { testimonialId: string };

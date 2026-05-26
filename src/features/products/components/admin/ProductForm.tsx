@@ -106,6 +106,42 @@ function ProductFrom({ product }: ProductsFormProps) {
       >
         <div className="flex flex-col gap-y-5 max-w-[500px]">
           <FormItem>
+            <FormLabel className="text-sm">Product Code</FormLabel>
+            <FormControl>
+              <Input
+                value={form.watch("productCode") ?? ""}
+                readOnly
+                placeholder="Auto-generated (ST...)"
+              />
+            </FormControl>
+            <FormDescription>
+              Auto-generated for bulk uploads. This value is read-only.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+
+          <FormField
+            control={control}
+            name="isDraft"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm">Draft Product</FormLabel>
+                <FormControl>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(field.value)}
+                      onChange={(event) => field.onChange(event.target.checked)}
+                    />
+                    Keep hidden from storefront until details are finalized.
+                  </label>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormItem>
             <FormLabel className="text-sm">Name*</FormLabel>
             <FormControl>
               <Input

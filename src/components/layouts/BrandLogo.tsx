@@ -4,24 +4,19 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
-  showEmblem?: boolean;
-  size?: "sm" | "md" | "lg" | "nav";
+  size?: "sm" | "md" | "lg" | "nav" | "sidebar" | "footer";
 };
 
-export function BrandLogo({
-  className,
-  showEmblem = false,
-  size = "nav",
-}: Props) {
+export function BrandLogo({ className, size = "nav" }: Props) {
   return (
     <Link
       href="/"
       className={cn(
-        "inline-flex w-fit max-w-full shrink-0 items-center justify-center",
+        "inline-flex w-fit shrink-0 items-center justify-start overflow-visible",
         className,
       )}
     >
-      <SakthiWordmark size={size} showEmblem={showEmblem} />
+      <SakthiWordmark size={size} />
     </Link>
   );
 }

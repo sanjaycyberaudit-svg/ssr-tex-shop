@@ -5,7 +5,10 @@ import { getClient } from "@/lib/urql";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { TestimonialsColumns, TestimonialColumnsFragment } from "@/features/testimonials";
+import {
+  TestimonialsColumns,
+  TestimonialColumnsFragment,
+} from "@/features/testimonials";
 import { DataTable } from "@/features/cms";
 
 export const dynamic = "force-dynamic";

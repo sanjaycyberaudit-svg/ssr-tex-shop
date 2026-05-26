@@ -1,32 +1,59 @@
 import InfoPage from "@/components/layouts/InfoPage";
 import { siteConfig } from "@/config/site";
+import { getStorefrontSocialLinks } from "@/lib/integrations/settings";
 import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact | Sakthi Textiles",
-  description: "Contact Sakthi Textiles — phone, email, WhatsApp, and store address",
+  title: "Contact | Sakthi Textile",
+  description:
+    "Contact Sakthi Textile — phone, email, WhatsApp, and store address",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const socialFromAdmin = await getStorefrontSocialLinks();
+  const social = {
+    ...siteConfig.social,
+    ...(socialFromAdmin ?? {}),
+  };
+
   return (
     <InfoPage
       heading="Contact Us"
-      description="Reach Sakthi Textiles by phone, WhatsApp, email, or visit our store in Salem."
+      description="Reach Sakthi Textile by phone, WhatsApp, email, or visit our store in Salem."
     >
       <section id="store" className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Visit our store</h2>
-        <address className="not-italic">
+        <h2 className="text-base font-semibold text-foreground">
+          Visit our store
+        </h2>
+        <address className="not-italic space-y-0.5">
           {siteConfig.addressLines.map((line) => (
             <p key={line}>{line}</p>
           ))}
+          <p className="pt-2 text-muted-foreground">
+            <span className="font-medium text-foreground">GSTIN: </span>
+            {siteConfig.gstin}
+          </p>
+          <p>
+            <Link
+              href={`mailto:${siteConfig.email}`}
+              className="text-primary hover:underline"
+            >
+              {siteConfig.email}
+            </Link>
+          </p>
         </address>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Phone & email</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          Phone & email
+        </h2>
         <p>
-          <Link href={siteConfig.phoneHref} className="text-primary hover:underline">
+          <Link
+            href={siteConfig.phoneHref}
+            className="text-primary hover:underline"
+          >
             {siteConfig.phone}
           </Link>
         </p>
@@ -45,7 +72,7 @@ export default function ContactPage() {
         <p>
           Fastest way to ask about stock, wedding orders, or delivery —{" "}
           <Link
-            href={siteConfig.social.whatsapp}
+            href={social.whatsapp}
             className="text-primary hover:underline"
             target="_blank"
             rel="noopener noreferrer"
@@ -60,7 +87,7 @@ export default function ContactPage() {
         <ul className="space-y-1">
           <li>
             <Link
-              href={siteConfig.social.instagram}
+              href={social.instagram}
               className="text-primary hover:underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -70,7 +97,7 @@ export default function ContactPage() {
           </li>
           <li>
             <Link
-              href={siteConfig.social.facebook}
+              href={social.facebook}
               className="text-primary hover:underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -80,7 +107,7 @@ export default function ContactPage() {
           </li>
           <li>
             <Link
-              href={siteConfig.social.youtube}
+              href={social.youtube}
               className="text-primary hover:underline"
               target="_blank"
               rel="noopener noreferrer"

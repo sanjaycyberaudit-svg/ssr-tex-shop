@@ -2,7 +2,7 @@ import type { NavItemWithOptionalChildren } from "@/types";
 
 export type SiteConfig = typeof siteConfig;
 
-/** Business card — Sakthi Textiles */
+/** Business card — Sakthi Textile */
 const ADDRESS_LINES = [
   "337/55 Palakara Thottam Street",
   "Mottur, Elampillai PO",
@@ -11,7 +11,8 @@ const ADDRESS_LINES = [
 
 const PHONE = "+91 77080 69049";
 const PHONE_HREF = "tel:+917708069049";
-const EMAIL = "contact@sakthitextiles.com";
+const EMAIL = "sakthitextilest@gmail.com";
+const GSTIN = "33CUTPS8607N1ZM";
 
 const SOCIAL = {
   instagram: "https://www.instagram.com/sakthitextiles",
@@ -21,8 +22,9 @@ const SOCIAL = {
 } as const;
 
 export const siteConfig = {
-  name: "Sakthi Textile",
+  name: "Sakthi Textile®",
   description: "Authentic silk and cotton sarees — wholesale and retail",
+  searchPlaceholder: "Search silk & cotton sarees, collections…",
   url: "https://sakthi-textiles-shop.vercel.app",
   addressLines: ADDRESS_LINES,
   /** Single-line address for compact UI */
@@ -31,10 +33,29 @@ export const siteConfig = {
   /** `tel:` href (digits only, with country code) */
   phoneHref: PHONE_HREF,
   email: EMAIL,
+  gstin: GSTIN,
   currency: "INR",
   currencySymbol: "₹",
   /** Update with your real profile URLs */
   social: SOCIAL,
+  /** Top offer ribbon — rotates on the storefront */
+  announcements: [
+    {
+      text: "Premium silk & cotton sarees — wholesale & retail at Sakthi Textile",
+      href: "/shop",
+      cta: "Shop now",
+    },
+    {
+      text: "Visit our store in Salem · Call for orders & enquiries",
+      href: "tel:+917708069049",
+      cta: "Call us",
+    },
+    {
+      text: "Explore Kanjivaram, wedding & festive collections",
+      href: "/collections",
+      cta: "View all",
+    },
+  ],
   mainNav: [
     {
       title: "Collections",
@@ -110,7 +131,7 @@ export const siteConfig = {
       ],
     },
     {
-      title: "About Sakthi Textiles",
+      title: "About Sakthi Textile",
       items: [
         { title: "Our Story", href: "/about", items: [] },
         { title: "Our Collections", href: "/collections", items: [] },

@@ -1,55 +1,95 @@
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const sizeMap = {
+  nav: "text-[clamp(1.05rem,4vw,1.38rem)] leading-none",
+  sidebar: "text-[1.12rem] leading-none sm:text-[1.18rem]",
+  footer: "text-[1.3rem] leading-none sm:text-[1.4rem]",
   sm: "text-[1.75rem] sm:text-[1.85rem]",
   md: "text-[2rem] sm:text-[2.15rem]",
   lg: "text-[2.35rem] sm:text-[2.6rem]",
-  nav: "text-[1.9rem] leading-none sm:text-[2.05rem]",
+} as const;
+
+const trackingMap = {
+  nav: "tracking-[0.008em]",
+  sidebar: "tracking-[0.025em]",
+  footer: "tracking-[0.05em]",
+  sm: "tracking-[0.05em]",
+  md: "tracking-[0.06em]",
+  lg: "tracking-[0.08em]",
+} as const;
+
+/** Fixed emblem dimensions (px) */
+const emblemSizeMap = {
+  nav: "h-[68px] w-[54px]",
+  sidebar: "h-[63px] w-[51px]",
+  footer: "h-[60px] w-[48px]",
+  sm: "h-[66px] w-[53px]",
+  md: "h-[78px] w-[63px]",
+  lg: "h-[84px] w-[68px]",
+} as const;
+
+const regMarkClassMap = {
+  nav: "ml-[0.1em] align-super text-[12px] font-extrabold leading-none text-[#9A7209] [text-shadow:none]",
+  sidebar:
+    "ml-[0.08em] align-super text-[11px] font-extrabold leading-none text-[#9A7209] [text-shadow:none]",
+  footer:
+    "ml-[0.08em] align-super text-[11px] font-extrabold leading-none text-[#9A7209] [text-shadow:none]",
+  sm: "ml-[0.08em] align-super text-[0.48em] font-extrabold leading-none text-[#9A7209] [text-shadow:none]",
+  md: "ml-[0.08em] align-super text-[0.42em] font-extrabold leading-none text-[#9A7209] [text-shadow:none]",
+  lg: "ml-[0.08em] align-super text-[0.42em] font-extrabold leading-none text-[#9A7209] [text-shadow:none]",
+} as const;
+
+const emblemGapMap = {
+  nav: "gap-[0.1875rem]",
+  sidebar: "gap-1",
+  footer: "gap-[0.1875rem]",
+  sm: "gap-[0.1875rem]",
+  md: "gap-[0.1875rem]",
+  lg: "gap-[0.1875rem]",
 } as const;
 
 type Props = {
   className?: string;
   size?: keyof typeof sizeMap;
-  /** Show small oval emblem before the wordmark (desktop) */
-  showEmblem?: boolean;
 };
 
-/**
- * Nalli-inspired cursive wordmark: slanted script, Sakthi green, ® on "textile".
- */
-export function SakthiWordmark({
-  className,
-  size = "md",
-  showEmblem = false,
-}: Props) {
+/** Official wordmark: ST emblem + gold caps "SAKTHI TEXTILE®". */
+export function SakthiWordmark({ className, size = "md" }: Props) {
   return (
     <span
       className={cn(
-        "inline-flex max-w-full items-center gap-1.5",
+        "wordmark inline-flex shrink-0 items-center font-[family-name:var(--font-brand-sans)]",
+        emblemGapMap[size],
+        sizeMap[size],
         className,
       )}
       aria-label="Sakthi Textile registered trademark"
     >
-      {showEmblem ? (
-        <span
-          className="hidden h-9 w-6 shrink-0 rounded-full border border-[#00542E]/20 bg-gradient-to-b from-[#FFD700]/30 to-[#00542E]/10 sm:block md:h-10 md:w-7"
-          aria-hidden
+      <span
+        className={cn("relative shrink-0", emblemSizeMap[size])}
+        aria-hidden
+      >
+        <Image
+          src="/images/sakthi-st-emblem.png"
+          alt=""
+          fill
+          sizes="144px"
+          className="object-contain object-center"
+          priority={size === "nav" || size === "sidebar" || size === "md"}
         />
-      ) : null}
+      </span>
       <span
         className={cn(
-          "inline-block max-w-full -skew-x-[10deg] font-[family-name:var(--font-sakthi-script)]",
-          "leading-[0.95] tracking-tight text-[#00542E]",
-          sizeMap[size],
+          "shrink-0 whitespace-nowrap font-extrabold uppercase leading-none",
+          "text-[#E5B820] [text-shadow:1px_1px_0_#8B6914,2px_2px_4px_rgba(0,0,0,0.12)]",
+          trackingMap[size],
         )}
       >
-        <span className="inline-block">Sakthi</span>{" "}
-        <span className="relative inline-block whitespace-nowrap">
-          textile
-          <sup
-            className="ml-0.5 align-super text-[0.38em] font-sans font-semibold not-italic text-[#B8860B] sm:text-[0.36em]"
-            aria-label="Registered trademark"
-          >
+        <span>Sakthi </span>
+        <span>
+          Textile
+          <sup className={regMarkClassMap[size]} aria-hidden>
             ®
           </sup>
         </span>

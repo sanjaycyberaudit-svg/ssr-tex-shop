@@ -1,6 +1,8 @@
 "use client";
+
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getRedirectFromSearchParams } from "@/lib/auth/redirect";
 import { getURL } from "@/lib/utils";
 
 import { Icons } from "@/components/layouts/icons";
@@ -12,14 +14,16 @@ function OAuthLoginButtons() {
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const signWithGoogle = async () => {
     setIsLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const next = encodeURIComponent(getRedirectFromSearchParams(searchParams));
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: getURL(),
+        redirectTo: `${getURL()}auth/callback?next=${next}`,
       },
     });
 
@@ -30,36 +34,21 @@ function OAuthLoginButtons() {
     setIsLoading(false);
   };
 
-  const signWithGithub = async () => {
-    setIsLoading(true);
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: getURL(),
-      },
-    });
-
-    setIsLoading(false);
-  };
   return (
-    <div className="flex flex-col space-y-3">
-      <Button onClick={signWithGoogle} disabled={isLoading}>
-        {isLoading && (
-          <Spinner className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-        )}
-        <Icons.google className="w-4 h-4 mr-5" />
-        Sign in with Google
-      </Button>
-
-      <Button onClick={signWithGithub} disabled={isLoading}>
-        {isLoading && (
-          <Spinner className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-        )}
-        <Icons.gitHub className="w-4 h-4 mr-5" />
-        Sign in with Github
-      </Button>
-    </div>
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full border-[#00542E]/25 hover:bg-[#00542E]/5"
+      onClick={signWithGoogle}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <Spinner className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+      ) : (
+        <Icons.google className="mr-2 h-4 w-4" />
+      )}
+      Continue with Google
+    </Button>
   );
 }
 

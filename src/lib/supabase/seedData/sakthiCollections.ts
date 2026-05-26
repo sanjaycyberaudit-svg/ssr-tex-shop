@@ -3,7 +3,7 @@ import db from "../db";
 import * as schema from "../schema";
 import { slugify } from "@/lib/utils";
 
-/** Sakthi Textiles saree categories (homepage carousel + /collections/[slug]) */
+/** Sakthi Textile saree categories (homepage carousel + /collections/[slug]) */
 export const SAKTHI_COLLECTION_LABELS = [
   "Softie Sarees",
   "Kanjivaram Wedding Sarees",
@@ -38,7 +38,7 @@ const DEMO_COLLECTION_SLUGS = [
 function collectionCopy(label: string) {
   return {
     title: label,
-    description: `Explore our ${label} at Sakthi Textiles — premium sarees for every occasion.`,
+    description: `Explore our ${label} at Sakthi Textile — premium sarees for every occasion.`,
   };
 }
 
@@ -73,7 +73,8 @@ export default async function seedSakthiCollections(
     const { title, description } = collectionCopy(label);
     const order = i + 1;
     const imageKey =
-      PLACEHOLDER_IMAGE_KEYS[i % PLACEHOLDER_IMAGE_KEYS.length] ?? PLACEHOLDER_IMAGE_KEYS[0];
+      PLACEHOLDER_IMAGE_KEYS[i % PLACEHOLDER_IMAGE_KEYS.length] ??
+      PLACEHOLDER_IMAGE_KEYS[0];
 
     const existing = await db
       .select()

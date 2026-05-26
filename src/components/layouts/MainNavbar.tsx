@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CartLink, CartNav } from "../../features/carts";
 import { UserNav } from "@/features/auth";
+import { AnnouncementBar } from "./AnnouncementBar";
 import { Icons } from "./icons";
 import Branding from "./Branding";
 import MobileNavbar from "./MobileNavbar";
@@ -15,46 +16,49 @@ interface MainNavbarProps {
 
 async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
   return (
-    <nav className="fixed z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
-      <div
-        className={cn(
-          adminLayout ? "mx-auto px-[3rem] max-w-[2500px] py-3" : "container",
-        )}
-      >
-        <div className="hidden md:flex gap-x-8 justify-between items-center">
-          {/* Menu & branding */}
-          <div className="flex gap-x-3 items-center">
-            <SideMenu />
-            <Branding showEmblem size="md" />
-          </div>
-
-          {adminLayout ? (
-            <></>
-          ) : (
-            <Suspense>
-              <SearchInput />
-            </Suspense>
+    <header className="fixed top-0 z-[100] w-full">
+      {!adminLayout ? <AnnouncementBar /> : null}
+      <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
+        <div
+          className={cn(
+            adminLayout
+              ? "mx-auto flex h-[var(--admin-header-height-mobile)] max-w-[2500px] items-center px-6 md:h-[var(--admin-header-height-desktop)] md:px-12"
+              : "container",
           )}
+        >
+          <div className="hidden w-full gap-x-8 items-center justify-between md:flex">
+            <div className="flex gap-x-3 items-center">
+              <SideMenu />
+              <Branding size="md" />
+            </div>
 
-          {/* Nav Action */}
-          <div className="flex gap-x-5 relative items-center">
-            <Suspense>
-              <UserNav />
-            </Suspense>
+            {adminLayout ? (
+              <></>
+            ) : (
+              <Suspense>
+                <SearchInput />
+              </Suspense>
+            )}
 
-            <Link href={"/wish-list"}>
-              <Icons.heart className="w-4 h-4" aria-label="wishlist" />
-            </Link>
+            <div className="flex gap-x-5 relative items-center">
+              <Suspense>
+                <UserNav />
+              </Suspense>
 
-            <Suspense fallback={<CartLink productCount={0} />}>
-              {!adminLayout && <CartNav />}
-            </Suspense>
+              <Link href={"/wish-list"}>
+                <Icons.heart className="w-4 h-4" aria-label="wishlist" />
+              </Link>
+
+              <Suspense fallback={<CartLink productCount={0} />}>
+                {!adminLayout && <CartNav />}
+              </Suspense>
+            </div>
           </div>
-        </div>
 
-        <MobileNavbar adminLayout={adminLayout} />
-      </div>
-    </nav>
+          <MobileNavbar adminLayout={adminLayout} />
+        </div>
+      </nav>
+    </header>
   );
 }
 

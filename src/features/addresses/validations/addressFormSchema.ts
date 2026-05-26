@@ -21,9 +21,7 @@ export const addressFormSchema = z.object({
         INDIAN_STATES.includes(value as (typeof INDIAN_STATES)[number]),
       "Select a state",
     ),
-  postal_code: z
-    .string()
-    .regex(/^\d{6}$/, "Enter a valid 6-digit PIN code"),
+  postal_code: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit PIN code"),
 });
 
 export type AddressFormValues = z.infer<typeof addressFormSchema>;

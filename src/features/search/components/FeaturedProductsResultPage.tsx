@@ -57,11 +57,7 @@ export function FeaturedProductsResultPage({
     return <SearchProductsGridSkeleton />;
   }
 
-  if (
-    !variables.after &&
-    products &&
-    products.edges.length === 0
-  ) {
+  if (!variables.after && products && products.edges.length === 0) {
     return (
       <p className="py-12 text-center text-muted-foreground">
         No featured products yet. Mark products as featured in Admin.

@@ -33,7 +33,16 @@ export async function startCheckout({
     throw new Error(message || "Checkout failed");
   }
 
-  const { sessionId } = (await res.json()) as { sessionId: string };
+  const payload = (await res.json()) as
+    | { provider: "phonepe"; redirectUrl: string }
+    | { provider: "stripe"; sessionId: string };
+
+  if (payload.provider === "phonepe") {
+    window.location.assign(payload.redirectUrl);
+    return;
+  }
+
+  const { sessionId } = payload;
   const stripe = await getStripe();
   const result = await stripe?.redirectToCheckout({ sessionId });
 

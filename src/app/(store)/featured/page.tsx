@@ -6,8 +6,8 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Featured Products | Sakthi Textiles",
-  description: "Handpicked featured sarees at Sakthi Textiles",
+  title: "Featured Products | Sakthi Textile",
+  description: "Handpicked featured sarees at Sakthi Textile",
 };
 
 export default function FeaturedProductsPage() {

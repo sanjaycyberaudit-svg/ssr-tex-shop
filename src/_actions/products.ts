@@ -1,9 +1,14 @@
 "use server";
 
 import db from "@/lib/supabase/db";
-import { InsertProducts, products } from "@/lib/supabase/schema";
-import { eq, inArray } from "drizzle-orm";
+import {
+  InsertProducts,
+  productMedias,
+  products,
+} from "@/lib/supabase/schema";
+import { eq, inArray, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
+import { slugify } from "@/lib/utils";
 
 type SearchProductsActionProps = {
   query: string;
@@ -38,3 +43,85 @@ export const getProductsByIds = async (productIds: string[]) => {
     .from(products)
     .where(inArray(products.id, productIds));
 };
+
+type DraftSourceMedia = {
+  mediaId: string;
+  originalFileName: string;
+};
+
+export type BulkDraftCreateResult = {
+  id: string;
+  productCode: string;
+  name: string;
+  slug: string;
+};
+
+const PRODUCT_CODE_LOCK_ID = 873214;
+
+function getFileNameBase(fileName: string) {
+  const cleaned = fileName.replace(/\.[^/.]+$/, "").trim();
+  return cleaned || "Product";
+}
+
+export async function createDraftProductsFromMedia(
+  mediaItems: DraftSourceMedia[],
+): Promise<BulkDraftCreateResult[]> {
+  if (mediaItems.length === 0) return [];
+
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${PRODUCT_CODE_LOCK_ID})`);
+
+    const lastCodeRows = await tx.execute<{ product_code: string | null }>(
+      sql`select product_code
+          from products
+          where product_code like 'ST%'
+          order by product_code desc
+          limit 1`,
+    );
+    const lastCode = lastCodeRows[0]?.product_code ?? null;
+    const lastNumber = Number.parseInt(lastCode?.replace(/^ST/, "") ?? "0", 10);
+    const start = Number.isFinite(lastNumber) ? lastNumber : 0;
+
+    const createdProducts: BulkDraftCreateResult[] = [];
+
+    for (let index = 0; index < mediaItems.length; index += 1) {
+      const currentNumber = start + index + 1;
+      const productCode = `ST${String(currentNumber).padStart(6, "0")}`;
+      const slug = slugify(`product-${productCode}`);
+      const fileNameBase = getFileNameBase(mediaItems[index].originalFileName);
+      const productName = `${fileNameBase} ${productCode}`;
+
+      const [created] = await tx
+        .insert(products)
+        .values({
+          name: productName,
+          slug,
+          productCode,
+          isDraft: true,
+          featuredImageId: mediaItems[index].mediaId,
+          description: "",
+        })
+        .returning({
+          id: products.id,
+          name: products.name,
+          slug: products.slug,
+          productCode: products.productCode,
+        });
+
+      await tx.insert(productMedias).values({
+        productId: created.id,
+        mediaId: mediaItems[index].mediaId,
+        priority: 1,
+      });
+
+      createdProducts.push({
+        id: created.id,
+        name: created.name,
+        slug: created.slug,
+        productCode: created.productCode ?? productCode,
+      });
+    }
+
+    return createdProducts;
+  });
+}

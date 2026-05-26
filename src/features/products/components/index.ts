@@ -8,4 +8,5 @@ export { default as SearchProductsGridSkeleton } from "../../search/components/S
 export { default as ProductsDataTable } from "./admin/ProductsDataTable";
 export { default as ProductForm } from "./admin/ProductForm";
 export { default as ProductsColumns } from "./admin/ProductsColumns";
+export { BulkDraftProductUpload } from "./admin/BulkDraftProductUpload";
 export * from "./admin/ProductForm";

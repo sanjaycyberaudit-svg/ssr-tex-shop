@@ -3,17 +3,32 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { DocumentType } from "@/gql";
-import { ProductCardFragment, ProductCardSkeleton } from "@/features/products";
+import { DocumentType, gql } from "@/gql";
+import { ProductCardSkeleton } from "@/features/products";
 import { AddToCartButton } from "@/features/carts";
 import { AddToWishListButton } from "@/features/wishlists";
 import { CarouselItem } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
-import { formatPrice, keytoUrl } from "@/lib/utils";
+import { keytoUrl } from "@/lib/utils";
 import { HomeSectionHeader } from "./HomeSectionHeader";
 import { HomeCarousel, homeFeaturedItemClass } from "./HomeCarousel";
 
-type ProductNode = DocumentType<typeof ProductCardFragment>;
+export const HomeFeaturedProductFragment = gql(/* GraphQL */ `
+  fragment HomeFeaturedProductFragment on products {
+    id
+    name
+    slug
+    badge
+    price
+    featuredImage: medias {
+      id
+      key
+      alt
+    }
+  }
+`);
+
+type ProductNode = DocumentType<typeof HomeFeaturedProductFragment>;
 
 type Props = {
   products: { node: ProductNode }[];
@@ -27,8 +42,8 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
       <div className="relative w-full aspect-[3/4] max-h-[min(70vh,420px)] sm:max-h-[480px] bg-muted">
         <Link href={`/shop/${slug}`} className="absolute inset-0">
           <Image
-            src={keytoUrl(featuredImage.key)}
-            alt={featuredImage.alt || name}
+            src={keytoUrl(featuredImage?.key)}
+            alt={featuredImage?.alt || name}
             fill
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 85vw, 480px"
             className="object-cover object-center"

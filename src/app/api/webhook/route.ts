@@ -1,4 +1,5 @@
 import { env } from "@/env.mjs";
+import { notifyOrderWhatsAppTargets } from "@/lib/integrations/whatsapp";
 import { stripe } from "@/lib/stripe";
 import db from "@/lib/supabase/db";
 import { PaymentStatus, address, orders } from "@/lib/supabase/schema";
@@ -40,6 +41,9 @@ export async function POST(request: NextRequest) {
           break;
         case "checkout.session.completed":
           const checkoutSession = event.data.object as Stripe.Checkout.Session;
+          const customerMobile = String(
+            checkoutSession.metadata?.customer_mobile ?? "",
+          ).trim();
 
           if (checkoutSession.status === "complete") {
             const customer_details = checkoutSession.customer_details;
@@ -67,9 +71,39 @@ export async function POST(request: NextRequest) {
                   checkoutSession.payment_intent.toString(),
                 payment_status: checkoutSession.payment_status as PaymentStatus,
                 payment_method: checkoutSession.payment_method_types[0],
+                payment_provider: "stripe",
+                payment_reference: checkoutSession.payment_intent?.toString(),
+                customer_mobile: customerMobile || null,
+                payment_meta: {
+                  stripeSessionId: checkoutSession.id,
+                },
               })
               .where(eq(orders.id, checkoutSession.client_reference_id))
               .returning();
+
+            const order = updatedOrder[0];
+            if (order?.payment_status === "paid") {
+              const wa = await notifyOrderWhatsAppTargets(order);
+              if (wa.customerNotified || wa.sellerNotified) {
+                await db
+                  .update(orders)
+                  .set({
+                    whatsapp_notified: wa.customerNotified
+                      ? true
+                      : order.whatsapp_notified,
+                    whatsapp_notified_at: wa.customerNotified
+                      ? new Date().toISOString()
+                      : order.whatsapp_notified_at,
+                    whatsapp_seller_notified: wa.sellerNotified
+                      ? true
+                      : order.whatsapp_seller_notified,
+                    whatsapp_seller_notified_at: wa.sellerNotified
+                      ? new Date().toISOString()
+                      : order.whatsapp_seller_notified_at,
+                  })
+                  .where(eq(orders.id, order.id));
+              }
+            }
           } else {
             const insertedOrder = await db
               .update(orders)
@@ -78,6 +112,7 @@ export async function POST(request: NextRequest) {
                 stripe_payment_intent_id:
                   checkoutSession.payment_intent.toString(),
                 payment_status: checkoutSession.payment_status as PaymentStatus,
+                payment_provider: "stripe",
               })
               .where(eq(orders.id, checkoutSession.client_reference_id))
               .returning();

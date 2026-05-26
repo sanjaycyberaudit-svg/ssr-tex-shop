@@ -129,7 +129,9 @@ export function AddAddressForm({
                   maxLength={10}
                   {...field}
                   onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    const digits = e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 10);
                     field.onChange(digits);
                   }}
                 />
@@ -148,7 +150,11 @@ export function AddAddressForm({
                 <RequiredLabel>Address</RequiredLabel>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Enter address" autoComplete="street-address" {...field} />
+                <Input
+                  placeholder="Enter address"
+                  autoComplete="street-address"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -179,7 +185,11 @@ export function AddAddressForm({
                   <RequiredLabel>City</RequiredLabel>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter city" autoComplete="address-level2" {...field} />
+                  <Input
+                    placeholder="Enter city"
+                    autoComplete="address-level2"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -231,7 +241,9 @@ export function AddAddressForm({
                     maxLength={6}
                     {...field}
                     onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      const digits = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 6);
                       field.onChange(digits);
                     }}
                   />

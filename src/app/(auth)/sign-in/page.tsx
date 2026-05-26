@@ -1,77 +1,103 @@
 import { type Metadata } from "next";
 import Link from "next/link";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import OAuthLoginButtons from "@/features/auth/components/OAuthLoginButtons";
 import { SigninForm } from "@/features/auth";
-import { Suspense } from "react";
+import { isAdminUser } from "@/lib/auth/admin";
+import {
+  ADMIN_POST_LOGIN_PATH,
+  getRedirectFromSearchParams,
+} from "@/lib/auth/redirect";
+import { createClient } from "@/lib/supabase/server";
+import { BrandLogo } from "@/components/layouts/BrandLogo";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
-  title: "HIYORI | Sign In",
-  description: "Sign in to HIYORI",
+  title: "Sign In | Sakthi Textile",
+  description: "Sign in to your Sakthi Textile account",
 };
 
-export default function SignInPage() {
+type SignInPageProps = {
+  searchParams?: { from?: string; next?: string; redirect?: string };
+};
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const supabase = createClient({ cookieStore: cookies() });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const params = new URLSearchParams();
+    for (const key of ["from", "next", "redirect"] as const) {
+      const value = searchParams?.[key];
+      if (value) params.set(key, value);
+    }
+    const requested = getRedirectFromSearchParams(params, "");
+    if (requested) {
+      redirect(requested);
+    }
+    if (await isAdminUser(user)) {
+      redirect(ADMIN_POST_LOGIN_PATH);
+    }
+    redirect("/");
+  }
+
   return (
-    <section>
-      <Card className="border-0 shadow-none">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Sign in</CardTitle>
-          <CardDescription>Welcome back</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Suspense
-            fallback={
-              <div className="bg-zinc-400 animate-pulse max-w-xl w-full h-[360px]" />
-            }
-          >
-            <SigninForm />
-          </Suspense>
+    <section className="space-y-6">
+      <div className="flex flex-col items-center gap-3 text-center sm:items-start sm:text-left">
+        <BrandLogo size="sidebar" className="justify-center sm:justify-start" />
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Sign in
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Welcome back to Sakthi Textile
+          </p>
+        </div>
+      </div>
 
-          <div className="relative mb-10">
-            <div className="relative flex justify-center text-xs uppercase">
-              <div className="absolute inset-0 flex items-center z-0">
-                <span className="w-full border-t" />
-              </div>
-              <span className="bg-background px-2 text-muted-foreground z-10">
-                Or continue with
-              </span>
-            </div>
+      <Suspense
+        fallback={
+          <div className="h-48 w-full animate-pulse rounded-lg bg-muted" />
+        }
+      >
+        <SigninForm />
+      </Suspense>
 
-            <div className="w-full py-5">
-              <OAuthLoginButtons />
-            </div>
+      <div className="space-y-4">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-[#00542E]/15" />
           </div>
-        </CardContent>
+          <span className="relative mx-auto block w-fit bg-card px-2 text-xs uppercase tracking-wide text-muted-foreground">
+            Or
+          </span>
+        </div>
+        <Suspense fallback={null}>
+          <OAuthLoginButtons />
+        </Suspense>
+      </div>
 
-        <CardFooter className="flex flex-wrap items-center space-x-2">
-          <div className="flex-1 text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link
-              aria-label="Sign up"
-              href="/sign-up"
-              className="text-primary underline-offset-4 transition-colors hover:underline"
-            >
-              Sign up
-            </Link>
-          </div>
+      <div className="flex flex-col gap-3 border-t border-[#00542E]/10 pt-4 text-sm">
+        <p className="text-muted-foreground">
+          Don&apos;t have an account?{" "}
           <Link
-            aria-label="Reset password"
-            href="/sign-in/reset-password"
-            className="text-sm text-primary underline-offset-4 transition-colors hover:underline"
+            href="/sign-up"
+            className="font-medium text-[#00542E] underline-offset-4 hover:underline"
           >
-            Reset password
+            Create account
           </Link>
-        </CardFooter>
-      </Card>
+        </p>
+        <Link
+          href="/"
+          className="font-medium text-[#00542E] underline-offset-4 hover:underline"
+        >
+          ← Continue shopping
+        </Link>
+      </div>
     </section>
   );
 }

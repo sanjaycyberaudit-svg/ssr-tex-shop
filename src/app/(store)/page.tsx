@@ -1,9 +1,8 @@
-import { getCurrentUser } from "@/features/users/actions";
 import { Shell } from "@/components/layouts/Shell";
 import { Icons } from "@/components/layouts/icons";
 import { CollectionCardFragment } from "@/features/collections";
-import { ProductCardFragment } from "@/features/products";
 import {
+  HomeFeaturedProductFragment,
   HomeHeroCarousel,
   HomeCategoriesCarousel,
   HomeTestimonialsCarousel,
@@ -11,13 +10,15 @@ import {
 } from "@/features/storefront/components";
 import { TestimonialCardFragment } from "@/features/testimonials";
 import { gql } from "@/gql";
+import { heroSlides } from "@/config/heroSlides";
+import { getHomeBannerSlides } from "@/lib/integrations/settings";
 import { getClient } from "@/lib/urql";
 import { siteConfig } from "@/config/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const LandingRouteQuery = gql(/* GraphQL */ `
-  query LandingRouteQuery($user_id: UUID) {
+  query LandingRouteQuery {
     products: productsCollection(
       filter: { featured: { eq: true } }
       first: 12
@@ -26,24 +27,7 @@ const LandingRouteQuery = gql(/* GraphQL */ `
       edges {
         node {
           id
-          ...ProductCardFragment
-        }
-      }
-    }
-
-    wishlistCollection(filter: { user_id: { eq: $user_id } }) {
-      edges {
-        node {
-          product_id
-        }
-      }
-    }
-
-    cartsCollection(filter: { user_id: { eq: $user_id } }) {
-      edges {
-        node {
-          product_id
-          quantity
+          ...HomeFeaturedProductFragment
         }
       }
     }
@@ -76,11 +60,11 @@ const LandingRouteQuery = gql(/* GraphQL */ `
 `);
 
 export default async function Home() {
-  const currentUser = await getCurrentUser();
-
-  const { data, error } = await getClient().query(LandingRouteQuery, {
-    user_id: currentUser?.id,
-  });
+  const [homeBannerSlides, landingResponse] = await Promise.all([
+    getHomeBannerSlides(),
+    getClient().query(LandingRouteQuery, {}),
+  ]);
+  const { data, error } = landingResponse;
 
   if (data === null && error) {
     console.error("LandingRouteQuery failed:", error.message);
@@ -89,10 +73,11 @@ export default async function Home() {
   const products = data?.products;
   const collectionScrollCards = data?.collectionScrollCards;
   const homeTestimonials = data?.homeTestimonials;
+  const slides = homeBannerSlides?.length ? homeBannerSlides : heroSlides;
 
   return (
     <main className="min-h-screen w-full min-w-0 overflow-x-hidden">
-      <HomeHeroCarousel />
+      <HomeHeroCarousel slides={slides} />
 
       <Shell>
         {error ? (

@@ -94,7 +94,9 @@ async function ProductDetailPage({ params }: Props) {
               <h1 className="text-4xl font-semibold tracking-wide mb-3">
                 {name}
               </h1>
-              <p className="text-2xl font-semibold mb-3">{formatPrice(price)}</p>
+              <p className="text-2xl font-semibold mb-3">
+                {formatPrice(price)}
+              </p>
             </div>
             <AddToWishListButton productId={id} />
           </section>
@@ -127,9 +129,9 @@ async function ProductDetailPage({ params }: Props) {
                 <AccordionTrigger>Ship & Returns</AccordionTrigger>
                 <AccordionContent>
                   Shipping across Tamil Nadu and India. Free delivery on
-                  selected orders — contact us on WhatsApp for details.
-                  Returns or exchanges may be accepted within 7 days for
-                  unused sarees with tags; please call before returning.
+                  selected orders — contact us on WhatsApp for details. Returns
+                  or exchanges may be accepted within 7 days for unused sarees
+                  with tags; please call before returning.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

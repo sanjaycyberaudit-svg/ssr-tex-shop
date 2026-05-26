@@ -1,9 +1,12 @@
 import { getProductsByIds } from "@/_actions/products";
 import type { CartItems } from "@/features/carts";
+import { createPhonePePayment } from "@/lib/payments/phonepe";
 import { stripe } from "@/lib/stripe";
 import db from "@/lib/supabase/db";
 import { SelectProducts, orders } from "@/lib/supabase/schema";
+import { getPhonePeConfig } from "@/lib/integrations/settings";
 import { getURL } from "@/lib/utils";
+import { eq } from "drizzle-orm";
 import { orderLines } from "./../../../lib/supabase/schema";
 
 import { User, createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -43,12 +46,15 @@ export async function POST(request: Request) {
   const validation = orderProductsSchema.safeParse(data);
   const supabase = createRouteHandlerClient({ cookies });
 
-  if (!validation)
+  if (!validation.success)
     return new NextResponse(JSON.stringify("Invalid data format."), {
       status: 400,
     });
 
   try {
+    const phonePeConfig = await getPhonePeConfig();
+    const preferPhonePe = Boolean(phonePeConfig);
+
     const productsQuantity = await mergeProductDetailsWithQuantities(
       data.orderProducts,
     );
@@ -68,7 +74,9 @@ export async function POST(request: Request) {
         amount: `${amount}`,
         order_status: "pending",
         payment_status: "unpaid",
-        payment_method: "card",
+        payment_method: preferPhonePe ? "phonepe" : "card",
+        payment_provider: preferPhonePe ? "phonepe" : "stripe",
+        customer_mobile: data.shipping.mobile,
       })
       .returning();
 
@@ -80,6 +88,32 @@ export async function POST(request: Request) {
         orderId: insertedOrder[0].id,
       })),
     );
+
+    if (preferPhonePe) {
+      const payment = await createPhonePePayment({
+        orderId: insertedOrder[0].id,
+        amountInRupees: amount,
+        customerMobile: data.shipping.mobile,
+        customerEmail: data.shipping.email,
+      });
+
+      if (!payment?.redirectUrl || !payment.merchantTransactionId) {
+        throw new Error("PhonePe payment URL could not be created");
+      }
+
+      await db
+        .update(orders)
+        .set({
+          phonepe_merchant_transaction_id: payment.merchantTransactionId,
+          payment_reference: payment.merchantTransactionId,
+        })
+        .where(eq(orders.id, insertedOrder[0].id));
+
+      return NextResponse.json({
+        provider: "phonepe",
+        redirectUrl: payment.redirectUrl,
+      });
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -107,8 +141,9 @@ export async function POST(request: Request) {
       cancel_url: `${getURL()}/cart`,
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ provider: "stripe", sessionId: session.id });
   } catch (err) {
+    console.error("[checkout] create-checkout-session failed:", err);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

@@ -25,7 +25,9 @@ export function CollectionCardSurface({
   priority = false,
 }: CollectionCardSurfaceProps) {
   return (
-    <div className={cn("relative w-full overflow-hidden", aspectClass, className)}>
+    <div
+      className={cn("relative w-full overflow-hidden", aspectClass, className)}
+    >
       <Image
         src={imageSrc}
         alt={imageAlt}

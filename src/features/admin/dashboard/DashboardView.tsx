@@ -75,7 +75,7 @@ export function DashboardView({ stats, statsError }: Props) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Sakthi Textiles Dashboard
+              Sakthi Textile Dashboard
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Store overview — products, orders, collections & alerts
@@ -239,6 +239,9 @@ export function DashboardView({ stats, statsError }: Props) {
                   {siteConfig.addressLines.map((line) => (
                     <p key={line}>{line}</p>
                   ))}
+                  <p className="pt-2 text-muted-foreground">
+                    GSTIN: {siteConfig.gstin}
+                  </p>
                   <p className="pt-2">
                     <a
                       href={siteConfig.phoneHref}

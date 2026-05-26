@@ -38,8 +38,7 @@ function CheckoutButton({ order, guest, ...props }: CheckoutButtonProps) {
     } catch (err) {
       toast({
         title: "Checkout failed",
-        description:
-          err instanceof Error ? err.message : "Please try again.",
+        description: err instanceof Error ? err.message : "Please try again.",
         variant: "destructive",
       });
       throw err;

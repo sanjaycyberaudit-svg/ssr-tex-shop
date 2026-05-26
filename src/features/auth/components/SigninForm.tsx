@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "@/lib/supabase/client";
+import { getRedirectFromSearchParams } from "@/lib/auth/redirect";
 import { authSchema } from "../validations";
 import { PasswordInput } from "./PasswordInput";
 
@@ -56,7 +57,7 @@ export function SignInForm() {
         toast({ title: "Error", description: error.message });
       } else {
         toast({ title: "Login Sucess" });
-        router.push(searchParams?.get("from") || "/");
+        router.push(getRedirectFromSearchParams(searchParams));
       }
     });
   }
@@ -97,7 +98,10 @@ export function SignInForm() {
             </FormItem>
           )}
         />
-        <Button disabled={isPending}>
+        <Button
+          disabled={isPending}
+          className="w-full bg-[#00542E] hover:bg-[#004225]"
+        >
           {isPending && (
             <Spinner className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
           )}

@@ -42,7 +42,7 @@ function CollectionBanner({
             {label}
           </h1>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#E8D5A3] sm:text-sm">
-            Sakthi Textiles collection
+            Sakthi Textile collection
           </p>
         </div>
       </div>

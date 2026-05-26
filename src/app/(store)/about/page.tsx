@@ -3,21 +3,22 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Our Story | Sakthi Textiles",
-  description: "About Sakthi Textiles — authentic sarees from Salem, Tamil Nadu",
+  title: "Our Story | Sakthi Textile",
+  description:
+    "About Sakthi Textile — authentic sarees from Salem, Tamil Nadu",
 };
 
 export default function AboutPage() {
   return (
     <InfoPage
       heading="Our Story"
-      description="Sakthi Textiles — trusted sarees for every occasion, from our family to yours."
+      description="Sakthi Textile — trusted sarees for every occasion, from our family to yours."
     >
       <p>
-        Sakthi Textiles has been serving customers across Tamil Nadu with
+        Sakthi Textile has been serving customers across Tamil Nadu with
         authentic silk and cotton sarees for festivals, weddings, and everyday
-        elegance. From Kanjivaram and soft silk to cotton and wedding collections,
-        we curate quality pieces for retail and wholesale buyers.
+        elegance. From Kanjivaram and soft silk to cotton and wedding
+        collections, we curate quality pieces for retail and wholesale buyers.
       </p>
       <p>
         Based in Salem district, we combine the warmth of a local textile shop

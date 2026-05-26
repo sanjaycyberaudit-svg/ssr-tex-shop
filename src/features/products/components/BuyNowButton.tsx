@@ -32,8 +32,7 @@ function BuyNowButton({ productId, quantity = 1 }: BuyNowButtonProps) {
     } catch (err) {
       toast({
         title: "Could not complete purchase",
-        description:
-          err instanceof Error ? err.message : "Please try again.",
+        description: err instanceof Error ? err.message : "Please try again.",
         variant: "destructive",
       });
       throw err;

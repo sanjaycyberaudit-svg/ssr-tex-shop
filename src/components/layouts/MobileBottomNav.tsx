@@ -45,7 +45,19 @@ export function MobileBottomNav() {
       aria-label="Mobile navigation"
     >
       <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around">
-        <Link href="/shop" className={itemClass(false)}>
+        <Link href="/" className={itemClass(pathname === "/")}>
+          <Home
+            className="h-5 w-5 shrink-0"
+            strokeWidth={pathname === "/" ? 2.25 : 1.75}
+          />
+          <span>Home</span>
+        </Link>
+        <Link
+          href="/shop"
+          className={itemClass(
+            pathname === "/shop" || pathname.startsWith("/shop/"),
+          )}
+        >
           <Search className="h-5 w-5 shrink-0" strokeWidth={1.75} />
           <span>Search</span>
         </Link>
@@ -57,13 +69,6 @@ export function MobileBottomNav() {
         >
           <User className="h-5 w-5 shrink-0" strokeWidth={1.75} />
           <span>Account</span>
-        </Link>
-        <Link href="/" className={itemClass(pathname === "/")}>
-          <Home
-            className="h-5 w-5 shrink-0"
-            strokeWidth={pathname === "/" ? 2.25 : 1.75}
-          />
-          <span>Home</span>
         </Link>
         <Link
           href="/wish-list"

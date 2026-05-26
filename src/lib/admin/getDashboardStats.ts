@@ -94,11 +94,11 @@ type OrderLineRow = {
   product_id: string;
   quantity: number;
   price: string | number;
-  products: { name: string } | { name: string }[] | null;
+  product: { name: string } | { name: string }[] | null;
 };
 
 function productNameFromLine(row: OrderLineRow): string {
-  const p = row.products;
+  const p = row.product;
   if (!p) return "Product";
   if (Array.isArray(p)) return p[0]?.name ?? "Product";
   return p.name;
@@ -193,7 +193,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase
         .from("order_lines")
-        .select("product_id, quantity, price, products ( name )"),
+        .select(
+          "product_id, quantity, price, product:products!order_lines_to_product ( name )",
+        ),
     ]);
 
   const firstError =

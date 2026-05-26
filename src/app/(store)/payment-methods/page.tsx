@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Payment Methods | Sakthi Textiles",
-  description: "How to pay for sarees at Sakthi Textiles",
+  title: "Payment Methods | Sakthi Textile",
+  description: "How to pay for sarees at Sakthi Textile",
 };
 
 export default function PaymentMethodsPage() {
@@ -15,7 +15,9 @@ export default function PaymentMethodsPage() {
       description="Secure online checkout and in-store payment options."
     >
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Online orders</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          Online orders
+        </h2>
         <p>
           When you checkout on our website, you can pay securely using major
           debit and credit cards through our payment partner (Stripe). All
@@ -32,7 +34,9 @@ export default function PaymentMethodsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">WhatsApp orders</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          WhatsApp orders
+        </h2>
         <p>
           For large or custom orders, you may arrange payment via UPI or bank
           transfer after confirming details on{" "}

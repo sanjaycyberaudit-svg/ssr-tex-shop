@@ -1,10 +1,10 @@
-import { Marck_Script, Playfair_Display } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
 
-/** Cursive wordmark — Nalli-style slanted script */
-export const sakthiScript = Marck_Script({
-  weight: "400",
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-sakthi-script",
+/** Brand wordmark — bold caps sans-serif */
+export const brandSans = Montserrat({
+  weight: ["700", "800"],
+  subsets: ["latin"],
+  variable: "--font-brand-sans",
   display: "swap",
 });
 

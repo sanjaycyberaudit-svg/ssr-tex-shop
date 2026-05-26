@@ -28,7 +28,9 @@ export function buildSupabasePoolerUrl(options: PoolerUrlOptions): string {
   return `postgresql://postgres.${options.projectRef}:${encoded}@${awsPrefix}-${region}.pooler.supabase.com:${port}/postgres`;
 }
 
-function parseLegacyDirectUrl(url: string): { ref: string; password: string } | null {
+function parseLegacyDirectUrl(
+  url: string,
+): { ref: string; password: string } | null {
   try {
     const parsed = new URL(url.replace(/^postgresql:/i, "http:"));
     const match = parsed.hostname.match(/^db\.([a-z0-9]+)\.supabase\.co$/i);
@@ -67,7 +69,9 @@ export function resolveDatabaseUrl(raw?: string): string {
   if (/pooler\.supabase\.com/i.test(url)) {
     const fixed = fixOutdatedPoolerHost(url);
     if (fixed !== url) {
-      console.warn("[db] Updated pooler host aws-0-ap-south-1 → aws-1-ap-south-1.");
+      console.warn(
+        "[db] Updated pooler host aws-0-ap-south-1 → aws-1-ap-south-1.",
+      );
     }
     return fixed;
   }

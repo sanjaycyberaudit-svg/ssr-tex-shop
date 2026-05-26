@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { heroSerif, sakthiScript } from "@/lib/fonts";
+import { brandSans, heroSerif } from "@/lib/fonts";
 import CustomProvider from "../providers/CustomProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <CustomProvider>
         <body
-          className={`${inter.className} ${sakthiScript.variable} ${heroSerif.variable}`}
+          className={`${inter.className} ${brandSans.variable} ${heroSerif.variable}`}
         >
           {children}
           <Toaster />

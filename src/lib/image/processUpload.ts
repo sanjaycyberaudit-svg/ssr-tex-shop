@@ -45,8 +45,7 @@ export async function processUploadedImage(
     throw new Error("SVG uploads are not supported. Use JPEG or PNG.");
   }
 
-  const isAnimatedGif =
-    metadata.format === "gif" && (metadata.pages ?? 1) > 1;
+  const isAnimatedGif = metadata.format === "gif" && (metadata.pages ?? 1) > 1;
 
   if (isAnimatedGif) {
     return {

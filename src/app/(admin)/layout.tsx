@@ -1,5 +1,10 @@
+import { MobileMenuProvider } from "@/components/layouts/MobileMenuContext";
 import Navbar from "@/components/layouts/MainNavbar";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
+import {
+  ADMIN_POST_LOGIN_PATH,
+  appendFromToSignIn,
+} from "@/lib/auth/redirect";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 
@@ -9,13 +14,26 @@ export default async function AdminLayout({ children }: Props) {
   const user = await getSessionUser();
 
   if (!(await isAdminUser(user))) {
-    redirect("/sign-in?error=Admin access required. Sign in with an admin account.");
+    if (!user) {
+      redirect(
+        appendFromToSignIn("/sign-in", ADMIN_POST_LOGIN_PATH, {
+          error: "Admin access required. Sign in with an admin account.",
+        }),
+      );
+    }
+    redirect(
+      "/?error=Admin access required. Sign in with an admin account.",
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar adminLayout />
-      <div className="pt-14">{children}</div>
-    </div>
+    <MobileMenuProvider>
+      <div className="flex h-dvh flex-col overflow-hidden bg-background">
+        <Navbar adminLayout />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[var(--admin-header-height-mobile)] md:pt-[var(--admin-header-height-desktop)]">
+          {children}
+        </div>
+      </div>
+    </MobileMenuProvider>
   );
 }

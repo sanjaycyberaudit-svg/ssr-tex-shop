@@ -11,13 +11,18 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { heroSlides } from "@/config/heroSlides";
+import { heroSlides, type HeroSlide } from "@/config/heroSlides";
 import { cn } from "@/lib/utils";
 
 const heroArrowClass =
   "absolute top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-sm border-0 bg-white/95 text-neutral-900 shadow-md transition hover:bg-white sm:h-12 sm:w-12";
 
-export function HomeHeroCarousel() {
+type Props = {
+  slides?: HeroSlide[];
+};
+
+export function HomeHeroCarousel({ slides }: Props) {
+  const activeSlides = slides?.length ? slides : heroSlides;
   const [api, setApi] = useState<CarouselApi>();
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -63,14 +68,14 @@ export function HomeHeroCarousel() {
         className="w-full"
       >
         <CarouselContent className="-ml-0">
-          {heroSlides.map((slide) => (
+          {activeSlides.map((slide) => (
             <CarouselItem key={slide.id} className="basis-full pl-0">
               <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] md:aspect-[21/9] md:max-h-[min(72vh,520px)]">
                 <Image
                   src={slide.image}
                   alt={slide.imageAlt}
                   fill
-                  priority={slide.id === heroSlides[0].id}
+                  priority={slide.id === activeSlides[0].id}
                   sizes="100vw"
                   className="object-cover object-[center_20%] sm:object-center"
                 />
@@ -129,7 +134,7 @@ export function HomeHeroCarousel() {
         role="tablist"
         aria-label="Hero slides"
       >
-        {heroSlides.map((slide, index) => (
+        {activeSlides.map((slide, index) => (
           <div
             key={slide.id}
             className="h-full flex-1 bg-white/25"

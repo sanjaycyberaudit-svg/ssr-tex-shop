@@ -48,5 +48,29 @@ export const dashboardConfig: DashboardConfig = {
       icon: "receipt",
       items: [],
     },
+    {
+      title: "API Settings",
+      href: "/admin/settings/apis",
+      icon: "globe",
+      items: [],
+    },
+    {
+      title: "Social URLs",
+      href: "/admin/settings/social",
+      icon: "instagram",
+      items: [],
+    },
+    {
+      title: "Home Banner",
+      href: "/admin/settings/home-banner",
+      icon: "image",
+      items: [],
+    },
+    {
+      title: "Velo",
+      href: "/admin/settings/velo",
+      icon: "globe",
+      items: [],
+    },
   ],
 };

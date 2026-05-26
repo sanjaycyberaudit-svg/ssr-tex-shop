@@ -4,15 +4,15 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Store Policy | Sakthi Textiles",
-  description: "Terms of use and store policies at Sakthi Textiles",
+  title: "Store Policy | Sakthi Textile",
+  description: "Terms of use and store policies at Sakthi Textile",
 };
 
 export default function StorePolicyPage() {
   return (
     <InfoPage
       heading="Store Policy"
-      description="Terms that apply when you shop with Sakthi Textiles online or at our Salem store."
+      description="Terms that apply when you shop with Sakthi Textile online or at our Salem store."
     >
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">Orders</h2>
@@ -25,7 +25,9 @@ export default function StorePolicyPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Product images</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          Product images
+        </h2>
         <p>
           Saree colours may vary slightly from photos due to screen settings and
           lighting. We photograph our stock carefully; contact us if you need
@@ -37,8 +39,8 @@ export default function StorePolicyPage() {
         <h2 className="text-base font-semibold text-foreground">Privacy</h2>
         <p>
           We use your name, phone, email, and address only to process orders and
-          communicate with you. We do not sell your personal information to third
-          parties.
+          communicate with you. We do not sell your personal information to
+          third parties.
         </p>
       </section>
 

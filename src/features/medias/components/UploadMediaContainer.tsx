@@ -63,7 +63,7 @@ function UploadMediaContainer({
 
       const uploadedNames = Array.isArray(payload)
         ? payload
-        : (payload.uploaded ?? []);
+        : payload.uploaded ?? [];
 
       if (uploadedNames.length > 0) {
         refetch({ requestPolicy: "network-only" });

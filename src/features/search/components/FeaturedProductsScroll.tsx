@@ -11,10 +11,7 @@ export function FeaturedProductsScroll() {
   ]);
 
   const loadMoreHandler = (after: string) => {
-    setPageVariables((prev) => [
-      ...prev,
-      { first: PAGE_SIZE, after },
-    ]);
+    setPageVariables((prev) => [...prev, { first: PAGE_SIZE, after }]);
   };
 
   return (

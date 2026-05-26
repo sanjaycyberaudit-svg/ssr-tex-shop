@@ -34,6 +34,69 @@ export const profiles = pgTable("profiles", {
 export type SelectUserProfiles = InferSelectModel<typeof profiles>;
 export type InsertUserProfiles = InferInsertModel<typeof profiles>;
 
+export const apiSettings = pgTable(
+  "api_settings",
+  {
+    key: text("key").notNull().primaryKey(),
+    value: json("value").$type<Record<string, unknown>>().notNull().default({}),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    updatedBy: uuid("updated_by").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    profile: foreignKey({
+      columns: [table.updatedBy],
+      foreignColumns: [profiles.id],
+      name: "api_settings_updated_by_fk",
+    }),
+  }),
+);
+
+export type SelectApiSettings = InferSelectModel<typeof apiSettings>;
+export type InsertApiSettings = InferInsertModel<typeof apiSettings>;
+
+export const externalApiKeys = pgTable(
+  "external_api_keys",
+  {
+    id: text("id")
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    provider: varchar("provider", { length: 64 }).notNull(),
+    clientName: varchar("client_name", { length: 191 }).notNull(),
+    keyPrefix: varchar("key_prefix", { length: 32 }).notNull(),
+    keyHash: text("key_hash").notNull().unique(),
+    isActive: boolean("is_active").notNull().default(true),
+    revokedAt: timestamp("revoked_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    lastUsedAt: timestamp("last_used_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    createdBy: uuid("created_by").references(() => profiles.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+);
+
+export type SelectExternalApiKeys = InferSelectModel<typeof externalApiKeys>;
+export type InsertExternalApiKeys = InferInsertModel<typeof externalApiKeys>;
+
 export const carts = pgTable(
   "carts",
   {
@@ -158,6 +221,8 @@ export const products = pgTable(
       .$defaultFn(() => createId()),
     name: varchar("name", { length: 191 }).notNull(),
     slug: varchar("slug", { length: 191 }).notNull().unique(),
+    productCode: varchar("product_code", { length: 32 }).unique(),
+    isDraft: boolean("is_draft").notNull().default(false),
     description: text("description"),
     featured: boolean("featured").default(false),
     badge: text("badge", { enum: ["new_product", "best_sale", "featured"] }),
@@ -230,6 +295,24 @@ export const orders = pgTable(
       enum: ["paid", "unpaid", "no_payment_required"],
     }).notNull(),
     payment_method: text("payment_method"),
+    payment_provider: text("payment_provider"),
+    payment_reference: text("payment_reference"),
+    customer_mobile: text("customer_mobile"),
+    phonepe_transaction_id: text("phonepe_transaction_id"),
+    phonepe_merchant_transaction_id: text("phonepe_merchant_transaction_id"),
+    whatsapp_notified: boolean("whatsapp_notified").notNull().default(false),
+    whatsapp_notified_at: timestamp("whatsapp_notified_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    whatsapp_seller_notified: boolean("whatsapp_seller_notified")
+      .notNull()
+      .default(false),
+    whatsapp_seller_notified_at: timestamp("whatsapp_seller_notified_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    payment_meta: json("payment_meta").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", {
       withTimezone: true,
     })
@@ -428,7 +511,9 @@ export const testimonials = pgTable(
       .notNull()
       .primaryKey()
       .$defaultFn(() => createId()),
-    kind: text("kind", { enum: ["text", "video"] }).notNull().default("text"),
+    kind: text("kind", { enum: ["text", "video"] })
+      .notNull()
+      .default("text"),
     customerName: varchar("customer_name", { length: 120 }).notNull(),
     location: varchar("location", { length: 120 }),
     quote: text("quote"),

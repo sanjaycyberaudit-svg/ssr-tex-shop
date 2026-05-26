@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Shipping & Returns | Sakthi Textiles",
-  description: "Delivery and return policy for Sakthi Textiles sarees",
+  title: "Shipping & Returns | Sakthi Textile",
+  description: "Delivery and return policy for Sakthi Textile sarees",
 };
 
 export default function ShippingReturnsPage() {
@@ -18,9 +18,9 @@ export default function ShippingReturnsPage() {
         <h2 className="text-base font-semibold text-foreground">Shipping</h2>
         <p>
           We ship sarees across Tamil Nadu and throughout India. Delivery time
-          is typically 3–7 business days depending on your location. For bulk
-          or wedding orders, please contact us on WhatsApp for a custom quote
-          and timeline.
+          is typically 3–7 business days depending on your location. For bulk or
+          wedding orders, please contact us on WhatsApp for a custom quote and
+          timeline.
         </p>
         <p>
           Free delivery may apply on selected orders — message us on{" "}
@@ -45,13 +45,18 @@ export default function ShippingReturnsPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Please call or WhatsApp us before sending any item back.</li>
           <li>Customised, altered, or worn sarees cannot be returned.</li>
-          <li>Shipping charges for returns may apply unless the item is faulty.</li>
+          <li>
+            Shipping charges for returns may apply unless the item is faulty.
+          </li>
         </ul>
       </section>
 
       <p>
         Questions? Call{" "}
-        <Link href={siteConfig.phoneHref} className="text-primary hover:underline">
+        <Link
+          href={siteConfig.phoneHref}
+          className="text-primary hover:underline"
+        >
           {siteConfig.phone}
         </Link>
         .

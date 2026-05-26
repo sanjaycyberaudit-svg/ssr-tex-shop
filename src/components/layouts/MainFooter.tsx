@@ -57,9 +57,9 @@ function MainFooter() {
         </div>
 
         <div className="border-t border-[#00542E]/15 pt-8 md:pt-10">
-          <div className="grid gap-8 md:grid-cols-[minmax(0,200px)_1fr_auto] md:items-start md:gap-10 lg:gap-14">
-            <div className="flex flex-col items-start">
-              <Branding size="lg" className="max-w-[220px]" />
+          <div className="grid gap-8 md:grid-cols-[minmax(min-content,300px)_1fr_auto] md:items-start md:gap-10 lg:gap-14">
+            <div className="flex flex-col items-start overflow-visible">
+              <Branding size="footer" className="shrink-0" />
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 sm:gap-8 md:max-w-xl">
@@ -71,6 +71,18 @@ function MainFooter() {
                   {siteConfig.addressLines.map((line) => (
                     <p key={line}>{line}</p>
                   ))}
+                  <p className="pt-2">
+                    <span className="font-medium text-foreground/80">GSTIN: </span>
+                    {siteConfig.gstin}
+                  </p>
+                  <p>
+                    <Link
+                      href={`mailto:${siteConfig.email}`}
+                      className="break-all hover:text-primary hover:underline"
+                    >
+                      {siteConfig.email}
+                    </Link>
+                  </p>
                 </address>
               </div>
 
@@ -117,12 +129,13 @@ function MainFooter() {
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#00542E]">
                 Follow us
               </h3>
-              <SocialMedias containerClassName="md:justify-end" />
+              <SocialMedias containerClassName="md:justify-end" colored />
             </div>
           </div>
 
           <p className="mt-8 border-t border-[#00542E]/10 pt-6 text-center text-xs text-muted-foreground/90">
-            © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+            © {new Date().getFullYear()} {siteConfig.name}. All rights
+            reserved.
           </p>
         </div>
       </div>

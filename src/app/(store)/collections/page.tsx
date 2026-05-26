@@ -6,11 +6,11 @@ import { gql } from "@/gql";
 import { getClient } from "@/lib/urql";
 import { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "All Categories | Sakthi Textiles",
-  description: "Browse all saree collections at Sakthi Textiles",
+  title: "All Categories | Sakthi Textile",
+  description: "Browse all saree collections at Sakthi Textile",
 };
 
 const AllCollectionsQuery = gql(/* GraphQL */ `
