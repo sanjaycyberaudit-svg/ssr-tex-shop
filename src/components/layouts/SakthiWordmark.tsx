@@ -63,6 +63,11 @@ const emblemGapMap = {
   lg: "gap-[0.09375rem]",
 } as const;
 
+const textOffsetMap = {
+  nav: "self-start translate-y-[4.5px] sm:translate-y-[6.5px]",
+  md: "self-start translate-y-[6.5px]",
+} as const;
+
 type Props = {
   className?: string;
   size?: keyof typeof sizeMap;
@@ -103,7 +108,7 @@ export function SakthiWordmark({ className, size = "md" }: Props) {
       <span
         className={cn(
           "shrink-0 whitespace-nowrap font-extrabold uppercase leading-none",
-          (size === "nav" || size === "md") && "self-start translate-y-[6.5px]",
+          (size === "nav" || size === "md") && textOffsetMap[size],
           "text-[#FFD700] [text-shadow:1px_1px_0_#8B6914,2px_2px_4px_rgba(0,0,0,0.12)]",
           trackingMap[size],
         )}

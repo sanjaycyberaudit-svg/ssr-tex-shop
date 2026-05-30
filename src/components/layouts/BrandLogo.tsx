@@ -13,7 +13,7 @@ export function BrandLogo({ className, size = "nav" }: Props) {
     size === "sidebar" || size === "footer" ? "nav" : size;
 
   const detailTextClassBySize: Record<NonNullable<Props["size"]>, string> = {
-    nav: "text-[7.5px] leading-[1.1] tracking-[0.04em]",
+    nav: "text-[7px] leading-[1.1] tracking-[0.04em] sm:text-[7.5px]",
     md: "text-[8.5px] leading-[1.1] tracking-[0.04em]",
     sm: "text-[8.75px] leading-[1.12] tracking-[0.04em]",
     lg: "text-[11px] leading-[1.14] tracking-[0.045em]",
@@ -25,12 +25,12 @@ export function BrandLogo({ className, size = "nav" }: Props) {
     NonNullable<Props["size"]>,
     string
   > = {
-    nav: "left-[53px] top-[37px]",
-    md: "left-[72px] top-[43px]",
-    sm: "left-[76px] top-[47px]",
-    lg: "left-[96px] top-[56px]",
-    sidebar: "left-[53px] top-[33.5px]",
-    footer: "left-[53px] top-[33.5px]",
+    nav: "inset-x-0 top-[35px] pl-[53px] sm:top-[37px]",
+    md: "inset-x-0 top-[43px] pl-[72px]",
+    sm: "inset-x-0 top-[47px] pl-[76px]",
+    lg: "inset-x-0 top-[56px] pl-[96px]",
+    sidebar: "inset-x-0 top-[33.5px] pl-[53px]",
+    footer: "inset-x-0 top-[33.5px] pl-[53px]",
   };
 
   const detailGapClassBySize: Record<NonNullable<Props["size"]>, string> = {
@@ -40,15 +40,6 @@ export function BrandLogo({ className, size = "nav" }: Props) {
     lg: "gap-[2px]",
     sidebar: "gap-[1.5px]",
     footer: "gap-[1.5px]",
-  };
-
-  const detailWidthClassBySize: Record<NonNullable<Props["size"]>, string> = {
-    nav: "w-[184px]",
-    md: "w-[266px]",
-    sm: "w-[238px]",
-    lg: "w-[332px]",
-    sidebar: "w-[184px]",
-    footer: "w-[184px]",
   };
 
   return (
@@ -70,7 +61,6 @@ export function BrandLogo({ className, size = "nav" }: Props) {
           "absolute z-[1] inline-flex flex-col items-center whitespace-nowrap text-center",
           detailPositionClassBySize[size],
           detailGapClassBySize[size],
-          detailWidthClassBySize[size],
           detailTextClassBySize[size],
         )}
       >
