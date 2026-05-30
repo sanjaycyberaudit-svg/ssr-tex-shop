@@ -1,8 +1,9 @@
 import React, { Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { DocumentType, gql } from "@/gql";
-import { cn, formatPrice, keytoUrl } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
+import { ProductThumbnail } from "@/features/products/components/ProductThumbnail";
+import { productThumbnailImageHoverClass } from "@/features/products/productThumbnail";
 
 import {
   Card,
@@ -60,14 +61,12 @@ export function ProductCard({
       className={cn("w-full border-0 rounded-lg py-3 ", className)}
       {...props}
     >
-      <CardContent className="relative p-0 mb-5 overflow-hidden">
-        <Link href={`/shop/${slug}`}>
-          <Image
-            src={keytoUrl(featuredImage.key)}
-            alt={featuredImage.alt}
-            width={400}
-            height={400}
-            className="aspect-[1/1] object-cover object-center hover:scale-[1.02] hover:opacity-70 transition-all duration-500"
+      <CardContent className="relative p-0 mb-5">
+        <Link href={`/shop/${slug}`} className="block">
+          <ProductThumbnail
+            imageKey={featuredImage.key}
+            alt={featuredImage.alt || name}
+            imageClassName={productThumbnailImageHoverClass}
           />
         </Link>
         {badge && (

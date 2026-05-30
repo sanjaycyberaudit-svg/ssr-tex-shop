@@ -19,7 +19,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { DocumentType } from "@/gql";
-import { useMutation } from "@urql/next";
 import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,11 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { parseVideoEmbed } from "../../lib/video";
-import {
-  CreateTestimonialMutation,
-  TestimonialFormFragment,
-  UpdateTestimonialMutation,
-} from "../../query";
+import { TestimonialFormFragment } from "../../query";
 
 const testimonialFormSchema = z
   .object({
@@ -89,9 +84,6 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
 
-  const [, updateTestimonial] = useMutation(UpdateTestimonialMutation);
-  const [, createTestimonial] = useMutation(CreateTestimonialMutation);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(testimonialFormSchema),
     defaultValues: {
@@ -127,37 +119,46 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
       };
 
       if (testimonial) {
-        const res = await updateTestimonial({ id: testimonial.id, ...payload });
-        setIsPending(false);
-        if (res.data) {
-          router.push("/admin/testimonials");
-          router.refresh();
-          toast({ title: "Testimonial updated." });
-        } else if (res.error) {
-          toast({
-            title: "Update failed",
-            description: res.error.message,
-            variant: "destructive",
-          });
+        const res = await fetch("/api/admin/testimonials", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: testimonial.id, ...payload }),
+        });
+        if (!res.ok) {
+          const err = (await res.json().catch(() => null)) as
+            | { message?: string }
+            | null;
+          throw new Error(err?.message || "Update failed");
         }
+
+        router.push("/admin/testimonials");
+        router.refresh();
+        toast({ title: "Testimonial updated." });
       } else {
-        const res = await createTestimonial({ id: nanoid(), ...payload });
-        setIsPending(false);
-        if (res.data) {
-          router.push("/admin/testimonials");
-          router.refresh();
-          toast({ title: "Testimonial created." });
-        } else if (res.error) {
-          toast({
-            title: "Create failed",
-            description: res.error.message,
-            variant: "destructive",
-          });
+        const res = await fetch("/api/admin/testimonials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: nanoid(), ...payload }),
+        });
+        if (!res.ok) {
+          const err = (await res.json().catch(() => null)) as
+            | { message?: string }
+            | null;
+          throw new Error(err?.message || "Create failed");
         }
+
+        router.push("/admin/testimonials");
+        router.refresh();
+        toast({ title: "Testimonial created." });
       }
-    } catch {
+    } catch (error) {
+      toast({
+        title: testimonial ? "Update failed" : "Create failed",
+        description: error instanceof Error ? error.message : "Please retry.",
+        variant: "destructive",
+      });
+    } finally {
       setIsPending(false);
-      toast({ title: "Something went wrong.", variant: "destructive" });
     }
   });
 

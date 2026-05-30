@@ -116,7 +116,7 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
         <SheetHeader className="overflow-hidden border-b border-[#00542E]/15 bg-[#00542E]/[0.06] px-4 py-4 text-left">
           <SheetTitle className="sr-only">Navigation menu</SheetTitle>
           <div className="min-w-0 max-w-full">
-            <BrandLogo size="sidebar" className="w-full max-w-full" />
+            <BrandLogo size="sidebar" className="shrink-0" />
           </div>
         </SheetHeader>
 

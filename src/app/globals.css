@@ -39,8 +39,8 @@
     --announcement-bar-height: 2.25rem;
     --store-nav-height-mobile: 3.75rem;
     --store-nav-height-desktop: 3.125rem;
-    /* Peacock emblem inset inside header (top + bottom); does not change nav bar height */
-    --store-emblem-clearance: 0.375rem;
+    /* Peacock emblem inset inside header (2px top + bottom); does not change nav bar height */
+    --store-emblem-clearance: 0.125rem;
     --store-header-offset-mobile: calc(
       var(--announcement-bar-height) + var(--store-nav-height-mobile)
     );
@@ -143,6 +143,38 @@ body {
   animation: whatsapp-glow 2.2s ease-in-out infinite;
 }
 
+@keyframes phone-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 16px rgba(14, 165, 233, 0.3),
+      0 0 0 0 rgba(14, 165, 233, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 4px 20px rgba(14, 165, 233, 0.45),
+      0 0 0 10px rgba(14, 165, 233, 0);
+  }
+}
+
+.animate-phone-glow {
+  animation: phone-glow 2.2s ease-in-out infinite;
+}
+
+/* Product grid thumbnails — portrait frame, top-aligned crop (see productThumbnail.ts) */
+.product-thumb-frame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  overflow: hidden;
+  background: hsl(var(--muted));
+}
+
+.product-thumb-image {
+  object-fit: cover;
+  object-position: top center;
+}
+
 @keyframes announcement-scroll {
   from {
     transform: translate3d(0, 0, 0);
@@ -168,6 +200,11 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-announcement-scroll {
+    animation: none;
+  }
+
+  .animate-whatsapp-glow,
+  .animate-phone-glow {
     animation: none;
   }
 

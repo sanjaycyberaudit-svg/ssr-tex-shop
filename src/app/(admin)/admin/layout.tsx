@@ -24,7 +24,7 @@ export default async function DashboardLayout({
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Follow {siteConfig.name}
               </p>
-              <SocialMedias variant="compact" />
+              <SocialMedias variant="compact" colored />
             </div>
           </div>
         </aside>

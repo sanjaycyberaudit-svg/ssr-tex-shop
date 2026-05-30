@@ -24,15 +24,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { DocumentType, gql } from "@/gql";
-import { useMutation } from "@urql/next";
-import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ImageDialog } from "@/features/medias";
-import {
-  CreateCollectionMutation,
-  UpdateCollectionMutation,
-} from "../../query";
 
 const CollectionFromFragment = gql(/* GraphQL */ `
   fragment CollectionFromFragment on collections {
@@ -53,9 +47,6 @@ function CollectionForm({ collection }: CollectionFormProps) {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
 
-  const [, updateCollection] = useMutation(UpdateCollectionMutation);
-  const [, createCollection] = useMutation(CreateCollectionMutation);
-
   const form = useForm<InsertCollection>({
     resolver: zodResolver(createInsertSchema(collections)),
     defaultValues: {
@@ -68,31 +59,63 @@ function CollectionForm({ collection }: CollectionFormProps) {
     register,
     control,
     handleSubmit,
-    formState: { errors },
   } = form;
 
   const onSubmit = handleSubmit(async (data: InsertCollection) => {
     setIsPending(true);
     try {
-      if (collection) {
-        const res = await updateCollection(data);
-        setIsPending(false);
-        if (res.data) {
-          router.push("/admin/collections");
-          router.refresh();
-          toast({ title: "Success Collection is updated." });
-        }
-      } else {
-        const res = await createCollection({ id: nanoid(), ...data });
-        setIsPending(false);
-        if (res.data) {
-          router.push("/admin/collections");
-          router.refresh();
+      const payload = {
+        slug: data.slug,
+        label: data.label,
+        description: data.description,
+        title: data.title,
+        featuredImageId: data.featuredImageId,
+      };
 
-          toast({ title: "Success Collection is created." });
+      if (collection) {
+        const res = await fetch("/api/admin/collections", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: collection.id, ...payload }),
+        });
+
+        if (!res.ok) {
+          const err = (await res.json().catch(() => null)) as
+            | { message?: string }
+            | null;
+          throw new Error(err?.message || "Failed to update collection.");
         }
+
+        router.replace("/admin/collections");
+        router.refresh();
+        toast({ title: "Collection updated successfully." });
+        return;
       }
-    } catch {
+
+      const res = await fetch("/api/admin/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+        throw new Error(err?.message || "Failed to create collection.");
+      }
+
+      router.replace("/admin/collections");
+      router.refresh();
+      toast({ title: "Collection created successfully." });
+    } catch (error) {
+      toast({
+        title: "Unable to save collection",
+        description:
+          error instanceof Error ? error.message : "Please retry.",
+        variant: "destructive",
+      });
+    } finally {
       setIsPending(false);
     }
   });

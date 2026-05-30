@@ -61,6 +61,12 @@ export const dashboardConfig: DashboardConfig = {
       items: [],
     },
     {
+      title: "Announcement Bar",
+      href: "/admin/settings/announcement-bar",
+      icon: "tag",
+      items: [],
+    },
+    {
       title: "Home Banner",
       href: "/admin/settings/home-banner",
       icon: "image",

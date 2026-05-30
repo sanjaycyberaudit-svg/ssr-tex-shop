@@ -1,5 +1,9 @@
 import { AuthStoreShell } from "@/components/layouts/AuthStoreShell";
-import { resolveStorefrontSocial } from "@/lib/integrations/settings";
+import {
+  resolveStorefrontAnnouncements,
+  resolveStorefrontSocial,
+} from "@/lib/integrations/settings";
+import { AnnouncementsProvider } from "@/providers/AnnouncementsProvider";
 import { SocialLinksProvider } from "@/providers/SocialLinksProvider";
 
 export default async function AuthLayout({
@@ -7,11 +11,16 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const social = await resolveStorefrontSocial();
+  const [social, announcements] = await Promise.all([
+    resolveStorefrontSocial(),
+    resolveStorefrontAnnouncements(),
+  ]);
 
   return (
     <SocialLinksProvider social={social}>
-      <AuthStoreShell>{children}</AuthStoreShell>
+      <AnnouncementsProvider announcements={announcements}>
+        <AuthStoreShell>{children}</AuthStoreShell>
+      </AnnouncementsProvider>
     </SocialLinksProvider>
   );
 }

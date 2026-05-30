@@ -29,13 +29,33 @@ export async function startCheckout({
   });
 
   if (!res.ok) {
-    const message = await res.text().catch(() => "Checkout failed");
-    throw new Error(message || "Checkout failed");
+    const payload = (await res.json().catch(() => null)) as
+      | { message?: string }
+      | null;
+    const message = payload?.message || "Checkout failed";
+    throw new Error(message);
   }
 
   const payload = (await res.json()) as
+    | {
+        provider: "cashfree";
+        paymentSessionId: string;
+        environment: "sandbox" | "production";
+      }
     | { provider: "phonepe"; redirectUrl: string }
     | { provider: "stripe"; sessionId: string };
+
+  if (payload.provider === "cashfree") {
+    const sdk = await loadCashfreeSdk();
+    const cashfree = sdk({
+      mode: payload.environment === "production" ? "production" : "sandbox",
+    });
+    await cashfree.checkout({
+      paymentSessionId: payload.paymentSessionId,
+      redirectTarget: "_self",
+    });
+    return;
+  }
 
   if (payload.provider === "phonepe") {
     window.location.assign(payload.redirectUrl);
@@ -48,5 +68,52 @@ export async function startCheckout({
 
   if (result?.error) {
     throw new Error(result.error.message);
+  }
+}
+
+type CashfreeCheckout = (params: {
+  paymentSessionId: string;
+  redirectTarget?: "_self" | "_blank" | "_modal" | string;
+}) => Promise<unknown>;
+
+type CashfreeInit = (params: {
+  mode: "sandbox" | "production";
+}) => { checkout: CashfreeCheckout };
+
+let cashfreeLoaderPromise: Promise<CashfreeInit> | null = null;
+
+async function loadCashfreeSdk(): Promise<CashfreeInit> {
+  if (typeof window === "undefined") {
+    throw new Error("Cashfree checkout is only available in browser");
+  }
+
+  if (window.Cashfree) {
+    return window.Cashfree as CashfreeInit;
+  }
+
+  if (!cashfreeLoaderPromise) {
+    cashfreeLoaderPromise = new Promise<CashfreeInit>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+      script.async = true;
+      script.onload = () => {
+        if (window.Cashfree) {
+          resolve(window.Cashfree as CashfreeInit);
+        } else {
+          reject(new Error("Cashfree SDK loaded but was unavailable"));
+        }
+      };
+      script.onerror = () =>
+        reject(new Error("Failed to load Cashfree checkout SDK"));
+      document.head.appendChild(script);
+    });
+  }
+
+  return cashfreeLoaderPromise;
+}
+
+declare global {
+  interface Window {
+    Cashfree?: unknown;
   }
 }

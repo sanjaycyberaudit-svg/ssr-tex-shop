@@ -13,6 +13,18 @@ export interface SidebarNavProps {
 
 export function SidebarNav({ items }: SidebarNavProps) {
   const pathname = usePathname();
+  const iconColorByName: Record<string, string> = {
+    layoutDashboard: "text-violet-500",
+    cart: "text-emerald-600",
+    folder: "text-amber-500",
+    messageSquare: "text-sky-500",
+    image: "text-fuchsia-500",
+    user: "text-cyan-600",
+    receipt: "text-indigo-500",
+    globe: "text-blue-600",
+    instagram: "text-pink-500",
+    tag: "text-orange-500",
+  };
 
   if (!items?.length) return null;
 
@@ -37,7 +49,15 @@ export function SidebarNav({ items }: SidebarNavProps) {
                 item.disabled && "pointer-events-none opacity-60",
               )}
             >
-              <Icon className="mr-2 h-4 w-4" aria-hidden="true" />
+              <Icon
+                className={cn(
+                  "mr-2 h-4 w-4 transition-colors",
+                  pathname === item.href
+                    ? "text-foreground"
+                    : iconColorByName[item.icon ?? ""] || "text-muted-foreground",
+                )}
+                aria-hidden="true"
+              />
               <span>{item.title}</span>
             </span>
           </Link>

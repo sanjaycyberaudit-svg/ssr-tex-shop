@@ -5,6 +5,7 @@ import Link from "next/link";
 
 type Props = {
   orders: RecentOrderRow[];
+  emptyMessage?: string;
 };
 
 function initials(name: string | null, email: string | null) {
@@ -14,11 +15,14 @@ function initials(name: string | null, email: string | null) {
   return base.slice(0, 2).toUpperCase();
 }
 
-export function RecentSales({ orders }: Props) {
+export function RecentSales({
+  orders,
+  emptyMessage = "No orders yet. Sales will show here when customers checkout.",
+}: Props) {
   if (orders.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-8 text-center">
-        No orders yet. Sales will show here when customers checkout.
+        {emptyMessage}
       </p>
     );
   }
@@ -28,7 +32,7 @@ export function RecentSales({ orders }: Props) {
       {orders.map((order) => (
         <Link
           key={order.id}
-          href="/admin/orders"
+          href={`/admin/orders/${order.id}`}
           className="flex items-center hover:opacity-80 transition-opacity"
         >
           <Avatar className="h-9 w-9">

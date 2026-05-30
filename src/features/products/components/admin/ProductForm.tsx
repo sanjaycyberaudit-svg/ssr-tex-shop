@@ -3,6 +3,12 @@
 import { createProductAction, updateProductAction } from "@/_actions/products";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -24,6 +30,7 @@ import TagsField from "@/components/ui/tagsField";
 import { useToast } from "@/components/ui/use-toast";
 import { BadgeSelectField } from "@/features/cms";
 import { ImageDialog } from "@/features/medias";
+import UploadMediaContainer from "@/features/medias/components/UploadMediaContainer";
 import {
   InsertProducts,
   SelectProducts,
@@ -34,7 +41,7 @@ import { useQuery } from "@urql/next";
 import { createInsertSchema } from "drizzle-zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, useMemo, useState, useTransition } from "react";
+import { Suspense, useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { gql } from "urql";
 
@@ -69,6 +76,15 @@ const BULK_SHARED_FIELDS = [
   "price",
 ] as const;
 
+function mergeUniqueFiles(prev: File[], next: File[]) {
+  const map = new Map<string, File>();
+  [...prev, ...next].forEach((file) => {
+    const key = `${file.name}:${file.size}:${file.lastModified}`;
+    map.set(key, file);
+  });
+  return Array.from(map.values());
+}
+
 export const ProductFormQuery = gql(/* GraphQL */ `
   query ProductFormQuery {
     collectionsCollection(orderBy: [{ label: AscNullsLast }]) {
@@ -89,8 +105,11 @@ function ProductFrom({ product }: ProductsFormProps) {
   const { toast } = useToast();
   const [createMode, setCreateMode] = useState<BulkCreateMode>("single");
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
+  const [selectedMediaIds, setSelectedMediaIds] = useState<string[]>([]);
+  const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
   const [bulkCreated, setBulkCreated] = useState<CreatedDraftProduct[]>([]);
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+  const localFileInputRef = useRef<HTMLInputElement>(null);
 
   const [{ data }] = useQuery({
     query: ProductFormQuery,
@@ -104,10 +123,26 @@ function ProductFrom({ product }: ProductsFormProps) {
   const { register, control, handleSubmit } = form;
 
   const inBulkMode = !product && createMode === "bulk";
+  const totalBulkImages = bulkFiles.length + selectedMediaIds.length;
   const canSubmitBulk = useMemo(
-    () => bulkFiles.length > 0 && bulkFiles.length <= MAX_BULK_FILES,
-    [bulkFiles.length],
+    () =>
+      totalBulkImages > 0 &&
+      totalBulkImages <= MAX_BULK_FILES &&
+      !isPending,
+    [isPending, totalBulkImages],
   );
+
+  const addLocalFiles = (files: File[]) => {
+    setBulkFiles((prev) => mergeUniqueFiles(prev, files));
+  };
+
+  const toggleSelectedMediaId = (mediaId: string) => {
+    setSelectedMediaIds((prev) =>
+      prev.includes(mediaId)
+        ? prev.filter((id) => id !== mediaId)
+        : [...prev, mediaId],
+    );
+  };
 
   const onSingleSubmit = async (data: InsertProducts) => {
     startTransition(async () => {
@@ -137,7 +172,7 @@ function ProductFrom({ product }: ProductsFormProps) {
     if (!canSubmitBulk) {
       toast({
         title: "Select images",
-        description: `Please select 1 to ${MAX_BULK_FILES} images.`,
+        description: `Select 1 to ${MAX_BULK_FILES} total images from Media Library and/or Computer.`,
         variant: "destructive",
       });
       return;
@@ -169,6 +204,7 @@ function ProductFrom({ product }: ProductsFormProps) {
       try {
         const formData = new FormData();
         bulkFiles.forEach((file) => formData.append("files", file));
+        formData.append("mediaIds", JSON.stringify(selectedMediaIds));
         formData.append("shared", JSON.stringify(shared));
 
         const res = await fetch("/api/admin/products/bulk-draft", {
@@ -189,6 +225,7 @@ function ProductFrom({ product }: ProductsFormProps) {
           description: `${payload.created?.length ?? 0} products created.`,
         });
         setBulkFiles([]);
+        setSelectedMediaIds([]);
         router.refresh();
       } catch (error) {
         toast({
@@ -435,26 +472,105 @@ function ProductFrom({ product }: ProductsFormProps) {
             <FormItem>
               <FormLabel>Bulk Images*</FormLabel>
               <FormControl>
-                <Input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(event) =>
-                    setBulkFiles(Array.from(event.target.files ?? []))
-                  }
-                />
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsMediaDialogOpen(true)}
+                    >
+                      Add from Media Library
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => localFileInputRef.current?.click()}
+                    >
+                      Upload from Computer
+                    </Button>
+                  </div>
+
+                  <input
+                    ref={localFileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const selected = Array.from(event.target.files ?? []);
+                      addLocalFiles(selected);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                </div>
               </FormControl>
               <FormDescription>
                 Select up to {MAX_BULK_FILES} images. Each image becomes one
-                product using the shared details above.
+                product using the shared details above. Any photo size or ratio
+                is fine — portrait and full-length model shots display with the
+                face kept visible on the shop grid.
               </FormDescription>
               <FormMessage />
               <p className="text-xs text-muted-foreground">
-                Selected files: {bulkFiles.length}
-                {bulkFiles.length > MAX_BULK_FILES
+                Selected images: {totalBulkImages} (Media:{" "}
+                {selectedMediaIds.length}, Computer: {bulkFiles.length})
+                {totalBulkImages > MAX_BULK_FILES
                   ? ` (maximum ${MAX_BULK_FILES}; remove some files)`
                   : ""}
               </p>
+
+              {selectedMediaIds.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium">From Media Library</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMediaIds.map((mediaId) => (
+                      <button
+                        key={mediaId}
+                        type="button"
+                        className="rounded border px-2 py-1 text-xs hover:bg-muted"
+                        onClick={() => toggleSelectedMediaId(mediaId)}
+                        title="Remove from selection"
+                      >
+                        {mediaId}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {bulkFiles.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium">From Computer</p>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    {bulkFiles.map((file) => (
+                      <div
+                        key={`${file.name}:${file.size}:${file.lastModified}`}
+                        className="flex items-center justify-between gap-3 rounded border px-2 py-1"
+                      >
+                        <span className="truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          className="text-destructive"
+                          onClick={() =>
+                            setBulkFiles((prev) =>
+                              prev.filter(
+                                (item) =>
+                                  !(
+                                    item.name === file.name &&
+                                    item.size === file.size &&
+                                    item.lastModified === file.lastModified
+                                  ),
+                              ),
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </FormItem>
           ) : (
             <FormField
@@ -480,6 +596,35 @@ function ProductFrom({ product }: ProductsFormProps) {
               )}
             />
           )}
+
+          {inBulkMode ? (
+            <Dialog open={isMediaDialogOpen} onOpenChange={setIsMediaDialogOpen}>
+              <DialogContent className="max-w-[1080px] min-h-full md:min-h-[480px]">
+                <DialogHeader>
+                  <DialogTitle className="mb-5">
+                    Select images from Media Library
+                  </DialogTitle>
+                </DialogHeader>
+                <Suspense>
+                  <UploadMediaContainer
+                    onClickItemsHandler={toggleSelectedMediaId}
+                    selectedImageIds={selectedMediaIds}
+                  />
+                </Suspense>
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-xs text-muted-foreground">
+                    Selected from media: {selectedMediaIds.length}
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={() => setIsMediaDialogOpen(false)}
+                  >
+                    Done
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          ) : null}
 
           {bulkCreated.length > 0 ? (
             <div className="space-y-2">
@@ -514,7 +659,11 @@ function ProductFrom({ product }: ProductsFormProps) {
         </div>
 
         <div className="py-8 flex gap-x-5 items-center">
-          <Button disabled={isPending} variant={"outline"} form="project-form">
+          <Button
+            disabled={isPending || (inBulkMode && !canSubmitBulk)}
+            variant={"outline"}
+            form="project-form"
+          >
             {product ? "Update" : inBulkMode ? "Create Bulk" : "Create"}
             {isPending && (
               <Spinner

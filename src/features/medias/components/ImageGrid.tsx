@@ -11,6 +11,7 @@ type ImagesGridProps = {
   UploadingMediaComponent?: ReactNode;
   containerClassName?: string;
   defaultImageId?: string;
+  selectedImageIds?: string[];
   onClickHandler?: (mediaId: string) => void;
   uploadingFiles?: FileWithPreview[];
   medias: { node: DocumentType<typeof ImageGridFragment> }[];
@@ -21,6 +22,7 @@ function ImagesGrid({
   containerClassName,
   onClickHandler,
   defaultImageId,
+  selectedImageIds = [],
   medias,
   UploadingMediaComponent,
   uploadingFiles = [],
@@ -59,9 +61,10 @@ function ImagesGrid({
           type="button"
           className={cn(
             "object-center group relative h-[120px] w-[120px]",
-            defaultImageId === media.id && "ring-offset-2 ring-2",
+            (defaultImageId === media.id || selectedImageIds.includes(media.id)) &&
+              "ring-offset-2 ring-2",
           )}
-          onClick={() => onClickHandler(media.id)}
+          onClick={() => onClickHandler?.(media.id)}
         >
           <Image
             src={keytoUrl(media.key)}

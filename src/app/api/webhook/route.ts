@@ -2,7 +2,7 @@ import { env } from "@/env.mjs";
 import { notifyOrderWhatsAppTargets } from "@/lib/integrations/whatsapp";
 import { stripe } from "@/lib/stripe";
 import db from "@/lib/supabase/db";
-import { PaymentStatus, address, orders } from "@/lib/supabase/schema";
+import { carts, PaymentStatus, orders } from "@/lib/supabase/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -25,7 +25,11 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    if (!sig || !webhookSecret) return;
+    if (!sig || !webhookSecret) {
+      return new NextResponse("Missing Stripe signature or webhook secret", {
+        status: 400,
+      });
+    }
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err: any) {
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
@@ -44,21 +48,16 @@ export async function POST(request: NextRequest) {
           const customerMobile = String(
             checkoutSession.metadata?.customer_mobile ?? "",
           ).trim();
+          const shippingAddressId = String(
+            checkoutSession.metadata?.shipping_address_id ?? "",
+          ).trim();
+          const paymentIntentId =
+            typeof checkoutSession.payment_intent === "string"
+              ? checkoutSession.payment_intent
+              : null;
 
           if (checkoutSession.status === "complete") {
             const customer_details = checkoutSession.customer_details;
-
-            const insertedAddress = await db
-              .insert(address)
-              .values({
-                city: customer_details.address.city,
-                country: customer_details.address.country,
-                line1: customer_details.address.line1,
-                line2: customer_details.address.line2,
-                postal_code: customer_details.address.postal_code,
-                state: customer_details.address.state,
-              })
-              .returning({ id: address.id });
 
             const updatedOrder = await db
               .update(orders)
@@ -67,13 +66,13 @@ export async function POST(request: NextRequest) {
                 email: customer_details!.email,
                 name: customer_details!.name,
                 order_status: "PREPARING",
-                stripe_payment_intent_id:
-                  checkoutSession.payment_intent.toString(),
+                stripe_payment_intent_id: paymentIntentId,
                 payment_status: checkoutSession.payment_status as PaymentStatus,
                 payment_method: checkoutSession.payment_method_types[0],
                 payment_provider: "stripe",
-                payment_reference: checkoutSession.payment_intent?.toString(),
+                payment_reference: paymentIntentId,
                 customer_mobile: customerMobile || null,
+                addressId: shippingAddressId || null,
                 payment_meta: {
                   stripeSessionId: checkoutSession.id,
                 },
@@ -103,14 +102,17 @@ export async function POST(request: NextRequest) {
                   })
                   .where(eq(orders.id, order.id));
               }
+
+              if (order.user_id) {
+                await db.delete(carts).where(eq(carts.userId, order.user_id));
+              }
             }
           } else {
             const insertedOrder = await db
               .update(orders)
               .set({
                 order_status: "canceled",
-                stripe_payment_intent_id:
-                  checkoutSession.payment_intent.toString(),
+                stripe_payment_intent_id: paymentIntentId,
                 payment_status: checkoutSession.payment_status as PaymentStatus,
                 payment_provider: "stripe",
               })

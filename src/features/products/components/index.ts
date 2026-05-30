@@ -1,4 +1,5 @@
 export { default as BuyNowButton } from "./BuyNowButton";
+export { ProductThumbnail } from "./ProductThumbnail";
 export { default as ProductCard, ProductCardFragment } from "./ProductCard";
 export { default as ProductCardSkeleton } from "./ProductCardSkeleton";
 export { default as ProductImageShowcase } from "./ProductImageShowcase";

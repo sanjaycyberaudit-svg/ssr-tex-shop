@@ -14,11 +14,20 @@ type ApiSettingRecord = {
 } | null;
 
 type IntegrationsPayload = {
+  cashfree: ApiSettingRecord;
   phonepe: ApiSettingRecord;
   whatsapp: ApiSettingRecord;
 };
 
 type FormState = {
+  cashfree: {
+    enabled: boolean;
+    clientId: string;
+    clientSecret: string;
+    baseUrl: string;
+    apiVersion: string;
+    environment: "sandbox" | "production";
+  };
   phonepe: {
     enabled: boolean;
     merchantId: string;
@@ -39,6 +48,14 @@ type FormState = {
 };
 
 const DEFAULT_FORM: FormState = {
+  cashfree: {
+    enabled: false,
+    clientId: "",
+    clientSecret: "",
+    baseUrl: "https://sandbox.cashfree.com/pg",
+    apiVersion: "2025-01-01",
+    environment: "sandbox",
+  },
   phonepe: {
     enabled: false,
     merchantId: "",
@@ -78,10 +95,25 @@ export function ApiIntegrationsForm() {
         const payload = (await res.json()) as IntegrationsPayload;
         if (cancelled) return;
 
+        const cashfreeValue = payload.cashfree?.value ?? {};
         const phonepeValue = payload.phonepe?.value ?? {};
         const whatsappValue = payload.whatsapp?.value ?? {};
 
         setForm({
+          cashfree: {
+            enabled: payload.cashfree?.isEnabled ?? false,
+            clientId: String(cashfreeValue.clientId ?? ""),
+            clientSecret: String(cashfreeValue.clientSecret ?? ""),
+            baseUrl: String(
+              cashfreeValue.baseUrl ?? "https://sandbox.cashfree.com/pg",
+            ),
+            apiVersion: String(cashfreeValue.apiVersion ?? "2025-01-01"),
+            environment:
+              String(cashfreeValue.environment ?? "sandbox").toLowerCase() ===
+              "production"
+                ? "production"
+                : "sandbox",
+          },
           phonepe: {
             enabled: payload.phonepe?.isEnabled ?? false,
             merchantId: String(phonepeValue.merchantId ?? ""),
@@ -137,6 +169,16 @@ export function ApiIntegrationsForm() {
     }));
   };
 
+  const updateCashfree = <K extends keyof FormState["cashfree"]>(
+    key: K,
+    value: FormState["cashfree"][K],
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      cashfree: { ...prev.cashfree, [key]: value },
+    }));
+  };
+
   const updateWhatsApp = <K extends keyof FormState["whatsapp"]>(
     key: K,
     value: FormState["whatsapp"][K],
@@ -148,7 +190,7 @@ export function ApiIntegrationsForm() {
   };
 
   const saveKey = async (
-    key: "phonepe" | "whatsapp",
+    key: "cashfree" | "phonepe" | "whatsapp",
     body: Record<string, unknown>,
   ) =>
     fetch("/api/admin/integrations", {
@@ -165,6 +207,18 @@ export function ApiIntegrationsForm() {
   const onSave = async () => {
     setIsSaving(true);
     try {
+      await saveKey("cashfree", {
+        key: "cashfree",
+        isEnabled: form.cashfree.enabled,
+        value: {
+          clientId: form.cashfree.clientId.trim(),
+          clientSecret: form.cashfree.clientSecret.trim(),
+          baseUrl: form.cashfree.baseUrl.trim(),
+          apiVersion: form.cashfree.apiVersion.trim() || "2025-01-01",
+          environment: form.cashfree.environment,
+        },
+      });
+
       await saveKey("phonepe", {
         key: "phonepe",
         isEnabled: form.phonepe.enabled,
@@ -192,7 +246,7 @@ export function ApiIntegrationsForm() {
 
       toast({
         title: "API settings saved",
-        description: "PhonePe and WhatsApp credentials updated.",
+        description: "Cashfree, PhonePe and WhatsApp credentials updated.",
       });
     } catch (error) {
       toast({
@@ -207,6 +261,87 @@ export function ApiIntegrationsForm() {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Cashfree Payment Gateway</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-xs text-muted-foreground">
+            Docs:{" "}
+            <a
+              className="text-primary underline underline-offset-2"
+              href="https://www.cashfree.com/docs/payments/overview"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Cashfree integration overview
+            </a>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.cashfree.enabled}
+              onChange={(e) => updateCashfree("enabled", e.target.checked)}
+            />
+            Enable Cashfree checkout
+          </label>
+          <div className="grid gap-2">
+            <Label htmlFor="cashfree-client-id">Client ID</Label>
+            <Input
+              id="cashfree-client-id"
+              value={form.cashfree.clientId}
+              onChange={(e) => updateCashfree("clientId", e.target.value)}
+              placeholder="CFxxxxxxxxxxxx"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cashfree-client-secret">Client Secret</Label>
+            <Input
+              id="cashfree-client-secret"
+              type="password"
+              value={form.cashfree.clientSecret}
+              onChange={(e) => updateCashfree("clientSecret", e.target.value)}
+              placeholder="Leave blank to keep existing"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cashfree-base-url">Base URL</Label>
+            <Input
+              id="cashfree-base-url"
+              value={form.cashfree.baseUrl}
+              onChange={(e) => updateCashfree("baseUrl", e.target.value)}
+              placeholder="https://sandbox.cashfree.com/pg"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cashfree-api-version">API Version</Label>
+            <Input
+              id="cashfree-api-version"
+              value={form.cashfree.apiVersion}
+              onChange={(e) => updateCashfree("apiVersion", e.target.value)}
+              placeholder="2025-01-01"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cashfree-environment">Environment</Label>
+            <select
+              id="cashfree-environment"
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={form.cashfree.environment}
+              onChange={(e) =>
+                updateCashfree(
+                  "environment",
+                  e.target.value === "production" ? "production" : "sandbox",
+                )
+              }
+            >
+              <option value="sandbox">Sandbox</option>
+              <option value="production">Production</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>PhonePe Payment Gateway</CardTitle>

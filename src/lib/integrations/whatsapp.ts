@@ -9,6 +9,99 @@ type SendOrderSuccessWhatsAppParams = {
   amount: string;
 };
 
+const WHATSAPP_API_VERSION = "v20.0";
+const WHATSAPP_REQUEST_TIMEOUT_MS = 12_000;
+const WHATSAPP_MAX_RETRIES = 1;
+
+type WhatsAppSendResult = { sent: true } | { sent: false; reason: string };
+
+type WhatsAppTemplateBody = {
+  messaging_product: "whatsapp";
+  to: string;
+  type: "template";
+  template: {
+    name: string;
+    language: { code: string };
+    components: Array<{
+      type: "body";
+      parameters: Array<{ type: "text"; text: string }>;
+    }>;
+  };
+};
+
+type WhatsAppTextBody = {
+  messaging_product: "whatsapp";
+  to: string;
+  type: "text";
+  text: { body: string };
+};
+
+function parseWhatsAppError(payload: unknown, fallback: string) {
+  const data = payload as { error?: { message?: string; code?: number } } | null;
+  const message = String(data?.error?.message ?? "").trim();
+  const code = data?.error?.code;
+  if (message && code) return `${message} (code ${code})`;
+  if (message) return message;
+  return fallback;
+}
+
+async function postWhatsAppMessage(
+  phoneNumberId: string,
+  accessToken: string,
+  body: WhatsAppTemplateBody | WhatsAppTextBody,
+): Promise<WhatsAppSendResult> {
+  const endpoint = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${phoneNumberId}/messages`;
+
+  for (let attempt = 0; attempt <= WHATSAPP_MAX_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), WHATSAPP_REQUEST_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(body),
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      if (res.ok) {
+        return { sent: true };
+      }
+
+      const payload = (await res.json().catch(() => null)) as unknown;
+      const reason = parseWhatsAppError(
+        payload,
+        `WhatsApp API error (${res.status})`,
+      );
+      const retriable = res.status >= 500 || res.status === 429;
+
+      if (!retriable || attempt >= WHATSAPP_MAX_RETRIES) {
+        return { sent: false, reason };
+      }
+    } catch (error) {
+      const timedOut =
+        error instanceof Error &&
+        (error.name === "AbortError" || /aborted/i.test(error.message));
+      const reason = timedOut
+        ? "WhatsApp request timeout"
+        : error instanceof Error
+          ? error.message
+          : "WhatsApp request failed";
+      if (attempt >= WHATSAPP_MAX_RETRIES) {
+        return { sent: false, reason };
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  return { sent: false, reason: "WhatsApp request failed" };
+}
+
 export async function sendOrderSuccessWhatsApp(
   params: SendOrderSuccessWhatsAppParams,
 ) {
@@ -19,12 +112,10 @@ export async function sendOrderSuccessWhatsApp(
   const to = normalizeIndianMobile(params.mobile);
   if (!to) return { sent: false, reason: "invalid_mobile" as const };
 
-  const endpoint = `https://graph.facebook.com/v20.0/${config.phoneNumberId}/messages`;
-
   const templateName = config.templateName?.trim();
   const language = config.templateLanguage || "en";
 
-  const body = templateName
+  const body: WhatsAppTemplateBody | WhatsAppTextBody = templateName
     ? {
         messaging_product: "whatsapp",
         to,
@@ -52,23 +143,7 @@ export async function sendOrderSuccessWhatsApp(
           body: `Hi ${params.customerName || "Customer"}, your order #${params.orderId} is confirmed. Amount paid: INR ${params.amount}. Thank you for shopping with Sakthi Textile.`,
         },
       };
-
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${config.accessToken}`,
-    },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const err = await res.text().catch(() => "WhatsApp API error");
-    return { sent: false, reason: err };
-  }
-
-  return { sent: true as const };
+  return postWhatsAppMessage(config.phoneNumberId, config.accessToken, body);
 }
 
 type SendSellerOrderWhatsAppParams = {
@@ -89,8 +164,7 @@ export async function sendSellerOrderWhatsApp(
   const to = normalizeIndianMobile(params.mobile);
   if (!to) return { sent: false, reason: "invalid_mobile" as const };
 
-  const endpoint = `https://graph.facebook.com/v20.0/${config.phoneNumberId}/messages`;
-  const body = {
+  const body: WhatsAppTextBody = {
     messaging_product: "whatsapp",
     to,
     type: "text",
@@ -99,22 +173,7 @@ export async function sendSellerOrderWhatsApp(
     },
   };
 
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${config.accessToken}`,
-    },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const err = await res.text().catch(() => "WhatsApp API error");
-    return { sent: false, reason: err };
-  }
-
-  return { sent: true as const };
+  return postWhatsAppMessage(config.phoneNumberId, config.accessToken, body);
 }
 
 export async function sendSellerWhatsAppBulk(params: {
@@ -131,8 +190,12 @@ export async function sendSellerWhatsAppBulk(params: {
     };
   }
 
+  const uniqueMobiles = [...new Set(config.sellerMobiles.map((m) => m.trim()))].filter(
+    Boolean,
+  );
+
   let sentCount = 0;
-  for (const mobile of config.sellerMobiles) {
+  for (const mobile of uniqueMobiles) {
     const res = await sendSellerOrderWhatsApp({
       mobile,
       orderId: params.orderId,

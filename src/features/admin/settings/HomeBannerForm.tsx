@@ -50,6 +50,28 @@ const DEFAULT_FORM: FormState = {
   slides: [createDefaultSlide(1)],
 };
 
+const DEFAULT_SUBTITLE = "Discover our latest collections.";
+const DEFAULT_TITLE_PREFIX = "Banner Slide";
+
+function normalizeSlideForSave(slide: SlideForm, index: number) {
+  const title = slide.title.trim() || `${DEFAULT_TITLE_PREFIX} ${index + 1}`;
+  const subtitle = slide.subtitle.trim() || DEFAULT_SUBTITLE;
+  const href = slide.href.trim() || "/shop";
+  const cta = slide.cta.trim() || "Shop now";
+  const imageAlt = slide.imageAlt.trim() || title;
+
+  return {
+    id: slide.id.trim() || `slide-${index + 1}`,
+    title,
+    subtitle,
+    href,
+    cta,
+    imageAlt,
+    imageMediaId: slide.imageMediaId.trim(),
+    image: slide.image.trim(),
+  };
+}
+
 export function HomeBannerForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -159,16 +181,15 @@ export function HomeBannerForm() {
   const onSave = async () => {
     setIsSaving(true);
     try {
-      const slides = form.slides.map((slide, index) => ({
-        id: slide.id.trim() || `slide-${index + 1}`,
-        title: slide.title.trim(),
-        subtitle: slide.subtitle.trim(),
-        href: slide.href.trim(),
-        cta: slide.cta.trim(),
-        imageAlt: slide.imageAlt.trim(),
-        imageMediaId: slide.imageMediaId.trim(),
-        image: slide.image.trim(),
-      }));
+      const slides = form.slides.map(normalizeSlideForSave);
+      const slideWithoutImage = slides.findIndex(
+        (slide) => !slide.imageMediaId && !slide.image,
+      );
+      if (slideWithoutImage >= 0) {
+        throw new Error(
+          `Slide ${slideWithoutImage + 1} needs an image (media or fallback URL).`,
+        );
+      }
 
       const res = await fetch("/api/admin/integrations", {
         method: "POST",
@@ -181,8 +202,13 @@ export function HomeBannerForm() {
       });
 
       if (!res.ok) {
-        const text = await res.text().catch(() => "Save failed");
-        throw new Error(text || "Save failed");
+        const payload = (await res.json().catch(() => null)) as
+          | { message?: string; error?: unknown }
+          | null;
+        if (payload?.message) {
+          throw new Error(payload.message);
+        }
+        throw new Error("Save failed");
       }
 
       toast({

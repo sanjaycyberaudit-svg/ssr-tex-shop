@@ -4,7 +4,7 @@ import useCartStore, { type CartItems } from "@/features/carts/useCartStore";
 import { useToast } from "@/components/ui/use-toast";
 import { AuthUser, Session } from "@supabase/supabase-js";
 import { nanoid } from "nanoid";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "../lib/supabase/client";
 import useWishlistStore from "@/features/wishlists/useWishlistStore";
 
@@ -27,6 +27,32 @@ interface SupabaseAuthProviderProps {
   children: React.ReactNode;
 }
 
+const WELCOME_TOAST_KEY = "auth:welcomed-user-id";
+
+function hasWelcomedInSession(userId: string) {
+  try {
+    return sessionStorage.getItem(WELCOME_TOAST_KEY) === userId;
+  } catch {
+    return false;
+  }
+}
+
+function markWelcomedInSession(userId: string) {
+  try {
+    sessionStorage.setItem(WELCOME_TOAST_KEY, userId);
+  } catch {
+    // Ignore storage access failures (private mode/restrictions).
+  }
+}
+
+function clearWelcomedInSession() {
+  try {
+    sessionStorage.removeItem(WELCOME_TOAST_KEY);
+  } catch {
+    // Ignore storage access failures (private mode/restrictions).
+  }
+}
+
 export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
   children,
 }) => {
@@ -35,6 +61,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
   const removeAllCartStorage = useCartStore((s) => s.removeAllProducts);
   const setWishlist = useWishlistStore((s) => s.setWishlist);
   const { toast } = useToast();
+  const lastWelcomedUserId = useRef<string | null>(null);
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
@@ -105,13 +132,23 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
                 });
             }
 
-            toast({
-              title: "Welcome Back.",
-              description: "Your are arleady signed in.",
-            });
+            if (
+              session?.user?.id &&
+              session.user.id !== lastWelcomedUserId.current &&
+              !hasWelcomedInSession(session.user.id)
+            ) {
+              lastWelcomedUserId.current = session.user.id;
+              markWelcomedInSession(session.user.id);
+              toast({
+                title: "Welcome back.",
+                description: "You are already signed in.",
+              });
+            }
             break;
           case "SIGNED_OUT":
             setUser(null);
+            lastWelcomedUserId.current = null;
+            clearWelcomedInSession();
             removeAllCartStorage();
             break;
 

@@ -2,10 +2,21 @@ import { syncPhonePeOrderPayment } from "@/lib/payments/orderPaymentSync";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => ({}))) as Record<
-    string,
-    unknown
-  >;
+  const rawBody = await request.text();
+  if (!rawBody.trim()) {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  let body: Record<string, unknown> = {};
+  try {
+    body = JSON.parse(rawBody) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: "Invalid JSON payload" },
+      { status: 400 },
+    );
+  }
+
   const responseEnvelope = String((body?.response as string) || "").trim();
   let decoded: Record<string, unknown> = {};
   if (responseEnvelope) {
@@ -28,16 +39,17 @@ export async function POST(request: NextRequest) {
       "",
   ).trim();
 
-  const orderId = String((body?.orderId as string) || "").trim();
+  if (!merchantTransactionId) {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
 
-  if (!merchantTransactionId && !orderId) {
+  if (!merchantTransactionId.startsWith("ORD_")) {
     return NextResponse.json({ ok: true, skipped: true });
   }
 
   try {
     await syncPhonePeOrderPayment({
-      orderId: orderId || undefined,
-      merchantTransactionId: merchantTransactionId || undefined,
+      merchantTransactionId,
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

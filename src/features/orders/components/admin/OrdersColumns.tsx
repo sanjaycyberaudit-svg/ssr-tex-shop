@@ -125,7 +125,7 @@ const OrdersColumns: ColumnDef<{
               href={`/admin/orders/${order.id}`}
               className={buttonVariants({ variant: "ghost" })}
             >
-              Edit Orders
+              View Order
             </Link>
             {/* <DeleteCategoryDialog categoryId={category.id} /> */}
           </DropdownMenuContent>

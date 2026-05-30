@@ -5,6 +5,10 @@ import { gql, DocumentType } from "@/gql";
 import Image from "next/image";
 import { Icons } from "../../../components/layouts/icons";
 import { keytoUrl } from "@/lib/utils";
+import {
+  productThumbnailFrameClass,
+  productThumbnailImageClass,
+} from "@/features/products/productThumbnail";
 
 type ProductImageShowcaseProps = React.HTMLAttributes<HTMLDivElement> & {
   data: DocumentType<typeof ProductImageShowcaseFragment>;
@@ -58,13 +62,18 @@ function ProductImageShowcase({ data }: ProductImageShowcaseProps) {
       {/* Active Image Display */}
       <div className="w-full max-w-2xl order-1 md:order-3 grow">
         {allImages[activeImageIndex] && (
-          <Image
-            src={keytoUrl(allImages[activeImageIndex].key)}
-            alt={allImages[activeImageIndex].alt || "Product image"}
-            className="w-full h-auto object-cover aspect-square mb-5"
-            width={1024}
-            height={1024}
-          />
+          <div
+            className={`${productThumbnailFrameClass} mb-5`}
+          >
+            <Image
+              src={keytoUrl(allImages[activeImageIndex].key)}
+              alt={allImages[activeImageIndex].alt || "Product image"}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className={productThumbnailImageClass}
+              priority
+            />
+          </div>
         )}
       </div>
 
@@ -78,7 +87,7 @@ function ProductImageShowcase({ data }: ProductImageShowcaseProps) {
               alt={image.alt || "Product image thumbnail"}
               width={100}
               height={100}
-              className={` aspect-[1/1] object-cover cursor-pointer p-1 ${activeImageIndex === index ? "border-2 border-blue-500" : ""}`}
+              className={`aspect-[3/4] object-cover object-top cursor-pointer p-1 ${activeImageIndex === index ? "border-2 border-blue-500" : ""}`}
               onClick={() => setActiveImageIndex(index)}
             />
           ))}

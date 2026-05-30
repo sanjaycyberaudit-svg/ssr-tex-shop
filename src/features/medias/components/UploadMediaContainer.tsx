@@ -13,10 +13,12 @@ import ImageGridSkeleton from "./ImageGridSkeleton";
 interface UploadMediaContainerProps {
   onClickItemsHandler: (mediaId: string) => void;
   defaultImageId?: string;
+  selectedImageIds?: string[];
 }
 function UploadMediaContainer({
   onClickItemsHandler,
   defaultImageId,
+  selectedImageIds,
 }: UploadMediaContainerProps) {
   const router = useRouter();
   const [uploadingImages, setUploadingImages] = useState<FileWithPreview[]>([]);
@@ -112,6 +114,7 @@ function UploadMediaContainer({
                 uploadingFiles={uploadingImages}
                 onClickHandler={onClickItemsHandler}
                 defaultImageId={defaultImageId}
+                selectedImageIds={selectedImageIds}
               />
 
               {medias.pageInfo.hasNextPage ? (

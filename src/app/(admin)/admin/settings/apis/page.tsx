@@ -5,7 +5,7 @@ export default function AdminApiSettingsPage() {
   return (
     <AdminShell
       heading="API Integrations"
-      description="Configure PhonePe payment gateway credentials and WhatsApp API automation."
+      description="Configure Cashfree, PhonePe payment gateway credentials and WhatsApp API automation."
     >
       <ApiIntegrationsForm />
     </AdminShell>

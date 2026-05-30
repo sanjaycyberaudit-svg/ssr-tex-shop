@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: Props) {
     <MobileMenuProvider>
       <div className="flex h-dvh flex-col overflow-hidden bg-background">
         <Navbar adminLayout />
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[var(--admin-header-height-mobile)] md:pt-[var(--admin-header-height-desktop)]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
       </div>

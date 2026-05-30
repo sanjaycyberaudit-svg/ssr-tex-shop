@@ -46,7 +46,7 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
             alt={featuredImage?.alt || name}
             fill
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 85vw, 480px"
-            className="object-cover object-center"
+            className="object-cover object-top"
             priority={false}
           />
         </Link>

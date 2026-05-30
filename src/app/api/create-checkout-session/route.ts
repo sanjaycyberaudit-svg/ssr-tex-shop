@@ -1,15 +1,21 @@
 import { getProductsByIds } from "@/_actions/products";
 import type { CartItems } from "@/features/carts";
 import { createPhonePePayment } from "@/lib/payments/phonepe";
+import { createCashfreePayment } from "@/lib/payments/cashfree";
 import { stripe } from "@/lib/stripe";
 import db from "@/lib/supabase/db";
 import { SelectProducts, orders } from "@/lib/supabase/schema";
-import { getPhonePeConfig } from "@/lib/integrations/settings";
+import {
+  getCashfreeConfig,
+  getIntegrationSetting,
+  getPhonePeConfig,
+  INTEGRATION_KEYS,
+} from "@/lib/integrations/settings";
 import { getURL } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { orderLines } from "./../../../lib/supabase/schema";
 
-import { User, createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -35,13 +41,12 @@ const orderProductsSchema = z.object({
 type OrderProducts = CartItems;
 
 export async function POST(request: Request) {
-  const data = (await request.json()) as {
+  const payload = await request.json().catch(() => null);
+  const data = (payload ?? {}) as {
     orderProducts: OrderProducts;
     guest: boolean;
     shipping: z.infer<typeof shippingSchema>;
   };
-
-  let user: User | undefined;
 
   const validation = orderProductsSchema.safeParse(data);
   const supabase = createRouteHandlerClient({ cookies });
@@ -52,8 +57,36 @@ export async function POST(request: Request) {
     });
 
   try {
-    const phonePeConfig = await getPhonePeConfig();
-    const preferPhonePe = Boolean(phonePeConfig);
+    const [cashfreeConfig, phonePeConfig, cashfreeSetting, phonepeSetting] =
+      await Promise.all([
+        getCashfreeConfig(),
+        getPhonePeConfig(),
+        getIntegrationSetting(INTEGRATION_KEYS.cashfree),
+        getIntegrationSetting(INTEGRATION_KEYS.phonepe),
+      ]);
+
+    if (cashfreeSetting?.isEnabled && !cashfreeConfig) {
+      return NextResponse.json(
+        {
+          message:
+            "Cashfree is enabled but configuration is incomplete. Update Client ID, Secret, Base URL and API version in Admin settings.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (phonepeSetting?.isEnabled && !phonePeConfig) {
+      return NextResponse.json(
+        {
+          message:
+            "PhonePe is enabled but configuration is incomplete. Update Merchant ID, Salt Key, Salt Index and Base URL in Admin settings.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const preferCashfree = Boolean(cashfreeConfig);
+    const preferPhonePe = !preferCashfree && Boolean(phonePeConfig);
 
     const productsQuantity = await mergeProductDetailsWithQuantities(
       data.orderProducts,
@@ -61,33 +94,79 @@ export async function POST(request: Request) {
 
     const amount = calcSubtotal(productsQuantity);
 
-    const insertedOrder = await db
-      .insert(orders)
-      .values({
-        user_id: !data.guest
-          ? (await supabase.auth.getUser()).data.user?.id
-          : null,
-        name: data.shipping.fullName,
-        email: data.shipping.email,
-        addressId: data.shipping.addressId,
-        currency: "inr",
-        amount: `${amount}`,
-        order_status: "pending",
-        payment_status: "unpaid",
-        payment_method: preferPhonePe ? "phonepe" : "card",
-        payment_provider: preferPhonePe ? "phonepe" : "stripe",
-        customer_mobile: data.shipping.mobile,
-      })
-      .returning();
+    const insertedOrder = await db.transaction(async (tx) => {
+      const created = await tx
+        .insert(orders)
+        .values({
+          user_id: !data.guest
+            ? (await supabase.auth.getUser()).data.user?.id
+            : null,
+          name: data.shipping.fullName,
+          email: data.shipping.email,
+          addressId: data.shipping.addressId,
+          currency: "inr",
+          amount: `${amount}`,
+          order_status: "pending",
+          payment_status: "unpaid",
+          payment_method: preferCashfree
+            ? "cashfree"
+            : preferPhonePe
+              ? "phonepe"
+              : "card",
+          payment_provider: preferCashfree
+            ? "cashfree"
+            : preferPhonePe
+              ? "phonepe"
+              : "stripe",
+          customer_mobile: data.shipping.mobile,
+        })
+        .returning();
 
-    await db.insert(orderLines).values(
-      productsQuantity.map(({ id, quantity, price }) => ({
-        productId: id,
-        quantity,
-        price: `${price}`,
+      await tx.insert(orderLines).values(
+        productsQuantity.map(({ id, quantity, price }) => ({
+          productId: id,
+          quantity,
+          price: `${price}`,
+          orderId: created[0].id,
+        })),
+      );
+
+      return created;
+    });
+
+    if (preferCashfree) {
+      const payment = await createCashfreePayment({
         orderId: insertedOrder[0].id,
-      })),
-    );
+        amountInRupees: amount,
+        customerName: data.shipping.fullName,
+        customerMobile: data.shipping.mobile,
+        customerEmail: data.shipping.email,
+        customerId: !data.guest
+          ? (await supabase.auth.getUser()).data.user?.id
+          : undefined,
+      });
+
+      if (!payment?.paymentSessionId) {
+        throw new Error("Cashfree payment session could not be created");
+      }
+
+      await db
+        .update(orders)
+        .set({
+          payment_reference: payment.cashfreeCfOrderId ?? payment.cashfreeOrderId,
+          payment_meta: {
+            cashfreeOrderId: payment.cashfreeOrderId,
+            cashfreeCfOrderId: payment.cashfreeCfOrderId,
+          },
+        })
+        .where(eq(orders.id, insertedOrder[0].id));
+
+      return NextResponse.json({
+        provider: "cashfree",
+        paymentSessionId: payment.paymentSessionId,
+        environment: payment.environment,
+      });
+    }
 
     if (preferPhonePe) {
       const payment = await createPhonePePayment({
@@ -144,7 +223,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ provider: "stripe", sessionId: session.id });
   } catch (err) {
     console.error("[checkout] create-checkout-session failed:", err);
-    return new NextResponse("Internal Error", { status: 500 });
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Checkout initiation failed. Please retry.";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }
 

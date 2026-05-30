@@ -199,14 +199,50 @@ export function DashboardView({ stats, statsError }: Props) {
               </Card>
               <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Recent orders</CardTitle>
+                  <CardTitle>Recent paid orders</CardTitle>
                   <CardDescription>
-                    Latest {stats.recentOrders.length} order
-                    {stats.recentOrders.length === 1 ? "" : "s"}
+                    Latest {stats.recentPaidOrders.length} paid order
+                    {stats.recentPaidOrders.length === 1 ? "" : "s"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecentSales orders={stats.recentOrders} />
+                  <RecentSales
+                    orders={stats.recentPaidOrders}
+                    emptyMessage="No paid orders yet."
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pending payment orders</CardTitle>
+                  <CardDescription>
+                    Orders that need payment follow-up
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RecentSales
+                    orders={stats.recentPendingOrders}
+                    emptyMessage="No pending payment orders right now."
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>All recent orders</CardTitle>
+                  <CardDescription>
+                    Latest {stats.recentOrders.length} order
+                    {stats.recentOrders.length === 1 ? "" : "s"} across all
+                    statuses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RecentSales
+                    orders={stats.recentOrders}
+                    emptyMessage="No orders yet."
+                  />
                 </CardContent>
               </Card>
             </div>

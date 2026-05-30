@@ -67,6 +67,8 @@ export type DashboardStats = {
   pendingOrdersCount: number;
   monthlyRevenue: MonthlyRevenuePoint[];
   recentOrders: RecentOrderRow[];
+  recentPaidOrders: RecentOrderRow[];
+  recentPendingOrders: RecentOrderRow[];
   notifications: DashboardNotification[];
   topProducts: TopProductRow[];
   ordersByPayment: { status: string; count: number }[];
@@ -169,6 +171,8 @@ export function getEmptyDashboardStats(): DashboardStats {
     pendingOrdersCount: 0,
     monthlyRevenue,
     recentOrders: [],
+    recentPaidOrders: [],
+    recentPendingOrders: [],
     notifications: [],
     topProducts: [],
     ordersByPayment: [],
@@ -177,6 +181,44 @@ export function getEmptyDashboardStats(): DashboardStats {
 
 function toDate(value: Date | string): Date {
   return value instanceof Date ? value : new Date(value);
+}
+
+function normalizeStatus(value: string | null | undefined): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function isPaidPaymentStatus(paymentStatus: string | null | undefined): boolean {
+  const normalized = normalizeStatus(paymentStatus);
+  return (
+    normalized === "paid" ||
+    normalized === "success" ||
+    normalized === "captured"
+  );
+}
+
+function needsPaymentAttention(order: OrderRow): boolean {
+  const paymentStatus = normalizeStatus(order.payment_status);
+  const orderStatus = normalizeStatus(order.order_status);
+  if (orderStatus === "cancelled") return false;
+  if (orderStatus === "pending") return true;
+  return (
+    paymentStatus === "unpaid" ||
+    paymentStatus === "pending" ||
+    paymentStatus === "failed"
+  );
+}
+
+function toRecentOrderRow(o: OrderRow): RecentOrderRow {
+  return {
+    id: o.id,
+    name: o.name,
+    email: o.email,
+    amount: Number(o.amount),
+    currency: o.currency,
+    payment_status: o.payment_status,
+    order_status: o.order_status,
+    createdAt: toDate(o.created_at),
+  };
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -255,7 +297,7 @@ function computeStats({
     new Date(now.getFullYear(), now.getMonth() - 11, 1),
   );
 
-  const paidOrders = allOrders.filter((o) => o.payment_status === "paid");
+  const paidOrders = allOrders.filter((o) => isPaidPaymentStatus(o.payment_status));
   const paidInRange = paidOrders.filter(
     (o) => toDate(o.created_at) >= twelveMonthsAgo,
   );
@@ -289,11 +331,7 @@ function computeStats({
 
   const notifications: DashboardNotification[] = [];
 
-  const pending = allOrders.filter(
-    (o) =>
-      o.order_status === "pending" ||
-      (o.payment_status === "unpaid" && o.order_status !== "cancelled"),
-  );
+  const pending = allOrders.filter((o) => needsPaymentAttention(o));
 
   for (const order of pending.slice(0, 5)) {
     notifications.push({
@@ -328,7 +366,9 @@ function computeStats({
     });
   }
 
-  const unpaidPaid = allOrders.filter((o) => o.payment_status === "unpaid");
+  const unpaidPaid = allOrders.filter(
+    (o) => normalizeStatus(o.payment_status) === "unpaid",
+  );
   if (unpaidPaid.length > 0 && notifications.length < 8) {
     notifications.push({
       id: "payment-unpaid",
@@ -383,16 +423,9 @@ function computeStats({
     paidOrdersCount: paidOrders.length,
     pendingOrdersCount: pending.length,
     monthlyRevenue: buildMonthlyRevenue(paidInRange),
-    recentOrders: allOrders.slice(0, 6).map((o) => ({
-      id: o.id,
-      name: o.name,
-      email: o.email,
-      amount: Number(o.amount),
-      currency: o.currency,
-      payment_status: o.payment_status,
-      order_status: o.order_status,
-      createdAt: toDate(o.created_at),
-    })),
+    recentOrders: allOrders.slice(0, 6).map(toRecentOrderRow),
+    recentPaidOrders: paidOrders.slice(0, 6).map(toRecentOrderRow),
+    recentPendingOrders: pending.slice(0, 6).map(toRecentOrderRow),
     notifications: notifications.slice(0, 12),
     topProducts,
     ordersByPayment: Object.entries(paymentGroups).map(([status, n]) => ({

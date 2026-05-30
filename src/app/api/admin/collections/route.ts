@@ -1,0 +1,115 @@
+import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
+import db from "@/lib/supabase/db";
+import { collections } from "@/lib/supabase/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+const collectionPayloadSchema = z.object({
+  slug: z.string().trim().min(1),
+  label: z.string().trim().min(1),
+  title: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  featuredImageId: z.string().trim().min(1),
+});
+
+async function ensureAdmin() {
+  const user = await getSessionUser();
+  const admin = await isAdminUser(user);
+  if (!user || !admin) return null;
+  return user;
+}
+
+export async function POST(request: NextRequest) {
+  const user = await ensureAdmin();
+  if (!user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const payload = await request.json().catch(() => null);
+  const parsed = collectionPayloadSchema.safeParse(payload);
+  if (!parsed.success) {
+    const parseError = parsed as z.SafeParseError<
+      z.infer<typeof collectionPayloadSchema>
+    >;
+    return NextResponse.json(
+      { message: "Invalid collection payload", error: parseError.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const insertValues = {
+      slug: parsed.data.slug,
+      label: parsed.data.label,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      featuredImageId: parsed.data.featuredImageId,
+    };
+    await db.insert(collections).values(insertValues);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to create collection.";
+    return NextResponse.json({ message }, { status: 400 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  const user = await ensureAdmin();
+  if (!user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const payload = await request.json().catch(() => null);
+  const updatePayloadSchema = z.object({
+    id: z.string().trim().min(1),
+    slug: z.string().trim().min(1),
+    label: z.string().trim().min(1),
+    title: z.string().trim().min(1),
+    description: z.string().trim().min(1),
+    featuredImageId: z.string().trim().min(1),
+  });
+  const parsed = updatePayloadSchema
+    .safeParse(payload);
+
+  if (!parsed.success) {
+    const parseError = parsed as z.SafeParseError<
+      z.infer<typeof updatePayloadSchema>
+    >;
+    return NextResponse.json(
+      { message: "Invalid collection payload", error: parseError.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const id = parsed.data.id;
+  const setValues = {
+    slug: parsed.data.slug,
+    label: parsed.data.label,
+    title: parsed.data.title,
+    description: parsed.data.description,
+    featuredImageId: parsed.data.featuredImageId,
+  };
+
+  try {
+    const rows = await db
+      .update(collections)
+      .set(setValues)
+      .where(eq(collections.id, id))
+      .returning({ id: collections.id });
+
+    if (rows.length < 1) {
+      return NextResponse.json(
+        { message: "Collection was not updated. Please retry." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to update collection.";
+    return NextResponse.json({ message }, { status: 400 });
+  }
+}

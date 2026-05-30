@@ -7,6 +7,7 @@ import { processUploadedImage } from "@/lib/image/processUpload";
 import { uploadMediaToSupabase } from "@/lib/storage/uploadMedia";
 import db from "@/lib/supabase/db";
 import { medias } from "@/lib/supabase/schema";
+import { inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
   const files = formData
     .getAll("files")
     .filter((value): value is File => value instanceof File);
+  const mediaIdsRaw = formData.get("mediaIds");
   const sharedRaw = formData.get("shared");
 
   let shared: BulkDraftSharedData | undefined;
@@ -76,22 +78,67 @@ export async function POST(request: NextRequest) {
     };
   }
 
-  if (files.length === 0) {
+  let requestedMediaIds: string[] = [];
+  if (typeof mediaIdsRaw === "string" && mediaIdsRaw.trim().length > 0) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(mediaIdsRaw);
+    } catch {
+      return NextResponse.json(
+        { message: "Invalid mediaIds payload." },
+        { status: 400 },
+      );
+    }
+
+    const mediaIdsValidation = z.array(z.string().min(1)).safeParse(parsed);
+    if (!mediaIdsValidation.success) {
+      return NextResponse.json(
+        { message: "Invalid mediaIds payload." },
+        { status: 400 },
+      );
+    }
+    requestedMediaIds = Array.from(new Set(mediaIdsValidation.data));
+  }
+
+  const totalSelected = files.length + requestedMediaIds.length;
+  if (totalSelected === 0) {
     return NextResponse.json(
-      { message: "Select at least one image file." },
+      { message: "Select at least one image from media or computer." },
       { status: 400 },
     );
   }
 
-  if (files.length > MAX_BULK_FILES) {
+  if (totalSelected > MAX_BULK_FILES) {
     return NextResponse.json(
-      { message: `You can upload up to ${MAX_BULK_FILES} images at once.` },
+      {
+        message: `You can select up to ${MAX_BULK_FILES} images total at once.`,
+      },
       { status: 400 },
     );
   }
 
   const uploadErrors: string[] = [];
   const uploadedMedias: { mediaId: string; originalFileName: string }[] = [];
+
+  if (requestedMediaIds.length > 0) {
+    const existingMediaRows = await db
+      .select({ id: medias.id, alt: medias.alt })
+      .from(medias)
+      .where(inArray(medias.id, requestedMediaIds));
+
+    const mediaById = new Map(existingMediaRows.map((row) => [row.id, row]));
+    requestedMediaIds.forEach((mediaId) => {
+      const media = mediaById.get(mediaId);
+      if (!media) {
+        uploadErrors.push(`${mediaId}: media not found.`);
+        return;
+      }
+      uploadedMedias.push({
+        mediaId: media.id,
+        originalFileName: media.alt || media.id,
+      });
+    });
+  }
 
   for (const file of files) {
     if (!file.type.startsWith("image/")) {

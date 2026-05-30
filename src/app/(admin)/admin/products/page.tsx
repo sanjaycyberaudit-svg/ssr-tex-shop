@@ -48,6 +48,9 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
         <ProductsDataTable
           columns={ProductsColumns}
           data={data.productsCollection?.edges || []}
+          bulkDeleteEndpoint="/api/admin/products/manage"
+          bulkDeleteLabel="Delete selected products"
+          enableDragSelect
         />
       </Suspense>
     </AdminShell>

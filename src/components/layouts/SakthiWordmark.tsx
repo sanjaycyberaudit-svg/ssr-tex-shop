@@ -38,6 +38,11 @@ const emblemSizeMap = {
   lg: "h-[84px] w-[68px]",
 } as const;
 
+const emblemScaleMap = {
+  nav: "scale-[1.46]",
+  md: "scale-[1.42]",
+} as const;
+
 const regMarkClassMap = {
   nav: "ml-[0.1em] align-super text-[12px] font-extrabold leading-none text-[#9A7209] [text-shadow:none]",
   sidebar:
@@ -87,10 +92,10 @@ export function SakthiWordmark({ className, size = "md" }: Props) {
           src="/images/sakthi-st-emblem.png"
           alt=""
           fill
-          sizes="(max-width: 768px) 48px, 66px"
+          sizes="(max-width: 768px) 56px, 74px"
           className={cn(
             "object-contain object-center",
-            (size === "nav" || size === "md") && "scale-[1.25]",
+            (size === "nav" || size === "md") && emblemScaleMap[size],
           )}
           priority={size === "nav" || size === "sidebar" || size === "md"}
         />
@@ -98,7 +103,8 @@ export function SakthiWordmark({ className, size = "md" }: Props) {
       <span
         className={cn(
           "shrink-0 whitespace-nowrap font-extrabold uppercase leading-none",
-          "text-[#E5B820] [text-shadow:1px_1px_0_#8B6914,2px_2px_4px_rgba(0,0,0,0.12)]",
+          (size === "nav" || size === "md") && "self-start translate-y-[6.5px]",
+          "text-[#FFD700] [text-shadow:1px_1px_0_#8B6914,2px_2px_4px_rgba(0,0,0,0.12)]",
           trackingMap[size],
         )}
       >

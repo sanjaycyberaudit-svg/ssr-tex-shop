@@ -16,7 +16,9 @@ interface MainNavbarProps {
 
 async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
   return (
-    <header className="fixed top-0 z-[100] w-full">
+    <header
+      className={cn("top-0 z-[100] w-full", adminLayout ? "relative" : "fixed")}
+    >
       {!adminLayout ? <AnnouncementBar /> : null}
       <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
         <div

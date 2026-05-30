@@ -1,11 +1,12 @@
 "use client";
 
-import { siteConfig } from "@/config/site";
 import Link from "next/link";
 import { ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStorefrontAnnouncements } from "@/providers/AnnouncementsProvider";
+import type { StorefrontAnnouncement } from "@/lib/announcements/types";
 
-type Announcement = (typeof siteConfig.announcements)[number];
+type Announcement = StorefrontAnnouncement;
 
 function isExternalHref(href: string) {
   return (
@@ -77,8 +78,8 @@ function MarqueeStrip({
 }
 
 export function AnnouncementBar() {
-  const items = siteConfig.announcements;
-  if (!items.length) return null;
+  const { enabled, items } = useStorefrontAnnouncements();
+  if (!enabled || !items.length) return null;
 
   if (items.length === 1) {
     const item = items[0];

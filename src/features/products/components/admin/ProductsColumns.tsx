@@ -2,17 +2,13 @@
 
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import DeleteDialog from "@/components/ui/deleteDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { gql, DocumentType } from "@/gql";
 import { formatPrice } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 export const ProductColumnFragment = gql(/* GraphQL */ `
   fragment ProductColumnFragment on products {
@@ -38,9 +34,91 @@ export const ProductColumnFragment = gql(/* GraphQL */ `
   }
 `);
 
-const ProductsColumns: ColumnDef<{
+type ProductRow = {
   node: DocumentType<typeof ProductColumnFragment>;
-}>[] = [
+};
+
+function ProductRowActions({ productId }: { productId: string }) {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const onDelete = async () => {
+    try {
+      const res = await fetch("/api/admin/products/manage", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [productId] }),
+      });
+      const payload = (await res.json().catch(() => null)) as
+        | { deletedIds?: string[]; blocked?: { id: string; reason: string }[]; message?: string }
+        | null;
+
+      if (!res.ok) {
+        throw new Error(payload?.message || "Delete failed");
+      }
+
+      const blocked = payload?.blocked ?? [];
+      if (blocked.length > 0) {
+        throw new Error(blocked[0].reason || "Product cannot be deleted.");
+      }
+
+      toast({ title: "Product deleted." });
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Please retry.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Link href={`/admin/products/${productId}`}>
+        <Button size="sm" variant="outline">
+          Edit
+        </Button>
+      </Link>
+      <DeleteDialog
+        onClickHandler={() => {
+          void onDelete();
+        }}
+        triggerLabel="Delete"
+        title="Delete product?"
+        description="This action permanently removes the product if it has no order history."
+        actionLabel="Delete"
+      />
+    </div>
+  );
+}
+
+const ProductsColumns: ColumnDef<ProductRow>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected()
+            ? true
+            : table.getIsSomePageRowsSelected()
+              ? "indeterminate"
+              : false
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all products on page"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select product row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "name",
     header: () => <div className="text-left capitalize">Product Name</div>,
@@ -102,46 +180,9 @@ const ProductsColumns: ColumnDef<{
     header: () => <div className="text-center capitalize">Actions</div>,
     cell: ({ row }) => {
       const product = row.original.node;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="flex flex-col items-start"
-          >
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-            <Link
-              href={`/admin/products/${product.id}`}
-              className={buttonVariants({ variant: "ghost" })}
-            >
-              Edit Product
-            </Link>
-            {/* <DeleteCategoryDialog categoryId={category.id} /> */}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <ProductRowActions productId={product.id} />;
     },
   },
 ];
-
-const DeleteCategoryDialog = ({ categoryId }: { categoryId: string }) => {
-  const onClickHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    // await deleteCategoryAction(categoryId)
-  };
-  return (
-    <DeleteDialog
-      onClickHandler={onClickHandler}
-      title="Delete Proejct"
-      actionLabel="Delete"
-    />
-  );
-};
 
 export default ProductsColumns;
