@@ -49,9 +49,11 @@ function ProductRowActions({ productId }: { productId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [productId] }),
       });
-      const payload = (await res.json().catch(() => null)) as
-        | { deletedIds?: string[]; blocked?: { id: string; reason: string }[]; message?: string }
-        | null;
+      const payload = (await res.json().catch(() => null)) as {
+        deletedIds?: string[];
+        blocked?: { id: string; reason: string }[];
+        message?: string;
+      } | null;
 
       if (!res.ok) {
         throw new Error(payload?.message || "Delete failed");

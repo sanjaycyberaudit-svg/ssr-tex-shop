@@ -80,7 +80,9 @@ export async function resolveStorefrontAnnouncements(): Promise<ResolvedStorefro
   const base = getDefaultAnnouncementLines();
 
   try {
-    const setting = await getIntegrationSetting(INTEGRATION_KEYS.announcementBar);
+    const setting = await getIntegrationSetting(
+      INTEGRATION_KEYS.announcementBar,
+    );
 
     if (!setting) {
       return { enabled: true, items: base };
@@ -221,12 +223,14 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig | null> {
   const phoneNumberId = String(value.phoneNumberId ?? "").trim();
   const notifySeller = Boolean(value.notifySeller);
   const sellerMobilesRaw = String(value.sellerMobiles ?? "");
-  const sellerMobiles = [...new Set(
-    sellerMobilesRaw
-    .split(/[\n,]/)
-    .map((mobile) => mobile.trim())
-    .filter(Boolean),
-  )];
+  const sellerMobiles = [
+    ...new Set(
+      sellerMobilesRaw
+        .split(/[\n,]/)
+        .map((mobile) => mobile.trim())
+        .filter(Boolean),
+    ),
+  ];
 
   if (!accessToken || !phoneNumberId) return null;
 
@@ -235,7 +239,9 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig | null> {
     phoneNumberId,
     templateName: String(value.templateName ?? "").trim(),
     templateLanguage:
-      String(value.templateLanguage ?? "en").trim().toLowerCase() || "en",
+      String(value.templateLanguage ?? "en")
+        .trim()
+        .toLowerCase() || "en",
     notifySeller,
     sellerMobiles,
     enabled: true,

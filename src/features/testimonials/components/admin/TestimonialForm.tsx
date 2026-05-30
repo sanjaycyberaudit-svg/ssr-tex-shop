@@ -125,9 +125,9 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
           body: JSON.stringify({ id: testimonial.id, ...payload }),
         });
         if (!res.ok) {
-          const err = (await res.json().catch(() => null)) as
-            | { message?: string }
-            | null;
+          const err = (await res.json().catch(() => null)) as {
+            message?: string;
+          } | null;
           throw new Error(err?.message || "Update failed");
         }
 
@@ -141,9 +141,9 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
           body: JSON.stringify({ id: nanoid(), ...payload }),
         });
         if (!res.ok) {
-          const err = (await res.json().catch(() => null)) as
-            | { message?: string }
-            | null;
+          const err = (await res.json().catch(() => null)) as {
+            message?: string;
+          } | null;
           throw new Error(err?.message || "Create failed");
         }
 

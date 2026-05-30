@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
       z.infer<typeof collectionPayloadSchema>
     >;
     return NextResponse.json(
-      { message: "Invalid collection payload", error: parseError.error.flatten() },
+      {
+        message: "Invalid collection payload",
+        error: parseError.error.flatten(),
+      },
       { status: 400 },
     );
   }
@@ -70,15 +73,17 @@ export async function PUT(request: NextRequest) {
     description: z.string().trim().min(1),
     featuredImageId: z.string().trim().min(1),
   });
-  const parsed = updatePayloadSchema
-    .safeParse(payload);
+  const parsed = updatePayloadSchema.safeParse(payload);
 
   if (!parsed.success) {
     const parseError = parsed as z.SafeParseError<
       z.infer<typeof updatePayloadSchema>
     >;
     return NextResponse.json(
-      { message: "Invalid collection payload", error: parseError.error.flatten() },
+      {
+        message: "Invalid collection payload",
+        error: parseError.error.flatten(),
+      },
       { status: 400 },
     );
   }

@@ -117,7 +117,9 @@ export function AdminOrderDetailView({
           <Copy className="mr-2 h-4 w-4" />
           Copy Address
         </Button>
-        <Button onClick={() => void copyHandler(courierCopyText, "Courier text")}>
+        <Button
+          onClick={() => void copyHandler(courierCopyText, "Courier text")}
+        >
           <PackageCheck className="mr-2 h-4 w-4" />
           Copy Courier Text
         </Button>
@@ -140,7 +142,9 @@ export function AdminOrderDetailView({
                   setPackedMap(
                     allPacked
                       ? {}
-                      : Object.fromEntries(items.map((item) => [item.id, true])),
+                      : Object.fromEntries(
+                          items.map((item) => [item.id, true]),
+                        ),
                   )
                 }
               >
@@ -208,7 +212,8 @@ export function AdminOrderDetailView({
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>
-                <span className="text-muted-foreground">Order ID:</span> {order.id}
+                <span className="text-muted-foreground">Order ID:</span>{" "}
+                {order.id}
               </p>
               <p>
                 <span className="text-muted-foreground">Placed:</span>{" "}
@@ -246,8 +251,12 @@ export function AdminOrderDetailView({
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>{order.customerName ?? "Guest customer"}</p>
-              <p className="text-muted-foreground">{order.customerEmail ?? "-"}</p>
-              <p className="text-muted-foreground">{order.customerMobile ?? "-"}</p>
+              <p className="text-muted-foreground">
+                {order.customerEmail ?? "-"}
+              </p>
+              <p className="text-muted-foreground">
+                {order.customerMobile ?? "-"}
+              </p>
               <div className="rounded-md border bg-muted/20 p-3 text-sm leading-6">
                 {order.shippingAddress ? (
                   <>

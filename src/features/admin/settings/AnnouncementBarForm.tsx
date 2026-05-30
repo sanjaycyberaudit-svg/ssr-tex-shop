@@ -63,7 +63,8 @@ export function AnnouncementBarForm() {
         const res = await fetch("/api/admin/integrations", {
           cache: "no-store",
         });
-        if (!res.ok) throw new Error("Could not load announcement bar settings");
+        if (!res.ok)
+          throw new Error("Could not load announcement bar settings");
 
         const payload = (await res.json()) as IntegrationsPayload;
         if (cancelled) return;
@@ -173,9 +174,9 @@ export function AnnouncementBarForm() {
       });
 
       if (!res.ok) {
-        const payload = (await res.json().catch(() => null)) as
-          | { message?: string }
-          | null;
+        const payload = (await res.json().catch(() => null)) as {
+          message?: string;
+        } | null;
         throw new Error(payload?.message || "Save failed");
       }
 

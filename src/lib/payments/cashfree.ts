@@ -49,14 +49,17 @@ function signCashfreeWebhookPayload(
     .digest("base64");
 }
 
-export async function createCashfreePayment(params: CreateCashfreePaymentParams) {
+export async function createCashfreePayment(
+  params: CreateCashfreePaymentParams,
+) {
   const config = await getCashfreeConfig();
   if (!config) return null;
 
   const phone = normalizeIndianMobile(params.customerMobile).replace(/^91/, "");
   const customerEmail = String(params.customerEmail ?? "").trim() || undefined;
   const customerName = String(params.customerName ?? "").trim() || undefined;
-  const customerId = String(params.customerId ?? "").trim() || `guest_${params.orderId}`;
+  const customerId =
+    String(params.customerId ?? "").trim() || `guest_${params.orderId}`;
   const returnUrl = `${getURL()}api/cashfree/redirect?order_id={order_id}`;
   const notifyUrl = `${getURL()}api/cashfree/webhook`;
 

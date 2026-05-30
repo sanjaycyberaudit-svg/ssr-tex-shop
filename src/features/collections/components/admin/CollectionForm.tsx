@@ -55,11 +55,7 @@ function CollectionForm({ collection }: CollectionFormProps) {
     },
   });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-  } = form;
+  const { register, control, handleSubmit } = form;
 
   const onSubmit = handleSubmit(async (data: InsertCollection) => {
     setIsPending(true);
@@ -80,9 +76,9 @@ function CollectionForm({ collection }: CollectionFormProps) {
         });
 
         if (!res.ok) {
-          const err = (await res.json().catch(() => null)) as
-            | { message?: string }
-            | null;
+          const err = (await res.json().catch(() => null)) as {
+            message?: string;
+          } | null;
           throw new Error(err?.message || "Failed to update collection.");
         }
 
@@ -99,9 +95,9 @@ function CollectionForm({ collection }: CollectionFormProps) {
       });
 
       if (!res.ok) {
-        const err = (await res.json().catch(() => null)) as
-          | { message?: string }
-          | null;
+        const err = (await res.json().catch(() => null)) as {
+          message?: string;
+        } | null;
         throw new Error(err?.message || "Failed to create collection.");
       }
 
@@ -111,8 +107,7 @@ function CollectionForm({ collection }: CollectionFormProps) {
     } catch (error) {
       toast({
         title: "Unable to save collection",
-        description:
-          error instanceof Error ? error.message : "Please retry.",
+        description: error instanceof Error ? error.message : "Please retry.",
         variant: "destructive",
       });
     } finally {

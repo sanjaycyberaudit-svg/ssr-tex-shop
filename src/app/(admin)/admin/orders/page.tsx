@@ -48,7 +48,8 @@ async function OrdersPage({ searchParams }: AdminOrdersPageProps) {
       orders = (data?.ordersCollection?.edges as AdminOrderEdge[] | null) ?? [];
     }
   } catch (error) {
-    fetchError = error instanceof Error ? error.message : "Failed to load orders";
+    fetchError =
+      error instanceof Error ? error.message : "Failed to load orders";
   }
 
   const normalize = (value: string | null | undefined) =>
@@ -62,7 +63,9 @@ async function OrdersPage({ searchParams }: AdminOrdersPageProps) {
     return status === "unpaid" || status === "pending" || status === "failed";
   };
 
-  const paidOrders = orders.filter((entry) => isPaid(entry.node.payment_status));
+  const paidOrders = orders.filter((entry) =>
+    isPaid(entry.node.payment_status),
+  );
   const pendingOrders = orders.filter((entry) =>
     isPendingAttention(entry.node.payment_status),
   );

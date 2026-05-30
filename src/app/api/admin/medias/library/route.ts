@@ -49,41 +49,54 @@ async function ensureAdmin() {
 }
 
 async function loadUsageForMediaIds(mediaIds: string[]) {
-  const [bannerSetting, productRows, productMediaRows, collectionRows, testimonialRows] =
-    await Promise.all([
-      db.query.apiSettings.findFirst({
-        where: eq(apiSettings.key, "home_banner_slides"),
-      }),
-      db
-        .select({ productId: products.id, mediaId: products.featuredImageId })
-        .from(products)
-        .where(inArray(products.featuredImageId, mediaIds)),
-      db
-        .select({ productId: productMedias.productId, mediaId: productMedias.mediaId })
-        .from(productMedias)
-        .where(inArray(productMedias.mediaId, mediaIds)),
-      db
-        .select({ mediaId: collections.featuredImageId })
-        .from(collections)
-        .where(inArray(collections.featuredImageId, mediaIds)),
-      db
-        .select({ mediaId: testimonials.featuredImageId })
-        .from(testimonials)
-        .where(
-          and(
-            isNotNull(testimonials.featuredImageId),
-            inArray(testimonials.featuredImageId, mediaIds),
-          ),
+  const [
+    bannerSetting,
+    productRows,
+    productMediaRows,
+    collectionRows,
+    testimonialRows,
+  ] = await Promise.all([
+    db.query.apiSettings.findFirst({
+      where: eq(apiSettings.key, "home_banner_slides"),
+    }),
+    db
+      .select({ productId: products.id, mediaId: products.featuredImageId })
+      .from(products)
+      .where(inArray(products.featuredImageId, mediaIds)),
+    db
+      .select({
+        productId: productMedias.productId,
+        mediaId: productMedias.mediaId,
+      })
+      .from(productMedias)
+      .where(inArray(productMedias.mediaId, mediaIds)),
+    db
+      .select({ mediaId: collections.featuredImageId })
+      .from(collections)
+      .where(inArray(collections.featuredImageId, mediaIds)),
+    db
+      .select({ mediaId: testimonials.featuredImageId })
+      .from(testimonials)
+      .where(
+        and(
+          isNotNull(testimonials.featuredImageId),
+          inArray(testimonials.featuredImageId, mediaIds),
         ),
-    ]);
+      ),
+  ]);
 
   const bannerMediaIds = parseBannerMediaIds(bannerSetting?.value);
   const bannerSlideCountMap = new Map<string, number>();
-  const slides = Array.isArray((bannerSetting?.value as Record<string, unknown>)?.slides)
-    ? (((bannerSetting?.value as Record<string, unknown>).slides as unknown[]) ?? [])
+  const slides = Array.isArray(
+    (bannerSetting?.value as Record<string, unknown>)?.slides,
+  )
+    ? ((bannerSetting?.value as Record<string, unknown>).slides as unknown[]) ??
+      []
     : [];
   for (const slide of slides) {
-    const id = String((slide as Record<string, unknown>).imageMediaId ?? "").trim();
+    const id = String(
+      (slide as Record<string, unknown>).imageMediaId ?? "",
+    ).trim();
     if (!id) continue;
     bannerSlideCountMap.set(id, (bannerSlideCountMap.get(id) ?? 0) + 1);
   }
@@ -102,7 +115,10 @@ async function loadUsageForMediaIds(mediaIds: string[]) {
 
   const collectionCountMap = new Map<string, number>();
   for (const row of collectionRows) {
-    collectionCountMap.set(row.mediaId, (collectionCountMap.get(row.mediaId) ?? 0) + 1);
+    collectionCountMap.set(
+      row.mediaId,
+      (collectionCountMap.get(row.mediaId) ?? 0) + 1,
+    );
   }
 
   const testimonialCountMap = new Map<string, number>();
@@ -116,7 +132,9 @@ async function loadUsageForMediaIds(mediaIds: string[]) {
 
   const usageByMedia = new Map<string, MediaUsage>();
   for (const mediaId of mediaIds) {
-    const productIds = [...(productIdsByMedia.get(mediaId) ?? new Set<string>())];
+    const productIds = [
+      ...(productIdsByMedia.get(mediaId) ?? new Set<string>()),
+    ];
     usageByMedia.set(mediaId, {
       bannerSlideCount: bannerSlideCountMap.get(mediaId) ?? 0,
       productCount: productIds.length,
@@ -150,21 +168,19 @@ export async function GET() {
   const { usageByMedia } = await loadUsageForMediaIds(mediaIds);
 
   return NextResponse.json({
-    medias: mediaRows
-      .reverse()
-      .map((row) => {
-        const usage = usageByMedia.get(row.id);
-        return {
-          ...row,
-          section: usage?.section ?? "product",
-          usage: {
-            bannerSlideCount: usage?.bannerSlideCount ?? 0,
-            productCount: usage?.productCount ?? 0,
-            collectionCount: usage?.collectionCount ?? 0,
-            testimonialCount: usage?.testimonialCount ?? 0,
-          },
-        };
-      }),
+    medias: mediaRows.reverse().map((row) => {
+      const usage = usageByMedia.get(row.id);
+      return {
+        ...row,
+        section: usage?.section ?? "product",
+        usage: {
+          bannerSlideCount: usage?.bannerSlideCount ?? 0,
+          productCount: usage?.productCount ?? 0,
+          collectionCount: usage?.collectionCount ?? 0,
+          testimonialCount: usage?.testimonialCount ?? 0,
+        },
+      };
+    }),
   });
 }
 
@@ -177,7 +193,9 @@ export async function DELETE(request: NextRequest) {
   const payload = await request.json().catch(() => null);
   const parsed = DELETE_SCHEMA.safeParse(payload);
   if (!parsed.success) {
-    const parseError = parsed as z.SafeParseError<z.infer<typeof DELETE_SCHEMA>>;
+    const parseError = parsed as z.SafeParseError<
+      z.infer<typeof DELETE_SCHEMA>
+    >;
     return NextResponse.json(
       { message: "Invalid delete request", error: parseError.error.flatten() },
       { status: 400 },
@@ -204,7 +222,9 @@ export async function DELETE(request: NextRequest) {
           .from(orderLines)
           .where(inArray(orderLines.productId, [...productIdsForOrderCheck]))
       : [];
-  const hasOrderLinesByProduct = new Set(orderLineRows.map((row) => row.productId));
+  const hasOrderLinesByProduct = new Set(
+    orderLineRows.map((row) => row.productId),
+  );
 
   const deletedMediaIds: string[] = [];
   const deletedProductIds: string[] = [];
@@ -266,7 +286,8 @@ export async function DELETE(request: NextRequest) {
     if (usage.productCount > 1) {
       blocked.push({
         mediaId,
-        reason: "Media is used by multiple products; cannot auto-delete safely.",
+        reason:
+          "Media is used by multiple products; cannot auto-delete safely.",
       });
       continue;
     }

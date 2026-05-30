@@ -37,7 +37,9 @@ type WhatsAppTextBody = {
 };
 
 function parseWhatsAppError(payload: unknown, fallback: string) {
-  const data = payload as { error?: { message?: string; code?: number } } | null;
+  const data = payload as {
+    error?: { message?: string; code?: number };
+  } | null;
   const message = String(data?.error?.message ?? "").trim();
   const code = data?.error?.code;
   if (message && code) return `${message} (code ${code})`;
@@ -54,7 +56,10 @@ async function postWhatsAppMessage(
 
   for (let attempt = 0; attempt <= WHATSAPP_MAX_RETRIES; attempt += 1) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), WHATSAPP_REQUEST_TIMEOUT_MS);
+    const timeout = setTimeout(
+      () => controller.abort(),
+      WHATSAPP_REQUEST_TIMEOUT_MS,
+    );
 
     try {
       const res = await fetch(endpoint, {
@@ -190,9 +195,9 @@ export async function sendSellerWhatsAppBulk(params: {
     };
   }
 
-  const uniqueMobiles = [...new Set(config.sellerMobiles.map((m) => m.trim()))].filter(
-    Boolean,
-  );
+  const uniqueMobiles = [
+    ...new Set(config.sellerMobiles.map((m) => m.trim())),
+  ].filter(Boolean);
 
   let sentCount = 0;
   for (const mobile of uniqueMobiles) {

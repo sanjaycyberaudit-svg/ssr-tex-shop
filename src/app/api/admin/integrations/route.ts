@@ -111,15 +111,14 @@ export async function GET() {
     storefrontSocial,
     homeBannerSlides,
     announcementBar,
-  ] =
-    await Promise.all([
-      getIntegrationSetting(INTEGRATION_KEYS.cashfree),
-      getIntegrationSetting(INTEGRATION_KEYS.phonepe),
-      getIntegrationSetting(INTEGRATION_KEYS.whatsapp),
-      getIntegrationSetting(INTEGRATION_KEYS.storefrontSocial),
-      getIntegrationSetting(INTEGRATION_KEYS.homeBannerSlides),
-      getIntegrationSetting(INTEGRATION_KEYS.announcementBar),
-    ]);
+  ] = await Promise.all([
+    getIntegrationSetting(INTEGRATION_KEYS.cashfree),
+    getIntegrationSetting(INTEGRATION_KEYS.phonepe),
+    getIntegrationSetting(INTEGRATION_KEYS.whatsapp),
+    getIntegrationSetting(INTEGRATION_KEYS.storefrontSocial),
+    getIntegrationSetting(INTEGRATION_KEYS.homeBannerSlides),
+    getIntegrationSetting(INTEGRATION_KEYS.announcementBar),
+  ]);
 
   return NextResponse.json({
     cashfree: cashfree ?? null,
@@ -157,7 +156,8 @@ export async function POST(request: NextRequest) {
       : [];
     const fallbackSlides = rawSlides.map((slide, index) => {
       const item = slide as Record<string, unknown>;
-      const title = String(item.title ?? "").trim() || `Banner Slide ${index + 1}`;
+      const title =
+        String(item.title ?? "").trim() || `Banner Slide ${index + 1}`;
       return {
         id: String(item.id ?? "").trim() || `slide-${index + 1}`,
         title,
@@ -190,19 +190,23 @@ export async function POST(request: NextRequest) {
   }
 
   if (key === INTEGRATION_KEYS.cashfree) {
-    const cashfreeParsed = cashfreePayloadSchema.partial({ clientSecret: true }).safeParse({
-      clientId: String(incomingValue.clientId ?? "").trim(),
-      clientSecret: String(incomingValue.clientSecret ?? "").trim(),
-      baseUrl:
-        String(incomingValue.baseUrl ?? "").trim() ||
-        "https://sandbox.cashfree.com/pg",
-      apiVersion: String(incomingValue.apiVersion ?? "").trim() || "2025-01-01",
-      environment:
-        String(incomingValue.environment ?? "sandbox").trim().toLowerCase() ===
-        "production"
-          ? "production"
-          : "sandbox",
-    });
+    const cashfreeParsed = cashfreePayloadSchema
+      .partial({ clientSecret: true })
+      .safeParse({
+        clientId: String(incomingValue.clientId ?? "").trim(),
+        clientSecret: String(incomingValue.clientSecret ?? "").trim(),
+        baseUrl:
+          String(incomingValue.baseUrl ?? "").trim() ||
+          "https://sandbox.cashfree.com/pg",
+        apiVersion:
+          String(incomingValue.apiVersion ?? "").trim() || "2025-01-01",
+        environment:
+          String(incomingValue.environment ?? "sandbox")
+            .trim()
+            .toLowerCase() === "production"
+            ? "production"
+            : "sandbox",
+      });
     if (!cashfreeParsed.success) {
       const cashfreeParseError = cashfreeParsed as z.SafeParseError<
         z.infer<typeof cashfreePayloadSchema>
@@ -219,16 +223,18 @@ export async function POST(request: NextRequest) {
   }
 
   if (key === INTEGRATION_KEYS.phonepe) {
-    const phonepeParsed = phonepePayloadSchema.partial({ saltKey: true }).safeParse({
-      merchantId: String(incomingValue.merchantId ?? "").trim(),
-      saltKey: String(incomingValue.saltKey ?? "").trim(),
-      saltIndex: String(incomingValue.saltIndex ?? "").trim(),
-      baseUrl:
-        String(incomingValue.baseUrl ?? "").trim() ||
-        "https://api.phonepe.com/apis/hermes",
-      merchantUserIdPrefix:
-        String(incomingValue.merchantUserIdPrefix ?? "").trim() || "USR",
-    });
+    const phonepeParsed = phonepePayloadSchema
+      .partial({ saltKey: true })
+      .safeParse({
+        merchantId: String(incomingValue.merchantId ?? "").trim(),
+        saltKey: String(incomingValue.saltKey ?? "").trim(),
+        saltIndex: String(incomingValue.saltIndex ?? "").trim(),
+        baseUrl:
+          String(incomingValue.baseUrl ?? "").trim() ||
+          "https://api.phonepe.com/apis/hermes",
+        merchantUserIdPrefix:
+          String(incomingValue.merchantUserIdPrefix ?? "").trim() || "USR",
+      });
     if (!phonepeParsed.success) {
       const phonepeParseError = phonepeParsed as z.SafeParseError<
         z.infer<typeof phonepePayloadSchema>
@@ -252,8 +258,9 @@ export async function POST(request: NextRequest) {
         phoneNumberId: String(incomingValue.phoneNumberId ?? "").trim(),
         templateName: String(incomingValue.templateName ?? "").trim(),
         templateLanguage:
-          String(incomingValue.templateLanguage ?? "").trim().toLowerCase() ||
-          "en",
+          String(incomingValue.templateLanguage ?? "")
+            .trim()
+            .toLowerCase() || "en",
         notifySeller: Boolean(incomingValue.notifySeller ?? false),
         sellerMobiles: String(incomingValue.sellerMobiles ?? "").trim(),
       });

@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import OrderCompletionCleaner from "@/features/orders/components/OrderCompletionCleaner";
 import db from "@/lib/supabase/db";
-import { address, medias, orderLines, orders, products } from "@/lib/supabase/schema";
+import {
+  address,
+  medias,
+  orderLines,
+  orders,
+  products,
+} from "@/lib/supabase/schema";
 import { formatDate, formatPrice, keytoUrl } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import Image from "next/image";
@@ -19,7 +25,9 @@ type TrackOrderProps = {
 const STATUS_STEPS = ["ordered", "packed", "shipped", "delivered"] as const;
 
 function normalizeStatus(status: string | null) {
-  const s = String(status ?? "pending").trim().toLowerCase();
+  const s = String(status ?? "pending")
+    .trim()
+    .toLowerCase();
   if (s.includes("deliver")) return "delivered";
   if (s.includes("ship") || s.includes("dispatch")) return "shipped";
   if (s.includes("pack") || s.includes("prepar")) return "packed";
@@ -41,7 +49,8 @@ function buildShippingAddress(details: {
   country: string | null;
 }) {
   const lines = [details.line1, details.line2].filter(Boolean);
-  const cityLine = `${details.city || "-"}, ${details.state || "-"} ${details.postalCode || ""}`.trim();
+  const cityLine =
+    `${details.city || "-"}, ${details.state || "-"} ${details.postalCode || ""}`.trim();
   return [...lines, cityLine, details.country || "India"].filter(Boolean);
 }
 
@@ -106,13 +115,16 @@ async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
         <Card>
           <CardHeader className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="text-lg sm:text-xl">Order Confirmed</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">
+                Order Confirmed
+              </CardTitle>
               <Badge variant="outline" className="capitalize">
                 {order.paymentStatus}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              Order ID: <span className="font-medium text-foreground">#{order.id}</span>
+              Order ID:{" "}
+              <span className="font-medium text-foreground">#{order.id}</span>
               {" • "}
               Placed on {formatDate(order.createdAt)}
             </p>
@@ -124,7 +136,10 @@ async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
               {" • "}
               Total:{" "}
               <span className="font-medium text-foreground">
-                {formatPrice(Number(order.amount), (order.currency || "INR").toUpperCase())}
+                {formatPrice(
+                  Number(order.amount),
+                  (order.currency || "INR").toUpperCase(),
+                )}
               </span>
             </p>
           </CardHeader>
@@ -142,7 +157,9 @@ async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
                     ) : (
                       <Circle className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="text-xs font-medium capitalize">{step}</span>
+                    <span className="text-xs font-medium capitalize">
+                      {step}
+                    </span>
                   </div>
                 );
               })}
@@ -174,7 +191,10 @@ async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
             </CardHeader>
             <CardContent className="space-y-3">
               {lineRows.map((line) => (
-                <div key={line.id} className="flex items-center gap-3 rounded-md border p-2.5">
+                <div
+                  key={line.id}
+                  className="flex items-center gap-3 rounded-md border p-2.5"
+                >
                   <div className="relative h-14 w-14 overflow-hidden rounded-md border bg-muted">
                     <Image
                       src={keytoUrl(line.imageKey ?? undefined)}
@@ -186,14 +206,20 @@ async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     {line.productSlug ? (
-                      <Link href={`/shop/${line.productSlug}`} className="line-clamp-1 text-sm font-medium hover:underline">
+                      <Link
+                        href={`/shop/${line.productSlug}`}
+                        className="line-clamp-1 text-sm font-medium hover:underline"
+                      >
                         {line.productName || "Product"}
                       </Link>
                     ) : (
-                      <p className="line-clamp-1 text-sm font-medium">{line.productName || "Product"}</p>
+                      <p className="line-clamp-1 text-sm font-medium">
+                        {line.productName || "Product"}
+                      </p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Qty: {line.quantity} • {formatPrice(Number(line.unitPrice))}
+                      Qty: {line.quantity} •{" "}
+                      {formatPrice(Number(line.unitPrice))}
                     </p>
                   </div>
                 </div>

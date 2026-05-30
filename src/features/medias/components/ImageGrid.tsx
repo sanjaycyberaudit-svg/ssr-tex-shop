@@ -61,7 +61,8 @@ function ImagesGrid({
           type="button"
           className={cn(
             "object-center group relative h-[120px] w-[120px]",
-            (defaultImageId === media.id || selectedImageIds.includes(media.id)) &&
+            (defaultImageId === media.id ||
+              selectedImageIds.includes(media.id)) &&
               "ring-offset-2 ring-2",
           )}
           onClick={() => onClickHandler?.(media.id)}

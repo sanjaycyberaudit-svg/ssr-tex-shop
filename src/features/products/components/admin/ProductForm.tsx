@@ -126,9 +126,7 @@ function ProductFrom({ product }: ProductsFormProps) {
   const totalBulkImages = bulkFiles.length + selectedMediaIds.length;
   const canSubmitBulk = useMemo(
     () =>
-      totalBulkImages > 0 &&
-      totalBulkImages <= MAX_BULK_FILES &&
-      !isPending,
+      totalBulkImages > 0 && totalBulkImages <= MAX_BULK_FILES && !isPending,
     [isPending, totalBulkImages],
   );
 
@@ -598,7 +596,10 @@ function ProductFrom({ product }: ProductsFormProps) {
           )}
 
           {inBulkMode ? (
-            <Dialog open={isMediaDialogOpen} onOpenChange={setIsMediaDialogOpen}>
+            <Dialog
+              open={isMediaDialogOpen}
+              onOpenChange={setIsMediaDialogOpen}
+            >
               <DialogContent className="max-w-[1080px] min-h-full md:min-h-[480px]">
                 <DialogHeader>
                   <DialogTitle className="mb-5">

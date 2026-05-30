@@ -202,9 +202,10 @@ export function HomeBannerForm() {
       });
 
       if (!res.ok) {
-        const payload = (await res.json().catch(() => null)) as
-          | { message?: string; error?: unknown }
-          | null;
+        const payload = (await res.json().catch(() => null)) as {
+          message?: string;
+          error?: unknown;
+        } | null;
         if (payload?.message) {
           throw new Error(payload.message);
         }

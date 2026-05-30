@@ -187,7 +187,9 @@ function normalizeStatus(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
 }
 
-function isPaidPaymentStatus(paymentStatus: string | null | undefined): boolean {
+function isPaidPaymentStatus(
+  paymentStatus: string | null | undefined,
+): boolean {
   const normalized = normalizeStatus(paymentStatus);
   return (
     normalized === "paid" ||
@@ -297,7 +299,9 @@ function computeStats({
     new Date(now.getFullYear(), now.getMonth() - 11, 1),
   );
 
-  const paidOrders = allOrders.filter((o) => isPaidPaymentStatus(o.payment_status));
+  const paidOrders = allOrders.filter((o) =>
+    isPaidPaymentStatus(o.payment_status),
+  );
   const paidInRange = paidOrders.filter(
     (o) => toDate(o.created_at) >= twelveMonthsAgo,
   );

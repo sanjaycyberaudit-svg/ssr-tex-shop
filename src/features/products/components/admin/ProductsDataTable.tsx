@@ -152,9 +152,7 @@ function DataTable<TData, TValue>({
       if (intersects) hits[row.id] = true;
     }
 
-    setRowSelection(
-      drag.additive ? { ...drag.startSelection, ...hits } : hits,
-    );
+    setRowSelection(drag.additive ? { ...drag.startSelection, ...hits } : hits);
   }, [drag, enableDragSelect, table]);
 
   const onBulkDelete = async () => {
@@ -166,9 +164,11 @@ function DataTable<TData, TValue>({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: selectedIds }),
       });
-      const payload = (await res.json().catch(() => null)) as
-        | { deletedIds?: string[]; blocked?: { id: string; reason: string }[]; message?: string }
-        | null;
+      const payload = (await res.json().catch(() => null)) as {
+        deletedIds?: string[];
+        blocked?: { id: string; reason: string }[];
+        message?: string;
+      } | null;
       if (!res.ok) {
         throw new Error(payload?.message || "Bulk delete failed.");
       }
@@ -240,9 +240,18 @@ function DataTable<TData, TValue>({
       <div ref={tableWrapRef} className="relative rounded-md border">
         <Table
           onMouseDown={(event) => {
-            if (!enableDragSelect || event.button !== 0 || !tableWrapRef.current) return;
+            if (
+              !enableDragSelect ||
+              event.button !== 0 ||
+              !tableWrapRef.current
+            )
+              return;
             const target = event.target as HTMLElement;
-            if (target.closest("button") || target.closest("a") || target.closest("[role=checkbox]")) {
+            if (
+              target.closest("button") ||
+              target.closest("a") ||
+              target.closest("[role=checkbox]")
+            ) {
               return;
             }
             setDrag({

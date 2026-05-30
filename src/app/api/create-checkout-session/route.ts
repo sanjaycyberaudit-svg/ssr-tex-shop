@@ -153,7 +153,8 @@ export async function POST(request: Request) {
       await db
         .update(orders)
         .set({
-          payment_reference: payment.cashfreeCfOrderId ?? payment.cashfreeOrderId,
+          payment_reference:
+            payment.cashfreeCfOrderId ?? payment.cashfreeOrderId,
           payment_meta: {
             cashfreeOrderId: payment.cashfreeOrderId,
             cashfreeCfOrderId: payment.cashfreeCfOrderId,

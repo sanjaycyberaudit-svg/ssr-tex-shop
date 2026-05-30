@@ -2,7 +2,13 @@ import AdminShell from "@/components/admin/AdminShell";
 import AdminOrderDetailView from "@/features/orders/components/admin/AdminOrderDetailView";
 import { keytoUrl } from "@/lib/utils";
 import db from "@/lib/supabase/db";
-import { address, medias, orderLines, orders, products } from "@/lib/supabase/schema";
+import {
+  address,
+  medias,
+  orderLines,
+  orders,
+  products,
+} from "@/lib/supabase/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
@@ -34,8 +40,10 @@ function buildAddressText(payload: {
   lines.push("");
 
   if (payload.shippingAddress) {
-    if (payload.shippingAddress.line1) lines.push(payload.shippingAddress.line1);
-    if (payload.shippingAddress.line2) lines.push(payload.shippingAddress.line2);
+    if (payload.shippingAddress.line1)
+      lines.push(payload.shippingAddress.line1);
+    if (payload.shippingAddress.line2)
+      lines.push(payload.shippingAddress.line2);
     lines.push(
       `${payload.shippingAddress.city || "-"}, ${payload.shippingAddress.state || "-"} ${payload.shippingAddress.postalCode || ""}`.trim(),
     );

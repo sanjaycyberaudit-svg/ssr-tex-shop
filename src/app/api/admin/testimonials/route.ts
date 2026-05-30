@@ -66,7 +66,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message:
-          error instanceof Error ? error.message : "Failed to create testimonial.",
+          error instanceof Error
+            ? error.message
+            : "Failed to create testimonial.",
       },
       { status: 400 },
     );
@@ -124,7 +126,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(
       {
         message:
-          error instanceof Error ? error.message : "Failed to update testimonial.",
+          error instanceof Error
+            ? error.message
+            : "Failed to update testimonial.",
       },
       { status: 400 },
     );

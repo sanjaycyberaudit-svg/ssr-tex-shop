@@ -8,7 +8,14 @@ import {
   saveCheckoutAddressDraft,
 } from "../lib/checkoutAddressDraft";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Form,
   FormControl,
@@ -18,7 +25,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -242,7 +253,10 @@ export function AddAddressForm({
                 <FormLabel>
                   <RequiredLabel>State</RequiredLabel>
                 </FormLabel>
-                <Popover open={statePickerOpen} onOpenChange={setStatePickerOpen}>
+                <Popover
+                  open={statePickerOpen}
+                  onOpenChange={setStatePickerOpen}
+                >
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -282,7 +296,9 @@ export function AddAddressForm({
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  state === field.value ? "opacity-100" : "opacity-0",
+                                  state === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
                                 )}
                               />
                               {state}

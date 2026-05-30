@@ -21,7 +21,10 @@ export function BrandLogo({ className, size = "nav" }: Props) {
     footer: "text-[9.75px] leading-[1.12] tracking-[0.04em]",
   };
 
-  const detailPositionClassBySize: Record<NonNullable<Props["size"]>, string> = {
+  const detailPositionClassBySize: Record<
+    NonNullable<Props["size"]>,
+    string
+  > = {
     nav: "left-[53px] top-[37px]",
     md: "left-[72px] top-[43px]",
     sm: "left-[76px] top-[47px]",
@@ -55,7 +58,10 @@ export function BrandLogo({ className, size = "nav" }: Props) {
         className,
       )}
     >
-      <Link href="/" className="inline-flex w-fit shrink-0 items-center justify-start">
+      <Link
+        href="/"
+        className="inline-flex w-fit shrink-0 items-center justify-start"
+      >
         <SakthiWordmark size={visualSize} />
       </Link>
 

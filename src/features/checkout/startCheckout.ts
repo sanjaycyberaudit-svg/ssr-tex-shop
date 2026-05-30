@@ -29,9 +29,9 @@ export async function startCheckout({
   });
 
   if (!res.ok) {
-    const payload = (await res.json().catch(() => null)) as
-      | { message?: string }
-      | null;
+    const payload = (await res.json().catch(() => null)) as {
+      message?: string;
+    } | null;
     const message = payload?.message || "Checkout failed";
     throw new Error(message);
   }
@@ -76,9 +76,9 @@ type CashfreeCheckout = (params: {
   redirectTarget?: "_self" | "_blank" | "_modal" | string;
 }) => Promise<unknown>;
 
-type CashfreeInit = (params: {
-  mode: "sandbox" | "production";
-}) => { checkout: CashfreeCheckout };
+type CashfreeInit = (params: { mode: "sandbox" | "production" }) => {
+  checkout: CashfreeCheckout;
+};
 
 let cashfreeLoaderPromise: Promise<CashfreeInit> | null = null;
 

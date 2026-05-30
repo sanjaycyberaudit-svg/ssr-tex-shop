@@ -111,10 +111,14 @@ export async function syncCashfreeOrderPayment(orderId: string) {
       payment_status: isPaid ? "paid" : "unpaid",
       payment_method: "cashfree",
       payment_provider: "cashfree",
-      payment_reference: status.cf_order_id ? String(status.cf_order_id) : orderId,
+      payment_reference: status.cf_order_id
+        ? String(status.cf_order_id)
+        : orderId,
       payment_meta: {
         cashfreeOrderId: status.order_id ?? orderId,
-        cashfreeCfOrderId: status.cf_order_id ? String(status.cf_order_id) : null,
+        cashfreeCfOrderId: status.cf_order_id
+          ? String(status.cf_order_id)
+          : null,
         cashfreeOrderStatus: state,
       },
     })

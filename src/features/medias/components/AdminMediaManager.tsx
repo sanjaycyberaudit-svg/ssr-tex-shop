@@ -77,7 +77,9 @@ export function AdminMediaManager() {
   const loadLibrary = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/medias/library", { cache: "no-store" });
+      const res = await fetch("/api/admin/medias/library", {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Could not load media library.");
       const payload = (await res.json()) as { medias: MediaLibraryItem[] };
       setMedias(payload.medias ?? []);
@@ -204,7 +206,9 @@ export function AdminMediaManager() {
           mediaIds: selectedIds,
         }),
       });
-      const payload = (await res.json()) as DeleteResponse | { message?: string };
+      const payload = (await res.json()) as
+        | DeleteResponse
+        | { message?: string };
       if (!res.ok) {
         throw new Error(
           "message" in payload && payload.message
@@ -311,7 +315,9 @@ export function AdminMediaManager() {
             onClick={onDeleteSelected}
             disabled={selectedIds.length === 0 || isDeleting}
           >
-            {isDeleting ? "Deleting..." : `Delete Selected (${selectedIds.length})`}
+            {isDeleting
+              ? "Deleting..."
+              : `Delete Selected (${selectedIds.length})`}
           </Button>
         </div>
       </div>
@@ -362,7 +368,9 @@ export function AdminMediaManager() {
                         ? prev.filter((id) => id !== item.id)
                         : [...prev, item.id];
                     }
-                    return prev.includes(item.id) && prev.length === 1 ? [] : [item.id];
+                    return prev.includes(item.id) && prev.length === 1
+                      ? []
+                      : [item.id];
                   });
                 }}
               >
