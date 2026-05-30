@@ -21,9 +21,9 @@ type AdminOrderDetailPageProps = {
 };
 
 function buildAddressText(payload: {
+  orderCreatedAt: string;
   customerName: string | null;
   customerMobile: string | null;
-  customerEmail: string | null;
   shippingAddress: {
     line1: string | null;
     line2: string | null;
@@ -33,21 +33,26 @@ function buildAddressText(payload: {
     country: string | null;
   } | null;
 }) {
+  const shipping = payload.shippingAddress;
+  const pincode = shipping?.postalCode?.trim() || "-";
+  const cityState = [shipping?.city, shipping?.state].filter(Boolean).join(", ");
+  const addressLines = [
+    shipping?.line1?.trim(),
+    shipping?.line2?.trim(),
+    cityState || undefined,
+    shipping?.country?.trim() || "India",
+  ].filter(Boolean) as string[];
+
   const lines: string[] = [];
   lines.push(`Name: ${payload.customerName || "Customer"}`);
-  if (payload.customerMobile) lines.push(`Mobile: ${payload.customerMobile}`);
-  if (payload.customerEmail) lines.push(`Email: ${payload.customerEmail}`);
+  lines.push(`Mobile: ${payload.customerMobile || "-"}`);
+  lines.push(`Pincode: ${pincode}`);
+  lines.push(`Date: ${new Date(payload.orderCreatedAt).toLocaleDateString("en-IN")}`);
   lines.push("");
+  lines.push("Address:");
 
-  if (payload.shippingAddress) {
-    if (payload.shippingAddress.line1)
-      lines.push(payload.shippingAddress.line1);
-    if (payload.shippingAddress.line2)
-      lines.push(payload.shippingAddress.line2);
-    lines.push(
-      `${payload.shippingAddress.city || "-"}, ${payload.shippingAddress.state || "-"} ${payload.shippingAddress.postalCode || ""}`.trim(),
-    );
-    lines.push(payload.shippingAddress.country || "India");
+  if (shipping) {
+    lines.push(...addressLines);
   } else {
     lines.push("Address not available.");
   }
@@ -174,7 +179,12 @@ async function OrderDetailPage({ params }: AdminOrderDetailPageProps) {
     shippingAddress,
   };
 
-  const addressText = buildAddressText(orderView);
+  const addressText = buildAddressText({
+    orderCreatedAt: orderView.createdAt,
+    customerName: orderView.customerName,
+    customerMobile: orderView.customerMobile,
+    shippingAddress: orderView.shippingAddress,
+  });
   const courierCopyText = buildCourierCopyText({
     orderId: orderView.id,
     createdAt: orderView.createdAt,

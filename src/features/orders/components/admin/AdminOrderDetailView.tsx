@@ -250,16 +250,30 @@ export function AdminOrderDetailView({
               <CardTitle className="text-base">Customer & Address</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <p>{order.customerName ?? "Guest customer"}</p>
-              <p className="text-muted-foreground">
-                {order.customerEmail ?? "-"}
-              </p>
-              <p className="text-muted-foreground">
-                {order.customerMobile ?? "-"}
-              </p>
+              <div className="grid grid-cols-[82px_1fr] gap-x-2 gap-y-1 text-sm">
+                <p className="text-muted-foreground">Name</p>
+                <p className="font-medium">{order.customerName ?? "Guest customer"}</p>
+                <p className="text-muted-foreground">Mobile</p>
+                <p className="font-medium">{order.customerMobile ?? "-"}</p>
+                <p className="text-muted-foreground">Pincode</p>
+                <p className="font-medium">
+                  {order.shippingAddress?.postalCode ?? "-"}
+                </p>
+                <p className="text-muted-foreground">Date</p>
+                <p className="font-medium">{formatDate(order.createdAt)}</p>
+                {order.customerEmail ? (
+                  <>
+                    <p className="text-muted-foreground">Email</p>
+                    <p className="font-medium break-all">{order.customerEmail}</p>
+                  </>
+                ) : null}
+              </div>
               <div className="rounded-md border bg-muted/20 p-3 text-sm leading-6">
                 {order.shippingAddress ? (
                   <>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Address
+                    </p>
                     <p>{order.shippingAddress.line1 ?? "-"}</p>
                     {order.shippingAddress.line2 ? (
                       <p>{order.shippingAddress.line2}</p>
