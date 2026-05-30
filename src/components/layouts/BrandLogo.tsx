@@ -17,20 +17,20 @@ export function BrandLogo({ className, size = "nav" }: Props) {
     md: "text-[8.5px] leading-[1.1] tracking-[0.04em]",
     sm: "text-[8.75px] leading-[1.12] tracking-[0.04em]",
     lg: "text-[11px] leading-[1.14] tracking-[0.045em]",
-    sidebar: "text-[9.75px] leading-[1.12] tracking-[0.04em]",
-    footer: "text-[9.75px] leading-[1.12] tracking-[0.04em]",
+    sidebar: "text-[6.5px] leading-[1.08] tracking-[0.03em]",
+    footer: "text-[6.5px] leading-[1.08] tracking-[0.03em]",
   };
 
   const detailPositionClassBySize: Record<
     NonNullable<Props["size"]>,
     string
   > = {
-    nav: "inset-x-0 top-[35px] pl-[53px] sm:top-[37px]",
-    md: "inset-x-0 top-[43px] pl-[72px]",
-    sm: "inset-x-0 top-[47px] pl-[76px]",
-    lg: "inset-x-0 top-[56px] pl-[96px]",
-    sidebar: "inset-x-0 top-[33.5px] pl-[53px]",
-    footer: "inset-x-0 top-[33.5px] pl-[53px]",
+    nav: "left-[53px] right-0 top-[35px] sm:top-[37px]",
+    md: "left-[72px] right-0 top-[43px]",
+    sm: "left-[76px] right-0 top-[47px]",
+    lg: "left-[96px] right-0 top-[56px]",
+    sidebar: "left-[53px] right-0 top-[33.5px]",
+    footer: "left-[53px] right-0 top-[33.5px]",
   };
 
   const detailGapClassBySize: Record<NonNullable<Props["size"]>, string> = {
