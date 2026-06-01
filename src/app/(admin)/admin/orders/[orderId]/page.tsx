@@ -35,7 +35,9 @@ function buildAddressText(payload: {
 }) {
   const shipping = payload.shippingAddress;
   const pincode = shipping?.postalCode?.trim() || "-";
-  const cityState = [shipping?.city, shipping?.state].filter(Boolean).join(", ");
+  const cityState = [shipping?.city, shipping?.state]
+    .filter(Boolean)
+    .join(", ");
   const addressLines = [
     shipping?.line1?.trim(),
     shipping?.line2?.trim(),
@@ -47,7 +49,9 @@ function buildAddressText(payload: {
   lines.push(`Name: ${payload.customerName || "Customer"}`);
   lines.push(`Mobile: ${payload.customerMobile || "-"}`);
   lines.push(`Pincode: ${pincode}`);
-  lines.push(`Date: ${new Date(payload.orderCreatedAt).toLocaleDateString("en-IN")}`);
+  lines.push(
+    `Date: ${new Date(payload.orderCreatedAt).toLocaleDateString("en-IN")}`,
+  );
   lines.push("");
   lines.push("Address:");
 

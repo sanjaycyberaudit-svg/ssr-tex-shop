@@ -1,4 +1,9 @@
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import {
+  isPaidPaymentStatus,
+  needsPaymentAttention,
+  normalizeOrderStatus,
+} from "@/lib/orders/paymentStatus";
 
 const MONTH_LABELS = [
   "Jan",
@@ -183,33 +188,6 @@ function toDate(value: Date | string): Date {
   return value instanceof Date ? value : new Date(value);
 }
 
-function normalizeStatus(value: string | null | undefined): string {
-  return (value ?? "").trim().toLowerCase();
-}
-
-function isPaidPaymentStatus(
-  paymentStatus: string | null | undefined,
-): boolean {
-  const normalized = normalizeStatus(paymentStatus);
-  return (
-    normalized === "paid" ||
-    normalized === "success" ||
-    normalized === "captured"
-  );
-}
-
-function needsPaymentAttention(order: OrderRow): boolean {
-  const paymentStatus = normalizeStatus(order.payment_status);
-  const orderStatus = normalizeStatus(order.order_status);
-  if (orderStatus === "cancelled") return false;
-  if (orderStatus === "pending") return true;
-  return (
-    paymentStatus === "unpaid" ||
-    paymentStatus === "pending" ||
-    paymentStatus === "failed"
-  );
-}
-
 function toRecentOrderRow(o: OrderRow): RecentOrderRow {
   return {
     id: o.id,
@@ -371,7 +349,7 @@ function computeStats({
   }
 
   const unpaidPaid = allOrders.filter(
-    (o) => normalizeStatus(o.payment_status) === "unpaid",
+    (o) => normalizeOrderStatus(o.payment_status) === "unpaid",
   );
   if (unpaidPaid.length > 0 && notifications.length < 8) {
     notifications.push({

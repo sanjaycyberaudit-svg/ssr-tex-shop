@@ -2124,8 +2124,8 @@ export type AdminOrdersPageQueryQuery = {
       node: {
         __typename: "orders";
         id: string;
-        order_status?: string | null;
         payment_status: string;
+        order_status?: string | null;
         order_linesCollection?: {
           __typename?: "order_linesConnection";
           edges: Array<{
@@ -4353,6 +4353,14 @@ export const AdminOrdersPageQueryDocument = {
                             {
                               kind: "Field",
                               name: { kind: "Name", value: "id" },
+                            },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "payment_status" },
+                            },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "order_status" },
                             },
                             {
                               kind: "FragmentSpread",

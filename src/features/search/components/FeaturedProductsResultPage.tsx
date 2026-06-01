@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { gql } from "@/gql";
 import { useQuery } from "@urql/next";
 import { Button } from "@/components/ui/button";
@@ -46,18 +47,49 @@ export function FeaturedProductsResultPage({
     query: FeaturedProductsQuery,
     variables,
   });
+  const [draftIds, setDraftIds] = useState<Set<string>>(new Set());
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   const products = data?.productsCollection;
+  const visibleEdges = useMemo(
+    () => products?.edges.filter(({ node }) => !draftIds.has(node.id)) ?? [],
+    [draftIds, products?.edges],
+  );
+
+  useEffect(() => {
+    let active = true;
+    const loadDraftIds = async () => {
+      try {
+        const res = await fetch("/api/products/drafts", { cache: "no-store" });
+        if (!res.ok) throw new Error("failed");
+        const payload = (await res.json()) as { ids?: string[] };
+        if (active) {
+          setDraftIds(new Set(payload.ids ?? []));
+        }
+      } catch {
+        if (active) {
+          setDraftIds(new Set());
+        }
+      }
+      if (active) {
+        setDraftLoaded(true);
+      }
+    };
+    void loadDraftIds();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (error) {
     return <p className="py-8 text-center text-destructive">{error.message}</p>;
   }
 
-  if (fetching && !products) {
+  if ((fetching && !products) || !draftLoaded) {
     return <SearchProductsGridSkeleton />;
   }
 
-  if (!variables.after && products && products.edges.length === 0) {
+  if (!variables.after && products && visibleEdges.length === 0) {
     return (
       <p className="py-12 text-center text-muted-foreground">
         No featured products yet. Mark products as featured in Admin.
@@ -65,14 +97,14 @@ export function FeaturedProductsResultPage({
     );
   }
 
-  if (!products || products.edges.length === 0) {
+  if (!products || visibleEdges.length === 0) {
     return null;
   }
 
   return (
     <div>
       <section className="grid w-full grid-cols-2 gap-x-3 gap-y-8 py-5 lg:grid-cols-4">
-        {products.edges.map(({ node }) => (
+        {visibleEdges.map(({ node }) => (
           <ProductCard key={node.id} product={node as ProductNode} />
         ))}
       </section>

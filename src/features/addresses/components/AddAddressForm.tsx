@@ -95,6 +95,8 @@ export function AddAddressForm({
 
   const isSubmitting = form.formState.isSubmitting;
   const [statePickerOpen, setStatePickerOpen] = useState(false);
+  const normalizeStateValue = (value: string) =>
+    value.toLowerCase().replace(/\s+/g, " ").trim();
 
   const wasDialogOpen = useRef(false);
   useEffect(() => {
@@ -286,10 +288,18 @@ export function AddAddressForm({
                           {INDIAN_STATES.map((state) => (
                             <CommandItem
                               key={state}
-                              value={state}
-                              onMouseDown={(event) => event.preventDefault()}
-                              onSelect={() => {
-                                field.onChange(state);
+                              value={`${state} ${state.replace(/\s+/g, "")}`}
+                              className="cursor-pointer"
+                              onSelect={(selectedValue) => {
+                                const normalizedSelected =
+                                  normalizeStateValue(selectedValue);
+                                const matchedState =
+                                  INDIAN_STATES.find((candidate) =>
+                                    normalizedSelected.includes(
+                                      normalizeStateValue(candidate),
+                                    ),
+                                  ) ?? state;
+                                field.onChange(matchedState);
                                 setStatePickerOpen(false);
                               }}
                             >

@@ -252,7 +252,9 @@ export function AdminOrderDetailView({
             <CardContent className="space-y-2 text-sm">
               <div className="grid grid-cols-[82px_1fr] gap-x-2 gap-y-1 text-sm">
                 <p className="text-muted-foreground">Name</p>
-                <p className="font-medium">{order.customerName ?? "Guest customer"}</p>
+                <p className="font-medium">
+                  {order.customerName ?? "Guest customer"}
+                </p>
                 <p className="text-muted-foreground">Mobile</p>
                 <p className="font-medium">{order.customerMobile ?? "-"}</p>
                 <p className="text-muted-foreground">Pincode</p>
@@ -264,7 +266,9 @@ export function AdminOrderDetailView({
                 {order.customerEmail ? (
                   <>
                     <p className="text-muted-foreground">Email</p>
-                    <p className="font-medium break-all">{order.customerEmail}</p>
+                    <p className="font-medium break-all">
+                      {order.customerEmail}
+                    </p>
                   </>
                 ) : null}
               </div>

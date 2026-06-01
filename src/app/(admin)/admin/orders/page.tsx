@@ -3,6 +3,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DataTable } from "@/features/cms";
 import { OrdersColumns } from "@/features/orders";
 import { gql } from "@/gql";
+import {
+  isPaidPaymentStatus,
+  needsPaymentAttention,
+} from "@/lib/orders/paymentStatus";
 import { getClient } from "@/lib/urql";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +24,8 @@ const AdminOrdersPageQuery = gql(/* GraphQL */ `
         node {
           __typename
           id
+          payment_status
+          order_status
           ...OrderColumnsFragment
         }
       }
@@ -31,6 +37,7 @@ type AdminOrderEdge = {
   node: {
     id: string;
     payment_status: string | null;
+    order_status: string | null;
   };
 };
 
@@ -52,22 +59,11 @@ async function OrdersPage({ searchParams }: AdminOrdersPageProps) {
       error instanceof Error ? error.message : "Failed to load orders";
   }
 
-  const normalize = (value: string | null | undefined) =>
-    (value ?? "").trim().toLowerCase();
-  const isPaid = (value: string | null | undefined) => {
-    const status = normalize(value);
-    return status === "paid" || status === "success" || status === "captured";
-  };
-  const isPendingAttention = (value: string | null | undefined) => {
-    const status = normalize(value);
-    return status === "unpaid" || status === "pending" || status === "failed";
-  };
-
   const paidOrders = orders.filter((entry) =>
-    isPaid(entry.node.payment_status),
+    isPaidPaymentStatus(entry.node.payment_status),
   );
   const pendingOrders = orders.filter((entry) =>
-    isPendingAttention(entry.node.payment_status),
+    needsPaymentAttention(entry.node),
   );
 
   return (

@@ -17,7 +17,7 @@ const documents = {
     types.Update_Collection_Page_QueryDocument,
   "\n  query AdminCollectionsPageQuery {\n    collectionsCollection(orderBy: [{ title: AscNullsLast }]) {\n      edges {\n        node {\n          __typename\n          id\n          ...CollectionColumnsFragment\n        }\n      }\n    }\n  }\n":
     types.AdminCollectionsPageQueryDocument,
-  "\n  query AdminOrdersPageQuery {\n    ordersCollection(orderBy: [{ created_at: DescNullsLast }]) {\n      edges {\n        node {\n          __typename\n          id\n          ...OrderColumnsFragment\n        }\n      }\n    }\n  }\n":
+  "\n  query AdminOrdersPageQuery {\n    ordersCollection(orderBy: [{ created_at: DescNullsLast }]) {\n      edges {\n        node {\n          __typename\n          id\n          payment_status\n          order_status\n          ...OrderColumnsFragment\n        }\n      }\n    }\n  }\n":
     types.AdminOrdersPageQueryDocument,
   "\n    query AdminProductsPageQuery {\n      productsCollection(orderBy: [{ created_at: DescNullsLast }]) {\n        edges {\n          node {\n            id\n            ...ProductColumnFragment\n          }\n        }\n      }\n    }\n  ":
     types.AdminProductsPageQueryDocument,
@@ -139,8 +139,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: "\n  query AdminOrdersPageQuery {\n    ordersCollection(orderBy: [{ created_at: DescNullsLast }]) {\n      edges {\n        node {\n          __typename\n          id\n          ...OrderColumnsFragment\n        }\n      }\n    }\n  }\n",
-): (typeof documents)["\n  query AdminOrdersPageQuery {\n    ordersCollection(orderBy: [{ created_at: DescNullsLast }]) {\n      edges {\n        node {\n          __typename\n          id\n          ...OrderColumnsFragment\n        }\n      }\n    }\n  }\n"];
+  source: "\n  query AdminOrdersPageQuery {\n    ordersCollection(orderBy: [{ created_at: DescNullsLast }]) {\n      edges {\n        node {\n          __typename\n          id\n          payment_status\n          order_status\n          ...OrderColumnsFragment\n        }\n      }\n    }\n  }\n",
+): (typeof documents)["\n  query AdminOrdersPageQuery {\n    ordersCollection(orderBy: [{ created_at: DescNullsLast }]) {\n      edges {\n        node {\n          __typename\n          id\n          payment_status\n          order_status\n          ...OrderColumnsFragment\n        }\n      }\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
