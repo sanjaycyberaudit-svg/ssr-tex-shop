@@ -18,9 +18,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import CartItemCard from "@/features/carts/components/CartItemCard";
 import CheckoutButton from "./CheckoutButton";
+import BulkOrderGuardDialog from "./BulkOrderGuardDialog";
 import EmptyCart from "@/features/carts/components/EmptyCart";
 import { RemoveCartsMutation, updateCartsMutation } from "../query";
 import { CartItems } from "../useCartStore";
+import { isBulkOrderQuantity } from "../constants/bulkOrder";
 
 export const FetchCartQuery = gql(/* GraphQL */ `
   query FetchCartQuery($userId: UUID, $first: Int, $after: Cursor) {
@@ -62,6 +64,7 @@ function UserCartSection({ user }: UserCartSectionProps) {
 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [bulkGuardOpen, setBulkGuardOpen] = useState(false);
   const [, updateCartProduct] = useMutation(updateCartsMutation);
   const [, removeCart] = useMutation(RemoveCartsMutation);
 
@@ -81,25 +84,25 @@ function UserCartSection({ user }: UserCartSectionProps) {
   if (!data || !data.cartsCollection) return notFound();
 
   const addOneHandler = async (productId: string, quantity: number) => {
-    if (quantity < 8) {
-      setIsLoading(true);
+    if (isBulkOrderQuantity(quantity + 1)) {
+      setBulkGuardOpen(true);
+      return;
+    }
+    setIsLoading(true);
 
-      const res = await updateCartProduct({
-        productId: productId,
-        userId: user.id,
-        newQuantity: quantity + 1,
+    const res = await updateCartProduct({
+      productId: productId,
+      userId: user.id,
+      newQuantity: quantity + 1,
+    });
+
+    if (res.error)
+      toast({
+        title: "Error",
+        description: expectedErrorsHandler({ error: res.error }),
       });
 
-      if (res.error)
-        toast({
-          title: "Error",
-          description: expectedErrorsHandler({ error: res.error }),
-        });
-
-      setIsLoading(false);
-    } else {
-      toast({ title: "Proudct Limit is reached." });
-    }
+    setIsLoading(false);
   };
 
   const minusOneHandler = async (productId: string, quantity: number) => {
@@ -205,6 +208,10 @@ function UserCartSection({ user }: UserCartSectionProps) {
       ) : (
         <EmptyCart />
       )}
+      <BulkOrderGuardDialog
+        open={bulkGuardOpen}
+        onOpenChange={setBulkGuardOpen}
+      />
     </>
   );
 }

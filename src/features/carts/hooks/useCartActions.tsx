@@ -4,6 +4,7 @@ import { User } from "@supabase/auth-helpers-nextjs";
 import { useMutation, useQuery } from "@urql/next";
 import { FetchCartQuery } from "../components/UserCartSection";
 import { createCartMutation, updateCartsMutation } from "../query";
+import { isBulkOrderQuantity } from "../constants/bulkOrder";
 import useCartStore from "../useCartStore";
 
 function useCartActions(user: User | null, productId: string) {
@@ -11,6 +12,7 @@ function useCartActions(user: User | null, productId: string) {
   const [, addToCart] = useMutation(createCartMutation);
   const [, updateCart] = useMutation(updateCartsMutation);
   const addProductStorage = useCartStore((s) => s.addProductToCart);
+  const guestCart = useCartStore((s) => s.cart);
 
   const [{ data }, refetch] = useQuery({
     query: FetchCartQuery,
@@ -23,6 +25,10 @@ function useCartActions(user: User | null, productId: string) {
     const existedProduct = data?.cartsCollection.edges.find(
       ({ node }) => node.product_id === productId,
     );
+    const currentQuantity = existedProduct?.node.quantity ?? 0;
+    if (isBulkOrderQuantity(currentQuantity + quantity)) {
+      return { blockedBulk: true, added: false };
+    }
     try {
       let res;
       if (!existedProduct) {
@@ -42,17 +48,24 @@ function useCartActions(user: User | null, productId: string) {
       }
       if (res && !res.error)
         toast({ title: "Success, Added a Product to the Cart." });
+      return { blockedBulk: false, added: true };
     } catch (err) {
       toast({ title: "Error, Unexpected Error occurred." });
+      return { blockedBulk: false, added: false };
     }
   };
 
   const guestAddProduct = (quantity: number) => {
+    const currentQuantity = guestCart[productId]?.quantity ?? 0;
+    if (isBulkOrderQuantity(currentQuantity + quantity)) {
+      return { blockedBulk: true, added: false };
+    }
     addProductStorage(productId, quantity);
     toast({ title: "Sucess, Added a Product to the Cart." });
+    return { blockedBulk: false, added: true };
   };
 
-  const addProductToCart = (quantity: number) =>
+  const addProductToCart = async (quantity: number) =>
     !user ? guestAddProduct(quantity) : authAddOrUpdateProduct(quantity);
 
   return { addProductToCart };

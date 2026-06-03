@@ -2,6 +2,7 @@
 import { QuantityInput } from "@/components/layouts/QuantityInput";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -14,6 +15,11 @@ import {
 } from "@/components/ui/form";
 
 import { useAuth } from "@/providers/AuthProvider";
+import BulkOrderGuardDialog from "./BulkOrderGuardDialog";
+import {
+  BULK_ORDER_MIN_QTY,
+  isBulkOrderQuantity,
+} from "../constants/bulkOrder";
 import useCartActions from "../hooks/useCartActions";
 import { AddProductCartData, AddProductToCartSchema } from "../validations";
 
@@ -24,7 +30,7 @@ interface AddProductToCartFormProps {
 function AddProductToCartForm({ productId }: AddProductToCartFormProps) {
   const { user } = useAuth();
   const { addProductToCart } = useCartActions(user, productId);
-  const maxQuantity = 8;
+  const [bulkGuardOpen, setBulkGuardOpen] = useState(false);
 
   const form = useForm<AddProductCartData>({
     resolver: zodResolver(AddProductToCartSchema),
@@ -34,12 +40,24 @@ function AddProductToCartForm({ productId }: AddProductToCartFormProps) {
   });
 
   async function onSubmit(values: AddProductCartData) {
-    addProductToCart(values.quantity);
+    if (isBulkOrderQuantity(values.quantity)) {
+      setBulkGuardOpen(true);
+      return;
+    }
+    const res = await addProductToCart(values.quantity);
+    if (res?.blockedBulk) {
+      setBulkGuardOpen(true);
+    }
   }
 
   const addOne = () => {
     const currQuantity = form.getValues("quantity");
-    if (currQuantity < maxQuantity) form.setValue("quantity", currQuantity + 1);
+    const nextQuantity = currQuantity + 1;
+    if (isBulkOrderQuantity(nextQuantity)) {
+      setBulkGuardOpen(true);
+      return;
+    }
+    form.setValue("quantity", nextQuantity);
   };
   const minusOne = () => {
     const currQuantity = form.getValues("quantity");
@@ -68,6 +86,10 @@ function AddProductToCartForm({ productId }: AddProductToCartFormProps) {
         />
         <Button type="submit">Add to Cart</Button>
       </form>
+      <BulkOrderGuardDialog
+        open={bulkGuardOpen}
+        onOpenChange={setBulkGuardOpen}
+      />
     </Form>
   );
 }

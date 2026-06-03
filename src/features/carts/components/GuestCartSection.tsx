@@ -2,7 +2,7 @@
 import { DocumentType, gql } from "@/gql";
 import { useQuery } from "@urql/next";
 import { formatPrice } from "@/lib/utils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -15,14 +15,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import EmptyCart from "./EmptyCart";
 import CartItemCard from "./CartItemCard";
 import CheckoutButton from "./CheckoutButton";
+import BulkOrderGuardDialog from "./BulkOrderGuardDialog";
 import useCartStore, {
   CartItems,
   calcProductCountStorage,
 } from "../useCartStore";
+import { isBulkOrderQuantity } from "../constants/bulkOrder";
 import { useToast } from "@/components/ui/use-toast";
 
 function GuestCartSection() {
   const { toast } = useToast();
+  const [bulkGuardOpen, setBulkGuardOpen] = useState(false);
   const cartItems = useCartStore((s) => s.cart);
   const addProductToCart = useCartStore((s) => s.addProductToCart);
   const removeProduct = useCartStore((s) => s.removeProduct);
@@ -57,11 +60,11 @@ function GuestCartSection() {
   );
 
   const addOneHandler = (productId: string, quantity: number) => {
-    if (quantity < 8) {
-      addProductToCart(productId, 1);
-    } else {
-      toast({ title: "Proudct Limit is reached." });
+    if (isBulkOrderQuantity(quantity + 1)) {
+      setBulkGuardOpen(true);
+      return;
     }
+    addProductToCart(productId, 1);
   };
   const minusOneHandler = (productId: string, quantity: number) => {
     if (quantity > 1) {
@@ -119,6 +122,10 @@ function GuestCartSection() {
       ) : (
         <EmptyCart />
       )}
+      <BulkOrderGuardDialog
+        open={bulkGuardOpen}
+        onOpenChange={setBulkGuardOpen}
+      />
     </>
   );
 }
