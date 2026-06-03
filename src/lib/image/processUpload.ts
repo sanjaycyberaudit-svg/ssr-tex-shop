@@ -7,6 +7,7 @@ export const UPLOAD_LIMIT_BYTES = 15 * 1024 * 1024;
 export const MAX_IMAGE_WIDTH = 2000;
 
 export const WEBP_QUALITY = 82;
+export const MAX_PROCESSED_IMAGE_BYTES = 2.75 * 1024 * 1024;
 
 export type ProcessedImage = {
   buffer: Buffer;
@@ -54,15 +55,37 @@ export async function processUploadedImage(
       extension: "gif",
     };
   }
+  const attempts = [
+    { width: MAX_IMAGE_WIDTH, quality: WEBP_QUALITY },
+    { width: MAX_IMAGE_WIDTH, quality: 78 },
+    { width: MAX_IMAGE_WIDTH, quality: 74 },
+    { width: 1800, quality: 78 },
+    { width: 1800, quality: 74 },
+    { width: 1600, quality: 74 },
+  ] as const;
 
-  const buffer = await sharp(input)
-    .rotate()
-    .resize({
-      width: MAX_IMAGE_WIDTH,
-      withoutEnlargement: true,
-    })
-    .webp({ quality: WEBP_QUALITY })
-    .toBuffer();
+  let buffer = Buffer.alloc(0);
+  for (const attempt of attempts) {
+    // Keep resolution first, then reduce quality/size in safe steps.
+    // eslint-disable-next-line no-await-in-loop
+    const output = await sharp(input)
+      .rotate()
+      .resize({
+        width: attempt.width,
+        withoutEnlargement: true,
+      })
+      .webp({ quality: attempt.quality })
+      .toBuffer();
+
+    if (!buffer.length || output.length < buffer.length) {
+      buffer = output;
+    }
+
+    if (output.length <= MAX_PROCESSED_IMAGE_BYTES) {
+      buffer = output;
+      break;
+    }
+  }
 
   return {
     buffer,

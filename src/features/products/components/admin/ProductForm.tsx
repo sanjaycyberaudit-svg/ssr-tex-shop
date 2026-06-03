@@ -66,6 +66,9 @@ type BulkDraftResponse = {
 
 const MAX_BULK_FILES = 50;
 const MAX_BULK_REQUEST_BYTES = 3.5 * 1024 * 1024;
+const CLIENT_PREPROCESS_MAX_EDGE = 2400;
+const CLIENT_TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
+const CLIENT_QUALITY_STEPS = [0.9, 0.86, 0.82, 0.78, 0.74] as const;
 const BULK_SHARED_FIELDS = [
   "name",
   "description",
@@ -111,6 +114,134 @@ function chunkFilesBySize(files: File[], maxBytes: number): File[][] {
   return chunks;
 }
 
+function replaceExt(fileName: string, ext: string) {
+  return fileName.replace(/\.[^/.]+$/, "") + ext;
+}
+
+async function compressImageForBulk(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  if (file.type === "image/gif") return file;
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Unsupported image format."));
+      img.src = objectUrl;
+    });
+
+    const originalWidth = image.naturalWidth || image.width;
+    const originalHeight = image.naturalHeight || image.height;
+    if (!originalWidth || !originalHeight) return file;
+
+    const scale = Math.min(
+      1,
+      CLIENT_PREPROCESS_MAX_EDGE / Math.max(originalWidth, originalHeight),
+    );
+    const targetWidth = Math.max(1, Math.round(originalWidth * scale));
+    const targetHeight = Math.max(1, Math.round(originalHeight * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+
+    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+    let bestBlob: Blob | null = null;
+    for (const quality of CLIENT_QUALITY_STEPS) {
+      // eslint-disable-next-line no-await-in-loop
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/webp", quality),
+      );
+      if (!blob) continue;
+
+      if (!bestBlob || blob.size < bestBlob.size) {
+        bestBlob = blob;
+      }
+      if (blob.size <= CLIENT_TARGET_IMAGE_BYTES) {
+        bestBlob = blob;
+        break;
+      }
+    }
+
+    if (!bestBlob) return file;
+    if (bestBlob.size >= file.size) return file;
+
+    return new File([bestBlob], replaceExt(file.name, ".webp"), {
+      type: "image/webp",
+      lastModified: file.lastModified,
+    });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+type BulkSharedPayload = {
+  name: string;
+  description: string;
+  isDraft: boolean;
+  collectionId: string | null;
+  badge: string | null;
+  rating: string;
+  price: string;
+  tags: string[];
+};
+
+type BulkBatchResponse = {
+  payload: BulkDraftResponse;
+  status: number;
+  isRequestTooLarge: boolean;
+};
+
+async function submitBulkBatch(params: {
+  files: File[];
+  selectedMediaIds: string[];
+  includeMediaIds: boolean;
+  shared: BulkSharedPayload;
+}): Promise<BulkBatchResponse> {
+  const formData = new FormData();
+  params.files.forEach((file) => formData.append("files", file));
+  formData.append(
+    "mediaIds",
+    JSON.stringify(params.includeMediaIds ? params.selectedMediaIds : []),
+  );
+  formData.append("shared", JSON.stringify(params.shared));
+
+  const res = await fetch("/api/admin/products/bulk-draft", {
+    method: "POST",
+    body: formData,
+  });
+
+  const raw = await res.text();
+  let payload: BulkDraftResponse;
+  try {
+    payload = JSON.parse(raw) as BulkDraftResponse;
+  } catch {
+    const isRequestTooLarge =
+      res.status === 413 || /request entity too large/i.test(raw);
+    const fallbackMessage = isRequestTooLarge
+      ? "Bulk upload too large. Auto-splitting and retrying..."
+      : raw.trim() || "Bulk create failed";
+    payload = {
+      message: fallbackMessage,
+      created: [],
+      errors: [fallbackMessage],
+    };
+  }
+
+  const isRequestTooLarge =
+    res.status === 413 ||
+    /request entity too large/i.test(payload.message ?? "") ||
+    /request entity too large/i.test(raw);
+
+  return { payload, status: res.status, isRequestTooLarge };
+}
+
 export const ProductFormQuery = gql(/* GraphQL */ `
   query ProductFormQuery {
     collectionsCollection(orderBy: [{ label: AscNullsLast }]) {
@@ -139,6 +270,13 @@ function ProductFrom({ product }: ProductsFormProps) {
     currentBatch: number;
     totalBatches: number;
   } | null>(null);
+  const [bulkPhase, setBulkPhase] = useState<
+    "idle" | "preparing" | "uploading" | "creating"
+  >("idle");
+  const [prepareProgress, setPrepareProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const localFileInputRef = useRef<HTMLInputElement>(null);
 
   const [{ data }] = useQuery({
@@ -156,12 +294,30 @@ function ProductFrom({ product }: ProductsFormProps) {
   const totalBulkImages = bulkFiles.length + selectedMediaIds.length;
   const canSubmitBulk = useMemo(
     () =>
-      totalBulkImages > 0 && totalBulkImages <= MAX_BULK_FILES && !isPending,
-    [isPending, totalBulkImages],
+      totalBulkImages > 0 &&
+      totalBulkImages <= MAX_BULK_FILES &&
+      !isPending &&
+      bulkPhase !== "preparing",
+    [bulkPhase, isPending, totalBulkImages],
   );
 
-  const addLocalFiles = (files: File[]) => {
-    setBulkFiles((prev) => mergeUniqueFiles(prev, files));
+  const addLocalFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+    setBulkPhase("preparing");
+    setPrepareProgress({ current: 0, total: files.length });
+
+    const processed: File[] = [];
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index];
+      // eslint-disable-next-line no-await-in-loop
+      const compressed = await compressImageForBulk(file);
+      processed.push(compressed);
+      setPrepareProgress({ current: index + 1, total: files.length });
+    }
+
+    setBulkFiles((prev) => mergeUniqueFiles(prev, processed));
+    setPrepareProgress(null);
+    setBulkPhase("idle");
   };
 
   const toggleSelectedMediaId = (mediaId: string) => {
@@ -217,12 +373,12 @@ function ProductFrom({ product }: ProductsFormProps) {
     }
 
     const values = form.getValues();
-    const shared = {
+    const shared: BulkSharedPayload = {
       name: String(values.name ?? "").trim(),
       description: String(values.description ?? ""),
       isDraft: Boolean(values.isDraft),
       collectionId: values.collectionId ?? null,
-      badge: values.badge ?? null,
+      badge: values.badge ? String(values.badge) : null,
       rating: String(values.rating ?? "4"),
       price: String(values.price ?? "0"),
       tags: Array.isArray(values.tags) ? values.tags : [],
@@ -230,9 +386,9 @@ function ProductFrom({ product }: ProductsFormProps) {
 
     startTransition(async () => {
       try {
+        setBulkPhase("uploading");
         const fileBatches = chunkFilesBySize(bulkFiles, MAX_BULK_REQUEST_BYTES);
-        const effectiveBatches =
-          fileBatches.length > 0 ? fileBatches : [[] as File[]];
+        const effectiveBatches = fileBatches.length > 0 ? fileBatches : [[]];
         setBulkProgress({
           currentBatch: 1,
           totalBatches: effectiveBatches.length,
@@ -240,52 +396,66 @@ function ProductFrom({ product }: ProductsFormProps) {
 
         let aggregatedCreated: CreatedDraftProduct[] = [];
         let aggregatedErrors: string[] = [];
+        const queue: { files: File[]; includeMediaIds: boolean }[] =
+          effectiveBatches.map((files, index) => ({
+            files,
+            includeMediaIds: index === 0,
+          }));
 
-        for (let i = 0; i < effectiveBatches.length; i += 1) {
+        let processedBatches = 0;
+        while (queue.length > 0) {
+          const nextBatch = queue.shift();
+          if (!nextBatch) break;
+
           setBulkProgress({
-            currentBatch: i + 1,
-            totalBatches: effectiveBatches.length,
-          });
-          const batchFiles = effectiveBatches[i];
-          const formData = new FormData();
-          batchFiles.forEach((file) => formData.append("files", file));
-          formData.append(
-            "mediaIds",
-            JSON.stringify(i === 0 ? selectedMediaIds : []),
-          );
-          formData.append("shared", JSON.stringify(shared));
-
-          const res = await fetch("/api/admin/products/bulk-draft", {
-            method: "POST",
-            body: formData,
+            currentBatch: processedBatches + 1,
+            totalBatches: processedBatches + queue.length + 1,
           });
 
-          const raw = await res.text();
-          let payload: BulkDraftResponse;
-          try {
-            payload = JSON.parse(raw) as BulkDraftResponse;
-          } catch {
-            const isRequestTooLarge =
-              res.status === 413 || /request entity too large/i.test(raw);
-            const fallbackMessage = isRequestTooLarge
-              ? "Bulk upload is too large for one request. Please retry with smaller images or fewer local files."
-              : raw.trim() || "Bulk create failed";
-            payload = {
-              message: fallbackMessage,
-              created: [],
-              errors: [fallbackMessage],
-            };
+          const batchResult = await submitBulkBatch({
+            files: nextBatch.files,
+            selectedMediaIds,
+            includeMediaIds: nextBatch.includeMediaIds,
+            shared,
+          });
+          setBulkPhase("creating");
+
+          if (batchResult.isRequestTooLarge && nextBatch.files.length > 1) {
+            const mid = Math.ceil(nextBatch.files.length / 2);
+            const firstHalf = nextBatch.files.slice(0, mid);
+            const secondHalf = nextBatch.files.slice(mid);
+            queue.unshift(
+              { files: secondHalf, includeMediaIds: false },
+              { files: firstHalf, includeMediaIds: nextBatch.includeMediaIds },
+            );
+            continue;
+          }
+
+          if (batchResult.isRequestTooLarge && nextBatch.files.length === 1) {
+            throw new Error(
+              `${nextBatch.files[0].name} is too large to upload. Please compress this file and retry.`,
+            );
           }
 
           aggregatedCreated = [
             ...aggregatedCreated,
-            ...(payload.created ?? []),
+            ...(batchResult.payload.created ?? []),
           ];
-          aggregatedErrors = [...aggregatedErrors, ...(payload.errors ?? [])];
+          aggregatedErrors = [
+            ...aggregatedErrors,
+            ...(batchResult.payload.errors ?? []),
+          ];
 
-          if (!res.ok && (payload.created?.length ?? 0) === 0) {
-            throw new Error(payload.message || "Bulk create failed");
+          if (
+            batchResult.status >= 400 &&
+            (batchResult.payload.created?.length ?? 0) === 0
+          ) {
+            throw new Error(
+              batchResult.payload.message || "Bulk create failed",
+            );
           }
+
+          processedBatches += 1;
         }
 
         setBulkCreated(aggregatedCreated);
@@ -306,6 +476,7 @@ function ProductFrom({ product }: ProductsFormProps) {
         });
       } finally {
         setBulkProgress(null);
+        setBulkPhase("idle");
       }
     });
   };
@@ -550,6 +721,7 @@ function ProductFrom({ product }: ProductsFormProps) {
                     <Button
                       type="button"
                       variant="outline"
+                      disabled={isPending || bulkPhase === "preparing"}
                       onClick={() => setIsMediaDialogOpen(true)}
                     >
                       Add from Media Library
@@ -557,6 +729,7 @@ function ProductFrom({ product }: ProductsFormProps) {
                     <Button
                       type="button"
                       variant="outline"
+                      disabled={isPending || bulkPhase === "preparing"}
                       onClick={() => localFileInputRef.current?.click()}
                     >
                       Upload from Computer
@@ -571,7 +744,7 @@ function ProductFrom({ product }: ProductsFormProps) {
                     className="hidden"
                     onChange={(event) => {
                       const selected = Array.from(event.target.files ?? []);
-                      addLocalFiles(selected);
+                      void addLocalFiles(selected);
                       event.currentTarget.value = "";
                     }}
                   />
@@ -591,12 +764,16 @@ function ProductFrom({ product }: ProductsFormProps) {
                   ? ` (maximum ${MAX_BULK_FILES}; remove some files)`
                   : ""}
               </p>
-              {isPending && inBulkMode ? (
+              {bulkPhase === "preparing" || (isPending && inBulkMode) ? (
                 <p className="inline-flex items-center gap-2 rounded-md border border-[#E8A317]/40 bg-[#FFF7E6] px-3 py-1.5 text-xs font-medium text-[#8A5A00]">
                   <Spinner className="h-3.5 w-3.5 animate-spin" />
-                  {bulkProgress
-                    ? `Creating products... batch ${bulkProgress.currentBatch}/${bulkProgress.totalBatches}`
-                    : "Preparing bulk upload..."}
+                  {bulkPhase === "preparing"
+                    ? `Preparing images... ${prepareProgress?.current ?? 0}/${prepareProgress?.total ?? 0}`
+                    : bulkPhase === "uploading"
+                      ? `Uploading batch ${bulkProgress?.currentBatch ?? 1}/${bulkProgress?.totalBatches ?? 1}...`
+                      : bulkProgress
+                        ? `Creating products... batch ${bulkProgress.currentBatch}/${bulkProgress.totalBatches}`
+                        : "Creating products..."}
                 </p>
               ) : null}
 
@@ -632,6 +809,7 @@ function ProductFrom({ product }: ProductsFormProps) {
                         <button
                           type="button"
                           className="text-destructive"
+                          disabled={isPending || bulkPhase === "preparing"}
                           onClick={() =>
                             setBulkFiles((prev) =>
                               prev.filter(
@@ -744,7 +922,11 @@ function ProductFrom({ product }: ProductsFormProps) {
 
         <div className="py-8 flex gap-x-5 items-center">
           <Button
-            disabled={isPending || (inBulkMode && !canSubmitBulk)}
+            disabled={
+              isPending ||
+              bulkPhase === "preparing" ||
+              (inBulkMode && !canSubmitBulk)
+            }
             variant={"outline"}
             form="project-form"
           >
