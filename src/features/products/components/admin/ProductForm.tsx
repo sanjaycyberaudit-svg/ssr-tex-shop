@@ -65,6 +65,7 @@ type BulkDraftResponse = {
 };
 
 const MAX_BULK_FILES = 50;
+const MAX_BULK_REQUEST_BYTES = 3.5 * 1024 * 1024;
 const BULK_SHARED_FIELDS = [
   "name",
   "description",
@@ -83,6 +84,31 @@ function mergeUniqueFiles(prev: File[], next: File[]) {
     map.set(key, file);
   });
   return Array.from(map.values());
+}
+
+function chunkFilesBySize(files: File[], maxBytes: number): File[][] {
+  if (files.length === 0) return [];
+
+  const chunks: File[][] = [];
+  let currentChunk: File[] = [];
+  let currentSize = 0;
+
+  for (const file of files) {
+    if (currentChunk.length > 0 && currentSize + file.size > maxBytes) {
+      chunks.push(currentChunk);
+      currentChunk = [];
+      currentSize = 0;
+    }
+
+    currentChunk.push(file);
+    currentSize += file.size;
+  }
+
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk);
+  }
+
+  return chunks;
 }
 
 export const ProductFormQuery = gql(/* GraphQL */ `
@@ -109,6 +135,10 @@ function ProductFrom({ product }: ProductsFormProps) {
   const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
   const [bulkCreated, setBulkCreated] = useState<CreatedDraftProduct[]>([]);
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+  const [bulkProgress, setBulkProgress] = useState<{
+    currentBatch: number;
+    totalBatches: number;
+  } | null>(null);
   const localFileInputRef = useRef<HTMLInputElement>(null);
 
   const [{ data }] = useQuery({
@@ -200,27 +230,70 @@ function ProductFrom({ product }: ProductsFormProps) {
 
     startTransition(async () => {
       try {
-        const formData = new FormData();
-        bulkFiles.forEach((file) => formData.append("files", file));
-        formData.append("mediaIds", JSON.stringify(selectedMediaIds));
-        formData.append("shared", JSON.stringify(shared));
-
-        const res = await fetch("/api/admin/products/bulk-draft", {
-          method: "POST",
-          body: formData,
+        const fileBatches = chunkFilesBySize(bulkFiles, MAX_BULK_REQUEST_BYTES);
+        const effectiveBatches =
+          fileBatches.length > 0 ? fileBatches : [[] as File[]];
+        setBulkProgress({
+          currentBatch: 1,
+          totalBatches: effectiveBatches.length,
         });
 
-        const payload = (await res.json()) as BulkDraftResponse;
-        setBulkCreated(payload.created ?? []);
-        setBulkErrors(payload.errors ?? []);
+        let aggregatedCreated: CreatedDraftProduct[] = [];
+        let aggregatedErrors: string[] = [];
 
-        if (!res.ok && (payload.created?.length ?? 0) === 0) {
-          throw new Error(payload.message || "Bulk create failed");
+        for (let i = 0; i < effectiveBatches.length; i += 1) {
+          setBulkProgress({
+            currentBatch: i + 1,
+            totalBatches: effectiveBatches.length,
+          });
+          const batchFiles = effectiveBatches[i];
+          const formData = new FormData();
+          batchFiles.forEach((file) => formData.append("files", file));
+          formData.append(
+            "mediaIds",
+            JSON.stringify(i === 0 ? selectedMediaIds : []),
+          );
+          formData.append("shared", JSON.stringify(shared));
+
+          const res = await fetch("/api/admin/products/bulk-draft", {
+            method: "POST",
+            body: formData,
+          });
+
+          const raw = await res.text();
+          let payload: BulkDraftResponse;
+          try {
+            payload = JSON.parse(raw) as BulkDraftResponse;
+          } catch {
+            const isRequestTooLarge =
+              res.status === 413 || /request entity too large/i.test(raw);
+            const fallbackMessage = isRequestTooLarge
+              ? "Bulk upload is too large for one request. Please retry with smaller images or fewer local files."
+              : raw.trim() || "Bulk create failed";
+            payload = {
+              message: fallbackMessage,
+              created: [],
+              errors: [fallbackMessage],
+            };
+          }
+
+          aggregatedCreated = [
+            ...aggregatedCreated,
+            ...(payload.created ?? []),
+          ];
+          aggregatedErrors = [...aggregatedErrors, ...(payload.errors ?? [])];
+
+          if (!res.ok && (payload.created?.length ?? 0) === 0) {
+            throw new Error(payload.message || "Bulk create failed");
+          }
         }
+
+        setBulkCreated(aggregatedCreated);
+        setBulkErrors(aggregatedErrors);
 
         toast({
           title: "Bulk create finished",
-          description: `${payload.created?.length ?? 0} products created.`,
+          description: `${aggregatedCreated.length} products created.`,
         });
         setBulkFiles([]);
         setSelectedMediaIds([]);
@@ -231,6 +304,8 @@ function ProductFrom({ product }: ProductsFormProps) {
           description: error instanceof Error ? error.message : "Please retry.",
           variant: "destructive",
         });
+      } finally {
+        setBulkProgress(null);
       }
     });
   };
@@ -516,6 +591,14 @@ function ProductFrom({ product }: ProductsFormProps) {
                   ? ` (maximum ${MAX_BULK_FILES}; remove some files)`
                   : ""}
               </p>
+              {isPending && inBulkMode ? (
+                <p className="inline-flex items-center gap-2 rounded-md border border-[#E8A317]/40 bg-[#FFF7E6] px-3 py-1.5 text-xs font-medium text-[#8A5A00]">
+                  <Spinner className="h-3.5 w-3.5 animate-spin" />
+                  {bulkProgress
+                    ? `Creating products... batch ${bulkProgress.currentBatch}/${bulkProgress.totalBatches}`
+                    : "Preparing bulk upload..."}
+                </p>
+              ) : null}
 
               {selectedMediaIds.length > 0 ? (
                 <div className="space-y-2">
@@ -665,13 +748,23 @@ function ProductFrom({ product }: ProductsFormProps) {
             variant={"outline"}
             form="project-form"
           >
-            {product ? "Update" : inBulkMode ? "Create Bulk" : "Create"}
             {isPending && (
               <Spinner
                 className="mr-2 h-4 w-4 animate-spin"
                 aria-hidden="true"
               />
             )}
+            {isPending
+              ? inBulkMode
+                ? "Creating bulk..."
+                : product
+                  ? "Updating..."
+                  : "Creating..."
+              : product
+                ? "Update"
+                : inBulkMode
+                  ? "Create Bulk"
+                  : "Create"}
           </Button>
           <Link href="/admin/products" className={buttonVariants()}>
             Cancel
