@@ -1,3 +1,4 @@
+import CartDeepLinkAdd from "@/features/carts/components/CartDeepLinkAdd";
 import CartSection from "@/features/carts/components/CartSection";
 import CartSectionSkeleton from "@/features/carts/components/CartSectionSkeleton";
 import { Shell } from "@/components/layouts/Shell";
@@ -16,6 +17,8 @@ async function CartPage() {
         <h1 className="text-3xl">Your Cart</h1>
         <Link href="/shop">Continue shopping</Link>
       </section>
+
+      <CartDeepLinkAdd />
 
       <Suspense fallback={<CartSectionSkeleton />}>
         <CartSection />

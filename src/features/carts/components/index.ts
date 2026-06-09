@@ -1,3 +1,4 @@
+export { default as CartDeepLinkAdd } from "./CartDeepLinkAdd";
 export { default as AddToCartButton } from "./AddToCartButton";
 export { default as AddProductToCartForm } from "./AddProductToCartForm";
 export { default as CartLink } from "./CartLink";
