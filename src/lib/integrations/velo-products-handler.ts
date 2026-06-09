@@ -64,7 +64,7 @@ const upsertDataSchema = z.object({
   rating: z.string().trim().optional().default("4"),
   price: z.string().trim().min(1),
   stock: z.number().int().min(0).optional().default(1),
-  isDraft: z.boolean().optional().default(true),
+  isDraft: z.boolean().optional().default(false),
   featuredImageMediaId: z.string().trim().optional(),
   imageBase64: z.string().trim().optional(),
   imageFileName: z.string().trim().optional(),
@@ -75,34 +75,39 @@ const listDataSchema = z.object({
   search: z.string().optional().default(""),
   draft: z.enum(["all", "draft", "published"]).optional().default("all"),
   page: z.number().int().min(1).optional().default(1),
-  pageSize: z.number().int().min(1).max(MAX_LIST_PAGE_SIZE).optional().default(20),
+  pageSize: z
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_LIST_PAGE_SIZE)
+    .optional()
+    .default(20),
 });
 
-const deleteDataSchema = z.object({
-  productId: z.string().trim().optional(),
-  externalProductId: z.string().trim().optional(),
-})
-.refine((value) => Boolean(value.productId || value.externalProductId), {
-  message: "Either productId or externalProductId is required.",
-});
+const deleteDataSchema = z
+  .object({
+    productId: z.string().trim().optional(),
+    externalProductId: z.string().trim().optional(),
+  })
+  .refine((value) => Boolean(value.productId || value.externalProductId), {
+    message: "Either productId or externalProductId is required.",
+  });
 
 const metaDataSchema = z.object({
   type: z.enum(["collections"]),
 });
 
-const bulkItemSchema = z.object({
-  externalProductId: z.string().trim().min(1),
-  name: z.string().trim().optional(),
-  featuredImageMediaId: z.string().trim().optional(),
-  imageBase64: z.string().trim().optional(),
-  imageFileName: z.string().trim().optional(),
-}).refine(
-  (item) => Boolean(item.featuredImageMediaId || item.imageBase64),
-  {
-    message:
-      "Each bulk item must include featuredImageMediaId or imageBase64.",
-  },
-);
+const bulkItemSchema = z
+  .object({
+    externalProductId: z.string().trim().min(1),
+    name: z.string().trim().optional(),
+    featuredImageMediaId: z.string().trim().optional(),
+    imageBase64: z.string().trim().optional(),
+    imageFileName: z.string().trim().optional(),
+  })
+  .refine((item) => Boolean(item.featuredImageMediaId || item.imageBase64), {
+    message: "Each bulk item must include featuredImageMediaId or imageBase64.",
+  });
 
 const bulkSharedSchema = z.object({
   namePrefix: z.string().trim().min(2),
@@ -118,7 +123,7 @@ const bulkSharedSchema = z.object({
   rating: z.string().trim().optional().default("4"),
   price: z.string().trim().min(1),
   stock: z.number().int().min(0).optional().default(1),
-  isDraft: z.boolean().optional().default(true),
+  isDraft: z.boolean().optional().default(false),
   sizeConfig: sizeConfigSchema,
 });
 
@@ -245,7 +250,9 @@ async function resolveMediaId(
   if (imageBase64) {
     return uploadBase64Image(imageBase64, imageFileName || "product.jpg");
   }
-  throw new Error("Product image is required (featuredImageMediaId or imageBase64).");
+  throw new Error(
+    "Product image is required (featuredImageMediaId or imageBase64).",
+  );
 }
 
 async function findProductByExternalId(externalProductId: string) {
@@ -274,7 +281,10 @@ async function findProductByExternalId(externalProductId: string) {
   return legacy ?? null;
 }
 
-async function saveExternalProductMapping(externalProductId: string, productId: string) {
+async function saveExternalProductMapping(
+  externalProductId: string,
+  productId: string,
+) {
   const key = externalProductKey(externalProductId);
   await db
     .insert(apiSettings)
@@ -300,10 +310,7 @@ async function saveExternalProductMapping(externalProductId: string, productId: 
     });
 }
 
-async function saveSizeConfig(
-  productId: string,
-  sizeConfig: unknown,
-) {
+async function saveSizeConfig(productId: string, sizeConfig: unknown) {
   if (!sizeConfig) return;
   await upsertProductSizeConfig({
     productId,
@@ -342,7 +349,12 @@ async function ensureProductMediaLink(productId: string, mediaId: string) {
   const [existing] = await db
     .select({ id: productMedias.id })
     .from(productMedias)
-    .where(and(eq(productMedias.productId, productId), eq(productMedias.mediaId, mediaId)))
+    .where(
+      and(
+        eq(productMedias.productId, productId),
+        eq(productMedias.mediaId, mediaId),
+      ),
+    )
     .limit(1);
   if (existing) return;
   await db.insert(productMedias).values({
@@ -526,8 +538,7 @@ export async function handleVeloProductsRequest(
         };
     }
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Request failed.";
+    const message = error instanceof Error ? error.message : "Request failed.";
     response = {
       ok: false,
       requestId,
@@ -565,15 +576,12 @@ async function handleList(
   const filters = [];
   if (search.trim()) {
     const q = `%${search.trim()}%`;
-    filters.push(
-      or(ilike(products.name, q), ilike(products.productCode, q)),
-    );
+    filters.push(or(ilike(products.name, q), ilike(products.productCode, q)));
   }
   if (draft === "draft") filters.push(eq(products.isDraft, true));
   if (draft === "published") filters.push(eq(products.isDraft, false));
 
-  const whereClause =
-    filters.length > 0 ? and(...filters) : undefined;
+  const whereClause = filters.length > 0 ? and(...filters) : undefined;
 
   const [rows, countRow] = await Promise.all([
     db
@@ -775,9 +783,7 @@ async function handleDelete(
 
   const productId =
     parsed.data.productId ??
-    (
-      await findProductByExternalId(parsed.data.externalProductId ?? "")
-    )?.id;
+    (await findProductByExternalId(parsed.data.externalProductId ?? ""))?.id;
   if (!productId) {
     return {
       ok: false,
@@ -824,7 +830,9 @@ async function handleDelete(
   if (parsed.data.externalProductId) {
     await db
       .delete(apiSettings)
-      .where(eq(apiSettings.key, externalProductKey(parsed.data.externalProductId)));
+      .where(
+        eq(apiSettings.key, externalProductKey(parsed.data.externalProductId)),
+      );
   }
 
   return {
