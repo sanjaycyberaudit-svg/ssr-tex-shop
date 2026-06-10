@@ -13,9 +13,14 @@ import { Suspense } from "react";
 async function CartPage() {
   return (
     <Shell>
-      <section className="flex justify-between items-center py-8">
-        <h1 className="text-3xl">Your Cart</h1>
-        <Link href="/shop">Continue shopping</Link>
+      <section className="flex items-center justify-between gap-3 py-4 md:py-8">
+        <h1 className="text-2xl font-bold md:text-3xl">Your Cart</h1>
+        <Link
+          href="/shop"
+          className="shrink-0 text-sm font-medium text-primary md:text-base"
+        >
+          Continue shopping
+        </Link>
       </section>
 
       <CartDeepLinkAdd />
@@ -24,9 +29,11 @@ async function CartPage() {
         <CartSection />
       </Suspense>
 
-      <Suspense fallback={<RecommendationProductsSkeleton />}>
-        <RecommendationProducts />
-      </Suspense>
+      <div className="mt-6 hidden md:block">
+        <Suspense fallback={<RecommendationProductsSkeleton />}>
+          <RecommendationProducts />
+        </Suspense>
+      </div>
     </Shell>
   );
 }

@@ -2,23 +2,16 @@
 import { useMemo, useState } from "react";
 import { DocumentType, gql } from "@/gql";
 import { expectedErrorsHandler } from "@/lib/urql";
-import { formatPrice } from "@/lib/utils";
 import { User } from "@supabase/supabase-js";
 import { useMutation, useQuery } from "@urql/next";
 import { notFound } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import CartItemCard from "@/features/carts/components/CartItemCard";
 import CheckoutButton from "./CheckoutButton";
 import BulkOrderGuardDialog from "./BulkOrderGuardDialog";
+import { CartCheckoutSummary } from "./CartCheckoutSummary";
+import { CartItemsList, cartPageBottomSpacerClass } from "./CartItemsList";
 import EmptyCart from "@/features/carts/components/EmptyCart";
 import { RemoveCartsMutation, updateCartsMutation } from "../query";
 import { CartItems } from "../useCartStore";
@@ -164,9 +157,9 @@ function UserCartSection({ user }: UserCartSectionProps) {
       {data.cartsCollection && cart.length > 0 ? (
         <section
           aria-label="Cart Section"
-          className="grid grid-cols-12 gap-x-6 gap-y-5"
+          className={`grid grid-cols-12 gap-x-6 gap-y-3 ${cartPageBottomSpacerClass()}`}
         >
-          <div className="col-span-12 md:col-span-9 max-h-[420px] overflow-y-auto">
+          <CartItemsList>
             {cart.map(({ node }) => (
               <CartItemCard
                 key={node.product_id}
@@ -183,27 +176,19 @@ function UserCartSection({ user }: UserCartSectionProps) {
                 disabled={isLoading}
               />
             ))}
-          </div>
+          </CartItemsList>
 
-          <Card className="w-full h-[180px] px-3 col-span-12 md:col-span-3">
-            <CardHeader className="px-3 pt-2 pb-0 text-md">
-              <CardTitle className="text-lg mb-0">Subtotoal: </CardTitle>
-              <CardDescription>{`${productCount} Items`}</CardDescription>
-            </CardHeader>
-            <CardContent className="relative overflow-hidden px-3 py-2">
-              <p className="text-3xl md:text-lg lg:text-2xl font-bold">
-                {formatPrice(subtotal)}
-              </p>
-            </CardContent>
-
-            <CardFooter className="gap-x-2 md:gap-x-5 px-3">
+          <CartCheckoutSummary
+            productCount={productCount}
+            subtotal={subtotal}
+            checkout={
               <CheckoutButton
                 guest={false}
                 disabled={isLoading}
                 order={createCartObject(data)}
               />
-            </CardFooter>
-          </Card>
+            }
+          />
         </section>
       ) : (
         <EmptyCart />
@@ -220,32 +205,23 @@ export default UserCartSection;
 
 const LoadingCartSection = () => (
   <section
-    className="grid grid-cols-12 gap-x-6 gap-y-5"
+    className="grid grid-cols-12 gap-x-6 gap-y-3"
     aria-label="Loading Skeleton"
   >
-    <div className="col-span-12 md:col-span-9 space-y-8">
-      {[...Array(4)].map((_, index) => (
-        <div
-          className="flex items-center justify-between gap-x-6 gap-y-8 border-b p-5"
-          key={index}
-        >
-          <Skeleton className="h-[120px] w-[120px]" />
-          <div className="space-y-3 w-full">
-            <Skeleton className="h-6 max-w-xs" />
-            <Skeleton className="h-4" />
-            <Skeleton className="h-4 w-full max-w-xl" />
-            <Skeleton className="h-4 w-full max-w-lg" />
+    <div className="col-span-12 divide-y md:col-span-9">
+      {[...Array(3)].map((_, index) => (
+        <div className="flex items-start gap-3 px-3 py-3" key={index}>
+          <Skeleton className="h-[72px] w-[72px] shrink-0 rounded-md" />
+          <div className="w-full space-y-2">
+            <Skeleton className="h-5 max-w-xs" />
+            <Skeleton className="h-9 max-w-[7.5rem] rounded-full" />
           </div>
         </div>
       ))}
     </div>
-    <div className="w-full h-[180px] px-3 col-span-12 md:col-span-3 border p-5">
-      <div className="space-y-3 w-full">
-        <Skeleton className="h-6 max-w-xs" />
-        <Skeleton className="h-4" />
-        <Skeleton className="h-4 mb-6" />
-        <Skeleton className="h-4 mb-6 max-w-[280px]" />
-      </div>
+    <div className="col-span-12 hidden border p-4 md:col-span-3 md:block">
+      <Skeleton className="mb-2 h-5 w-24" />
+      <Skeleton className="h-8 w-32" />
     </div>
   </section>
 );

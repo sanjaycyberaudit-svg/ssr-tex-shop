@@ -52,19 +52,19 @@ function CartItemCard({
   quantity,
 }: CartItemCardProps) {
   return (
-    <Card className="flex items-center justify-between gap-x-6 gap-y-8 px-5 py-3 shadow-none border-0 border-b">
-      <CardContent className="relative p-0 mb-5 overflow-hidden ">
+    <Card className="flex items-start gap-3 border-0 bg-transparent px-3 py-3 shadow-none md:items-center md:gap-6 md:px-5">
+      <CardContent className="relative shrink-0 overflow-hidden p-0">
         <Image
           src={keytoUrl(product.featuredImage.key)}
           alt={product.featuredImage.alt}
           width={150}
           height={150}
-          className="aspect-square object-cover"
+          className="aspect-square h-[72px] w-[72px] rounded-md object-cover md:h-[120px] md:w-[120px]"
         />
       </CardContent>
 
-      <CardHeader className="p-0 mb-3 md:mb-5 grow max-w-lg">
-        <CardTitle>
+      <CardHeader className="min-w-0 flex-1 space-y-2 p-0">
+        <CardTitle className="text-sm font-semibold leading-snug md:text-base">
           <Link href={`/shop/${product.slug}`} className="hover:underline">
             {product.name}
           </Link>
@@ -75,18 +75,23 @@ function CartItemCard({
           addOneHandler={addOneHandler}
           minusOneHandler={minusOneHandler}
           disabled={disabled}
+          className="h-9 max-w-[7.5rem] px-2 py-1 md:h-12 md:max-w-36 md:px-4"
         />
       </CardHeader>
 
-      <CardFooter className="gap-x-2 md:gap-x-5 p-0 ">
-        <p>{formatPrice(product.price)}</p>
+      <CardFooter className="flex shrink-0 flex-col items-end gap-1 p-0 md:flex-row md:items-center md:gap-3">
+        <p className="text-sm font-semibold md:text-base">
+          {formatPrice(product.price)}
+        </p>
 
         <Button
           aria-label="Remove Item Button"
           variant="ghost"
+          size="icon"
+          className="h-8 w-8"
           onClick={removeHandler}
         >
-          <Icons.close size={20} />
+          <Icons.close size={18} />
         </Button>
       </CardFooter>
     </Card>
