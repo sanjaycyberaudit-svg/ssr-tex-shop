@@ -4,6 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  AdminLoadingState,
+  LoadingButtonLabel,
+} from "@/components/admin/AdminLoadingState";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import { cn, keytoUrl } from "@/lib/utils";
 
 type MediaSection = "banner" | "product";
@@ -37,6 +42,21 @@ type DragState = {
   startSelection: Set<string>;
 };
 
+type MediaUploadPhase = "idle" | "preparing" | "uploading" | "refreshing";
+
+type MediaUploadProgress = {
+  phase: MediaUploadPhase;
+  current: number;
+  total: number;
+  percent: number;
+  message: string;
+};
+
+const MAX_MEDIA_REQUEST_BYTES = 3.5 * 1024 * 1024;
+const CLIENT_PREPROCESS_MAX_EDGE = 2400;
+const CLIENT_TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
+const CLIENT_QUALITY_STEPS = [0.9, 0.86, 0.82, 0.78, 0.74] as const;
+
 function intersects(a: DOMRect, b: DOMRect) {
   return !(
     a.right < b.left ||
@@ -44,6 +64,167 @@ function intersects(a: DOMRect, b: DOMRect) {
     a.bottom < b.top ||
     a.top > b.bottom
   );
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function replaceExt(fileName: string, ext: string) {
+  return fileName.replace(/\.[^/.]+$/, "") + ext;
+}
+
+function chunkFilesBySize(files: File[], maxBytes: number): File[][] {
+  if (files.length === 0) return [];
+  const chunks: File[][] = [];
+  let currentChunk: File[] = [];
+  let currentSize = 0;
+
+  for (const file of files) {
+    if (currentChunk.length > 0 && currentSize + file.size > maxBytes) {
+      chunks.push(currentChunk);
+      currentChunk = [];
+      currentSize = 0;
+    }
+    currentChunk.push(file);
+    currentSize += file.size;
+  }
+
+  if (currentChunk.length > 0) chunks.push(currentChunk);
+  return chunks;
+}
+
+async function compressImageForMediaUpload(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  if (file.type === "image/gif") return file;
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Unsupported image format."));
+      img.src = objectUrl;
+    });
+
+    const originalWidth = image.naturalWidth || image.width;
+    const originalHeight = image.naturalHeight || image.height;
+    if (!originalWidth || !originalHeight) return file;
+
+    const scale = Math.min(
+      1,
+      CLIENT_PREPROCESS_MAX_EDGE / Math.max(originalWidth, originalHeight),
+    );
+    const targetWidth = Math.max(1, Math.round(originalWidth * scale));
+    const targetHeight = Math.max(1, Math.round(originalHeight * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+    let bestBlob: Blob | null = null;
+    for (const quality of CLIENT_QUALITY_STEPS) {
+      // eslint-disable-next-line no-await-in-loop
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/webp", quality),
+      );
+      if (!blob) continue;
+      if (!bestBlob || blob.size < bestBlob.size) bestBlob = blob;
+      if (blob.size <= CLIENT_TARGET_IMAGE_BYTES) {
+        bestBlob = blob;
+        break;
+      }
+    }
+
+    if (!bestBlob) return file;
+    if (bestBlob.size >= file.size) return file;
+
+    return new File([bestBlob], replaceExt(file.name, ".webp"), {
+      type: "image/webp",
+      lastModified: file.lastModified,
+    });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function uploadMediaBatch(files: File[]) {
+  const formData = new FormData();
+  files.forEach((file, index) => formData.append(`files[${index}]`, file));
+
+  let response: Response | null = null;
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      response = await fetchWithTimeout("/api/medias", {
+        method: "POST",
+        body: formData,
+        timeoutMs: 45000,
+      });
+      if (response.status < 500) break;
+    } catch {
+      // transient failure, retry
+    }
+    attempts += 1;
+    if (attempts < 3) {
+      // eslint-disable-next-line no-await-in-loop
+      await delay(400 * attempts);
+    }
+  }
+
+  if (!response) {
+    return {
+      status: 503,
+      uploaded: [] as string[],
+      errors: ["Upload request failed after retries."],
+      message: "Upload request failed after retries.",
+      isRequestTooLarge: false,
+    };
+  }
+
+  const raw = await response.text();
+  let payload:
+    | string[]
+    | { message?: string; uploaded?: string[]; errors?: string[] }
+    | null = null;
+  try {
+    payload = JSON.parse(raw) as
+      | string[]
+      | { message?: string; uploaded?: string[]; errors?: string[] };
+  } catch {
+    payload = null;
+  }
+
+  const isRequestTooLarge =
+    response.status === 413 || /request entity too large/i.test(raw);
+
+  if (Array.isArray(payload)) {
+    return {
+      status: response.status,
+      uploaded: payload,
+      errors: [],
+      message: "",
+      isRequestTooLarge,
+    };
+  }
+
+  const uploaded = payload?.uploaded ?? [];
+  const errors = payload?.errors ?? [];
+  const message = payload?.message ?? "";
+
+  return {
+    status: response.status,
+    uploaded,
+    errors,
+    message,
+    isRequestTooLarge,
+  };
 }
 
 export function AdminMediaManager() {
@@ -54,6 +235,8 @@ export function AdminMediaManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] =
+    useState<MediaUploadProgress | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -77,7 +260,7 @@ export function AdminMediaManager() {
   const loadLibrary = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/medias/library", {
+      const res = await fetchWithTimeout("/api/admin/medias/library", {
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Could not load media library.");
@@ -156,32 +339,116 @@ export function AdminMediaManager() {
 
   const onUploadFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-
-    const formData = new FormData();
-    [...files].forEach((file, index) => {
-      formData.append(`files[${index}]`, file);
-    });
+    const selectedFiles = Array.from(files);
 
     setIsUploading(true);
     try {
-      const res = await fetch("/api/medias", {
-        method: "POST",
-        body: formData,
+      setUploadProgress({
+        phase: "preparing",
+        current: 0,
+        total: selectedFiles.length,
+        percent: 1,
+        message: `Preparing images 0/${selectedFiles.length}`,
       });
-      const payload = (await res.json().catch(() => null)) as
-        | string[]
-        | { message?: string; uploaded?: string[]; errors?: string[] }
-        | null;
 
-      if (!res.ok && payload && !Array.isArray(payload) && payload.message) {
-        throw new Error(payload.message);
+      const preparedFiles: File[] = [];
+      for (let index = 0; index < selectedFiles.length; index += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        const compressed = await compressImageForMediaUpload(
+          selectedFiles[index],
+        );
+        preparedFiles.push(compressed);
+        const prepPercent = Math.max(
+          1,
+          Math.round(((index + 1) / selectedFiles.length) * 45),
+        );
+        setUploadProgress({
+          phase: "preparing",
+          current: index + 1,
+          total: selectedFiles.length,
+          percent: prepPercent,
+          message: `Preparing images ${index + 1}/${selectedFiles.length}`,
+        });
       }
 
+      const initialBatches = chunkFilesBySize(
+        preparedFiles,
+        MAX_MEDIA_REQUEST_BYTES,
+      );
+      const queue = initialBatches.length > 0 ? [...initialBatches] : [[]];
+      let processedBatches = 0;
+      let uploadedCount = 0;
+      const errors: string[] = [];
+
+      while (queue.length > 0) {
+        const filesBatch = queue.shift();
+        if (!filesBatch) break;
+        const totalNow = processedBatches + queue.length + 1;
+        const currentNow = processedBatches + 1;
+        const uploadPercent = Math.min(
+          95,
+          Math.round(45 + (currentNow / Math.max(1, totalNow)) * 45),
+        );
+        setUploadProgress({
+          phase: "uploading",
+          current: currentNow,
+          total: totalNow,
+          percent: uploadPercent,
+          message: `Uploading batch ${currentNow}/${totalNow}`,
+        });
+
+        // eslint-disable-next-line no-await-in-loop
+        const result = await uploadMediaBatch(filesBatch);
+        if (result.isRequestTooLarge && filesBatch.length > 1) {
+          const mid = Math.ceil(filesBatch.length / 2);
+          const firstHalf = filesBatch.slice(0, mid);
+          const secondHalf = filesBatch.slice(mid);
+          queue.unshift(secondHalf, firstHalf);
+          continue;
+        }
+
+        if (result.isRequestTooLarge && filesBatch.length === 1) {
+          throw new Error(
+            `${filesBatch[0].name} is too large to upload. Compress this image and retry.`,
+          );
+        }
+
+        if (
+          result.status >= 400 &&
+          result.uploaded.length === 0 &&
+          (result.errors.length === 0 || result.message)
+        ) {
+          throw new Error(result.message || "Media upload failed.");
+        }
+
+        uploadedCount += result.uploaded.length;
+        errors.push(...result.errors);
+        processedBatches += 1;
+      }
+
+      setUploadProgress({
+        phase: "refreshing",
+        current: 1,
+        total: 1,
+        percent: 98,
+        message: "Refreshing media library...",
+      });
       await loadLibrary();
+
+      if (uploadedCount === 0) {
+        throw new Error(errors[0] || "No images were uploaded.");
+      }
+
       toast({
         title: "Upload complete",
-        description: "Media library refreshed.",
+        description:
+          errors.length > 0
+            ? `${uploadedCount} image(s) uploaded with ${errors.length} warning(s).`
+            : `${uploadedCount} image(s) uploaded successfully.`,
       });
+      if (errors.length > 0) {
+        console.warn("[media-upload] partial errors:", errors);
+      }
     } catch (error) {
       toast({
         title: "Upload failed",
@@ -190,6 +457,7 @@ export function AdminMediaManager() {
       });
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -198,7 +466,7 @@ export function AdminMediaManager() {
     if (selectedIds.length === 0) return;
     setIsDeleting(true);
     try {
-      const res = await fetch("/api/admin/medias/library", {
+      const res = await fetchWithTimeout("/api/admin/medias/library", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -270,6 +538,24 @@ export function AdminMediaManager() {
 
   return (
     <div className="space-y-4">
+      {uploadProgress ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/35 backdrop-blur-[1px]">
+          <div className="w-[320px] rounded-xl border border-[#E8A317]/40 bg-white p-5 shadow-2xl">
+            <p className="text-center text-sm font-semibold text-[#8A5A00]">
+              {uploadProgress.message}
+            </p>
+            <p className="mt-2 text-center text-3xl font-bold text-[#8A5A00]">
+              {uploadProgress.percent}%
+            </p>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#FDECC8]">
+              <div
+                className="h-full rounded-full bg-[#E8A317] transition-all"
+                style={{ width: `${uploadProgress.percent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <Button
           variant={activeSection === "banner" ? "default" : "outline"}
@@ -291,7 +577,11 @@ export function AdminMediaManager() {
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
           >
-            {isUploading ? "Uploading..." : "Upload Images"}
+            <LoadingButtonLabel
+              isLoading={isUploading}
+              loadingText="Uploading..."
+              idleText="Upload Images"
+            />
           </Button>
           <Button
             type="button"
@@ -315,9 +605,11 @@ export function AdminMediaManager() {
             onClick={onDeleteSelected}
             disabled={selectedIds.length === 0 || isDeleting}
           >
-            {isDeleting
-              ? "Deleting..."
-              : `Delete Selected (${selectedIds.length})`}
+            <LoadingButtonLabel
+              isLoading={isDeleting}
+              loadingText="Deleting..."
+              idleText={`Delete Selected (${selectedIds.length})`}
+            />
           </Button>
         </div>
       </div>
@@ -339,7 +631,7 @@ export function AdminMediaManager() {
       />
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading medias...</p>
+        <AdminLoadingState message="Loading media library..." />
       ) : (
         <div
           ref={gridRef}

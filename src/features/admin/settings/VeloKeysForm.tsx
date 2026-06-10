@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  AdminLoadingState,
+  LoadingButtonLabel,
+} from "@/components/admin/AdminLoadingState";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 
 type KeyRecord = {
   id: string;
@@ -67,10 +72,104 @@ export function VeloKeysForm() {
     ].join("\n");
   }, [latestApiKey]);
 
+  const productsUsageSnippet = useMemo(() => {
+    const key = latestApiKey || "YOUR_VELO_API_KEY";
+    return [
+      "const apiKey = '" + key + "';",
+      "const baseUrl = 'https://sakthi-textiles-shop.vercel.app/api/velo/products';",
+      "",
+      "async function callProductsApi(action, requestId, data) {",
+      "  const res = await fetch(baseUrl, {",
+      "    method: 'POST',",
+      "    headers: {",
+      "      'Content-Type': 'application/json',",
+      "      'x-velo-key': apiKey,",
+      "    },",
+      "    body: JSON.stringify({ action, requestId, data }),",
+      "  });",
+      "  const payload = await res.json();",
+      "  if (!res.ok || !payload.ok) throw new Error(payload.message || 'Request failed');",
+      "  return payload;",
+      "}",
+      "",
+      "// 1) Fetch collections for dropdown",
+      "await callProductsApi('meta', `meta-${Date.now()}`, { type: 'collections' });",
+      "",
+      "// 2) List products",
+      "await callProductsApi('list', `list-${Date.now()}`, {",
+      "  search: '',",
+      "  draft: 'all', // all | draft | published",
+      "  page: 1,",
+      "  pageSize: 20,",
+      "});",
+      "",
+      "// 3) Upsert product (create or update by externalProductId)",
+      "await callProductsApi('upsert', `upsert-${Date.now()}`, {",
+      "  externalProductId: 'APP-1001',",
+      "  name: 'Soft Silk Saree',",
+      "  description: 'New collection piece',",
+      "  collectionId: 'COLLECTION_UUID',",
+      "  tags: ['silk', 'festival'],",
+      "  badge: 'featured',",
+      "  rating: '4',",
+      "  price: '1999',",
+      "  stock: 1,",
+      "  isDraft: false,",
+      "  featuredImageMediaId: 'MEDIA_UUID',",
+      "  sizeConfig: {",
+      "    enabled: true,",
+      "    options: [",
+      "      { size: '36', qty: 1 },",
+      "      { size: '38', qty: 1 },",
+      "      { size: '40', qty: 1 },",
+      "      { size: '42', qty: 1 },",
+      "      { size: '44', qty: 1 },",
+      "    ],",
+      "  },",
+      "});",
+      "",
+      "// 4) Bulk upsert",
+      "await callProductsApi('bulk_upsert', `bulk-${Date.now()}`, {",
+      "  shared: {",
+      "    namePrefix: 'Saree',",
+      "    description: 'Bulk sync from external app',",
+      "    collectionId: 'COLLECTION_UUID',",
+      "    tags: ['bulk'],",
+      "    badge: null,",
+      "    rating: '4',",
+      "    price: '1499',",
+      "    stock: 1,",
+      "    isDraft: true,",
+      "    sizeConfig: { enabled: true, options: [] },",
+      "  },",
+      "  items: [",
+      "    {",
+      "      externalProductId: 'APP-BULK-001',",
+      "      name: 'Bulk Product 1',",
+      "      featuredImageMediaId: 'MEDIA_UUID_1',",
+      "    },",
+      "    {",
+      "      externalProductId: 'APP-BULK-002',",
+      "      name: 'Bulk Product 2',",
+      "      imageBase64: '<BASE64_IMAGE_DATA>',",
+      "      imageFileName: 'bulk2.jpg',",
+      "    },",
+      "  ],",
+      "});",
+      "",
+      "// 5) Delete product by external id",
+      "await callProductsApi('delete', `delete-${Date.now()}`, {",
+      "  externalProductId: 'APP-1001',",
+      "});",
+    ].join("\\n");
+  }, [latestApiKey]);
+
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/velo/keys", { cache: "no-store" });
+      const res = await fetchWithTimeout("/api/admin/velo/keys", {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Could not load Velo keys");
       const payload = (await res.json()) as KeysPayload;
       setKeys(payload.keys ?? []);
@@ -93,7 +192,7 @@ export function VeloKeysForm() {
     if (!clientName.trim()) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/velo/keys", {
+      const res = await fetchWithTimeout("/api/admin/velo/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientName: clientName.trim() }),
@@ -124,7 +223,7 @@ export function VeloKeysForm() {
 
   const revokeKey = async (id: string) => {
     try {
-      const res = await fetch("/api/admin/velo/keys", {
+      const res = await fetchWithTimeout("/api/admin/velo/keys", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -143,6 +242,7 @@ export function VeloKeysForm() {
 
   return (
     <div className="space-y-6">
+      {loading ? <AdminLoadingState message="Loading Velo keys..." /> : null}
       <Card>
         <CardHeader>
           <CardTitle>Generate Velo API Key</CardTitle>
@@ -158,7 +258,11 @@ export function VeloKeysForm() {
             />
           </div>
           <Button disabled={saving || !clientName.trim()} onClick={createKey}>
-            {saving ? "Generating..." : "Generate Unique Key"}
+            <LoadingButtonLabel
+              isLoading={saving}
+              loadingText="Generating..."
+              idleText="Generate Unique Key"
+            />
           </Button>
 
           {latestApiKey ? (
@@ -185,11 +289,31 @@ export function VeloKeysForm() {
 
       <Card>
         <CardHeader>
+          <CardTitle>How Velo app should manage products</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Use this snippet to call the unified products API from your external
+            app. Supported actions: meta, list, upsert, bulk_upsert, delete.
+          </p>
+          <Textarea
+            value={productsUsageSnippet}
+            readOnly
+            className="min-h-[420px]"
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Existing Velo Keys</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading keys...</p>
+            <AdminLoadingState
+              message="Refreshing keys list..."
+              className="w-fit"
+            />
           ) : keys.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No keys created yet.

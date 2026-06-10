@@ -23,9 +23,10 @@ interface CategoryPageProps {
 }
 
 export function generateMetadata({ params }: CategoryPageProps) {
+  const collectionName = toTitleCase(unslugify(params.collectionSlug));
   return {
-    title: `HIYORI | ${toTitleCase(unslugify(params.collectionSlug))}`,
-    description: `HIYORI | Buy ${params.collectionSlug} funiture.`,
+    title: `${collectionName} | Sakthi Textile`,
+    description: `Shop ${collectionName} sarees at Sakthi Textile.`,
   };
 }
 

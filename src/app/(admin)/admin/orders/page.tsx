@@ -2,12 +2,11 @@ import AdminShell from "@/components/admin/AdminShell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DataTable } from "@/features/cms";
 import { OrdersColumns } from "@/features/orders";
-import { gql } from "@/gql";
 import {
   isPaidPaymentStatus,
   needsPaymentAttention,
 } from "@/lib/orders/paymentStatus";
-import { getClient } from "@/lib/urql";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export const dynamic = "force-dynamic";
 
@@ -17,27 +16,19 @@ type AdminOrdersPageProps = {
   };
 };
 
-const AdminOrdersPageQuery = gql(/* GraphQL */ `
-  query AdminOrdersPageQuery {
-    ordersCollection(orderBy: [{ created_at: DescNullsLast }]) {
-      edges {
-        node {
-          __typename
-          id
-          payment_status
-          order_status
-          ...OrderColumnsFragment
-        }
-      }
-    }
-  }
-`);
-
 type AdminOrderEdge = {
   node: {
     id: string;
     payment_status: string | null;
     order_status: string | null;
+    order_linesCollection: {
+      edges: Array<{
+        node: {
+          id: string;
+          product_id: string | null;
+        };
+      }>;
+    };
   };
 };
 
@@ -48,11 +39,41 @@ async function OrdersPage({ searchParams }: AdminOrdersPageProps) {
   let orders: AdminOrderEdge[] = [];
 
   try {
-    const { data, error } = await getClient().query(AdminOrdersPageQuery, {});
-    if (error) {
-      fetchError = error.message;
+    const supabase = createServiceRoleClient();
+    const [ordersRes, linesRes] = await Promise.all([
+      supabase
+        .from("orders")
+        .select("id, payment_status, order_status, created_at")
+        .order("created_at", { ascending: false }),
+      supabase.from("order_lines").select("id, orderId, product_id"),
+    ]);
+
+    if (ordersRes.error || linesRes.error) {
+      fetchError = ordersRes.error?.message || linesRes.error?.message || null;
     } else {
-      orders = (data?.ordersCollection?.edges as AdminOrderEdge[] | null) ?? [];
+      const linesByOrderId = new Map<
+        string,
+        Array<{ id: string; product_id: string | null }>
+      >();
+      (linesRes.data ?? []).forEach((line) => {
+        if (!line.orderId) return;
+        const list = linesByOrderId.get(line.orderId) ?? [];
+        list.push({ id: line.id, product_id: line.product_id });
+        linesByOrderId.set(line.orderId, list);
+      });
+
+      orders = (ordersRes.data ?? []).map((row) => ({
+        node: {
+          id: row.id,
+          payment_status: row.payment_status,
+          order_status: row.order_status,
+          order_linesCollection: {
+            edges: (linesByOrderId.get(row.id) ?? []).map((line) => ({
+              node: line,
+            })),
+          },
+        },
+      }));
     }
   } catch (error) {
     fetchError =

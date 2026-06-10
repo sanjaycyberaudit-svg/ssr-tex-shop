@@ -6,12 +6,14 @@ type StartCheckoutParams = {
   order: CartItems;
   guest: boolean;
   shipping: SavedShippingAddress;
+  promoCode?: string | null;
 };
 
 export async function startCheckout({
   order,
   guest,
   shipping,
+  promoCode,
 }: StartCheckoutParams) {
   const res = await fetch("/api/create-checkout-session", {
     method: "POST",
@@ -24,7 +26,9 @@ export async function startCheckout({
         fullName: shipping.fullName,
         email: shipping.email,
         mobile: shipping.mobile,
+        state: shipping.state,
       },
+      promoCode: promoCode ?? null,
     }),
   });
 

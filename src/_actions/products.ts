@@ -54,6 +54,7 @@ export type BulkDraftSharedData = {
   rating?: string;
   price?: string;
   tags?: string[];
+  stock?: number;
 };
 
 export type BulkDraftCreateResult = {
@@ -116,6 +117,7 @@ export async function createDraftProductsFromMedia(
           rating: shared?.rating ?? "4",
           price: shared?.price ?? "0",
           tags: shared?.tags ?? [],
+          stock: Math.max(0, Math.round(shared?.stock ?? 0)),
         })
         .returning({
           id: products.id,

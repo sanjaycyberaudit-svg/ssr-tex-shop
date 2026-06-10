@@ -4,11 +4,37 @@ import {
   resolveVeloApiKey,
   touchVeloApiKeyUsage,
 } from "@/lib/integrations/velo";
-import { and, asc, eq, gt, inArray } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, ne } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
+
+const VELO_CORS_ORIGINS = new Set([
+  "https://software-saree-order.vercel.app",
+  "http://localhost:3000",
+  "https://localhost",
+  "http://localhost",
+  "capacitor://localhost",
+]);
+
+function veloCorsHeaders(request: NextRequest): HeadersInit {
+  const origin = request.headers.get("origin") ?? "";
+  const allowOrigin = VELO_CORS_ORIGINS.has(origin) ? origin : "*";
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-velo-key",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: veloCorsHeaders(request),
+  });
+}
 
 function extractApiKey(request: NextRequest) {
   const headerKey = request.headers.get("x-velo-key")?.trim();
@@ -25,7 +51,10 @@ export async function GET(request: NextRequest) {
   const apiKey = extractApiKey(request);
   const resolvedKey = await resolveVeloApiKey(apiKey);
   if (!resolvedKey) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Unauthorized" },
+      { status: 401, headers: veloCorsHeaders(request) },
+    );
   }
   await touchVeloApiKeyUsage(resolvedKey.id);
 
@@ -42,18 +71,27 @@ export async function GET(request: NextRequest) {
     if (Number.isNaN(parsed.getTime())) {
       return NextResponse.json(
         { message: "Invalid `since` format. Use ISO datetime." },
-        { status: 400 },
+        { status: 400, headers: veloCorsHeaders(request) },
       );
     }
     createdAfterDate = parsed;
   }
 
+  // Include all valid payment statuses in schema, exclude cancelled orders.
+  const paymentFilter = inArray(orders.payment_status, [
+    "paid",
+    "unpaid",
+    "no_payment_required",
+  ]);
+  const activeOrderFilter = ne(orders.order_status, "cancelled");
+
   const whereClause = createdAfterDate
     ? and(
-        eq(orders.payment_status, "paid"),
+        paymentFilter,
+        activeOrderFilter,
         gt(orders.createdAt, createdAfterDate),
       )
-    : eq(orders.payment_status, "paid");
+    : and(paymentFilter, activeOrderFilter);
 
   const orderRows = await db
     .select({
@@ -77,12 +115,15 @@ export async function GET(request: NextRequest) {
     .limit(limit);
 
   if (orderRows.length === 0) {
-    return NextResponse.json({
-      client: resolvedKey.clientName,
-      count: 0,
-      orders: [],
-      nextSince: since ?? null,
-    });
+    return NextResponse.json(
+      {
+        client: resolvedKey.clientName,
+        count: 0,
+        orders: [],
+        nextSince: since ?? null,
+      },
+      { headers: veloCorsHeaders(request) },
+    );
   }
 
   const orderIds = orderRows.map((row) => row.id);
@@ -151,10 +192,13 @@ export async function GET(request: NextRequest) {
     })),
   }));
 
-  return NextResponse.json({
-    client: resolvedKey.clientName,
-    count: data.length,
-    orders: data,
-    nextSince: orderRows[orderRows.length - 1].createdAt,
-  });
+  return NextResponse.json(
+    {
+      client: resolvedKey.clientName,
+      count: data.length,
+      orders: data,
+      nextSince: orderRows[orderRows.length - 1].createdAt,
+    },
+    { headers: veloCorsHeaders(request) },
+  );
 }

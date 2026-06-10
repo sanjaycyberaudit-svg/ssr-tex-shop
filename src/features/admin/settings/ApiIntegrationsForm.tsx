@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AdminLoadingState,
+  LoadingButtonLabel,
+} from "@/components/admin/AdminLoadingState";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 
 type ApiSettingRecord = {
   key: string;
@@ -87,7 +92,7 @@ export function ApiIntegrationsForm() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/admin/integrations", {
+        const res = await fetchWithTimeout("/api/admin/integrations", {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Could not load API settings");
@@ -193,7 +198,7 @@ export function ApiIntegrationsForm() {
     key: "cashfree" | "phonepe" | "whatsapp",
     body: Record<string, unknown>,
   ) =>
-    fetch("/api/admin/integrations", {
+    fetchWithTimeout("/api/admin/integrations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -261,6 +266,9 @@ export function ApiIntegrationsForm() {
 
   return (
     <div className="space-y-6">
+      {isLoading ? (
+        <AdminLoadingState message="Loading API settings..." />
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>Cashfree Payment Gateway</CardTitle>
@@ -484,7 +492,11 @@ export function ApiIntegrationsForm() {
       </Card>
 
       <Button onClick={onSave} disabled={saveDisabled}>
-        {isSaving ? "Saving..." : "Save API settings"}
+        <LoadingButtonLabel
+          isLoading={isSaving}
+          loadingText="Saving..."
+          idleText="Save API settings"
+        />
       </Button>
     </div>
   );

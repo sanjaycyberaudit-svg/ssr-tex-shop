@@ -3,6 +3,7 @@ import { persistNSync } from "persist-and-sync";
 
 export type CartItem = {
   quantity: number;
+  size?: string;
 };
 
 export type CartItems = { [productId: string]: CartItem };
@@ -10,8 +11,9 @@ export type ProductData = { productId: string; quantity: number };
 
 type CartStore = {
   cart: CartItems;
-  addProductToCart: (id: string, quantity: number) => void;
-  setProductQuantity: (id: string, quantity: number) => void;
+  addProductToCart: (id: string, quantity: number, size?: string) => void;
+  setProductQuantity: (id: string, quantity: number, size?: string) => void;
+  setProductSize: (id: string, size: string) => void;
   replaceCart: (cart: CartItems) => void;
   removeProduct: (id: string) => void;
   removeAllProducts: () => void;
@@ -21,7 +23,7 @@ const useCartStore = create<CartStore>(
   persistNSync(
     (set) => ({
       cart: {},
-      addProductToCart: (id, quantity) => {
+      addProductToCart: (id, quantity, size) => {
         set((state) => {
           const existingProduct = state.cart[id];
           if (!existingProduct && quantity <= 0) return state;
@@ -39,22 +41,50 @@ const useCartStore = create<CartStore>(
           return {
             cart: {
               ...state.cart,
-              [id]: { quantity: newQuantity },
+              [id]: {
+                quantity: newQuantity,
+                ...(size
+                  ? { size }
+                  : existingProduct?.size
+                    ? { size: existingProduct.size }
+                    : {}),
+              },
             },
           };
         });
       },
-      setProductQuantity: (id, quantity) =>
+      setProductQuantity: (id, quantity, size) =>
         set((state) => {
           if (quantity <= 0) {
             const updatedCart = { ...state.cart };
             delete updatedCart[id];
             return { cart: updatedCart };
           }
+          const existingProduct = state.cart[id];
           return {
             cart: {
               ...state.cart,
-              [id]: { quantity },
+              [id]: {
+                quantity,
+                ...(size
+                  ? { size }
+                  : existingProduct?.size
+                    ? { size: existingProduct.size }
+                    : {}),
+              },
+            },
+          };
+        }),
+      setProductSize: (id, size) =>
+        set((state) => {
+          const existingProduct = state.cart[id];
+          return {
+            cart: {
+              ...state.cart,
+              [id]: {
+                quantity: existingProduct?.quantity ?? 0,
+                size,
+              },
             },
           };
         }),

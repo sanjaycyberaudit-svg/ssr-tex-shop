@@ -19,7 +19,9 @@ export function getProductSizeConfigKey(productId: string) {
 }
 
 function normalizeSizeLabel(raw: unknown) {
-  return String(raw ?? "").trim().slice(0, 8);
+  return String(raw ?? "")
+    .trim()
+    .slice(0, 8);
 }
 
 function normalizeQty(raw: unknown) {

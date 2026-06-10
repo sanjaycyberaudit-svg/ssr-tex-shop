@@ -25,9 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
 import TagsField from "@/components/ui/tagsField";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  AdminLoadingState,
+  LoadingButtonLabel,
+} from "@/components/admin/AdminLoadingState";
 import { BadgeSelectField } from "@/features/cms";
 import { ImageDialog } from "@/features/medias";
 import UploadMediaContainer from "@/features/medias/components/UploadMediaContainer";
@@ -36,12 +39,20 @@ import {
   SelectProducts,
   products,
 } from "@/lib/supabase/schema";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@urql/next";
 import { createInsertSchema } from "drizzle-zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, useMemo, useRef, useState, useTransition } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useForm } from "react-hook-form";
 import { gql } from "urql";
 
@@ -78,7 +89,50 @@ const BULK_SHARED_FIELDS = [
   "rating",
   "tags",
   "price",
+  "stock",
 ] as const;
+
+type ApiSettingRecord = {
+  key: string;
+  isEnabled: boolean;
+  value: Record<string, unknown>;
+} | null;
+
+type IntegrationsPayload = {
+  stockControl: ApiSettingRecord;
+};
+
+type SizeOptionForm = {
+  size: string;
+  qty: string;
+};
+
+type ProductSizeConfigForm = {
+  enabled: boolean;
+  options: SizeOptionForm[];
+};
+
+const DEFAULT_SIZE_OPTIONS: SizeOptionForm[] = [
+  { size: "36", qty: "1" },
+  { size: "38", qty: "1" },
+  { size: "40", qty: "1" },
+  { size: "42", qty: "1" },
+  { size: "44", qty: "1" },
+];
+
+function normalizeSizeQtyInput(raw: unknown) {
+  const value = Number(String(raw ?? "").replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.round(value * 100) / 100);
+}
+
+function hasAnySizeOptionConfigured(options: SizeOptionForm[]) {
+  return options.some((option) => {
+    const size = String(option.size ?? "").trim();
+    const qty = normalizeSizeQtyInput(option.qty);
+    return size.length > 0 || qty > 0;
+  });
+}
 
 function mergeUniqueFiles(prev: File[], next: File[]) {
   const map = new Map<string, File>();
@@ -190,6 +244,7 @@ type BulkSharedPayload = {
   rating: string;
   price: string;
   tags: string[];
+  stock: number;
 };
 
 type BulkBatchResponse = {
@@ -197,6 +252,10 @@ type BulkBatchResponse = {
   status: number;
   isRequestTooLarge: boolean;
 };
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function submitBulkBatch(params: {
   files: File[];
@@ -212,10 +271,39 @@ async function submitBulkBatch(params: {
   );
   formData.append("shared", JSON.stringify(params.shared));
 
-  const res = await fetch("/api/admin/products/bulk-draft", {
-    method: "POST",
-    body: formData,
-  });
+  let res: Response | null = null;
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      // Retry transient bulk failures to reduce random client/network breakage.
+      // eslint-disable-next-line no-await-in-loop
+      res = await fetchWithTimeout("/api/admin/products/bulk-draft", {
+        method: "POST",
+        body: formData,
+        timeoutMs: 45000,
+      });
+      if (res.status < 500) break;
+    } catch {
+      // continue to retry
+    }
+    attempts += 1;
+    if (attempts < 3) {
+      // eslint-disable-next-line no-await-in-loop
+      await delay(400 * attempts);
+    }
+  }
+
+  if (!res) {
+    return {
+      payload: {
+        message: "Bulk request failed after retries. Please retry once.",
+        created: [],
+        errors: ["Bulk request failed after retries. Please retry once."],
+      },
+      status: 503,
+      isRequestTooLarge: false,
+    };
+  }
 
   const raw = await res.text();
   let payload: BulkDraftResponse;
@@ -277,6 +365,14 @@ function ProductFrom({ product }: ProductsFormProps) {
     current: number;
     total: number;
   } | null>(null);
+  const [stockControl, setStockControl] = useState({
+    enabled: false,
+    lowStockThreshold: 5,
+  });
+  const [sizeConfig, setSizeConfig] = useState<ProductSizeConfigForm>({
+    enabled: false,
+    options: [{ size: "", qty: "" }],
+  });
   const localFileInputRef = useRef<HTMLInputElement>(null);
 
   const [{ data }] = useQuery({
@@ -285,10 +381,107 @@ function ProductFrom({ product }: ProductsFormProps) {
 
   const form = useForm<InsertProducts>({
     resolver: zodResolver(createInsertSchema(products)),
-    defaultValues: { ...product },
+    defaultValues: {
+      ...product,
+      stock: typeof product?.stock === "number" ? product.stock : 1,
+    },
   });
 
   const { register, control, handleSubmit } = form;
+
+  useEffect(() => {
+    let active = true;
+    const loadSettings = async () => {
+      try {
+        const response = await fetchWithTimeout("/api/admin/integrations", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+        const payload = (await response.json()) as IntegrationsPayload;
+        if (!active) return;
+
+        const thresholdRaw = Number(
+          payload.stockControl?.value?.lowStockThreshold ?? 5,
+        );
+        const lowStockThreshold = Number.isFinite(thresholdRaw)
+          ? Math.min(99, Math.max(1, Math.round(thresholdRaw)))
+          : 5;
+        const enabled = Boolean(payload.stockControl?.isEnabled ?? false);
+        setStockControl({ enabled, lowStockThreshold });
+
+        if (!product && enabled) {
+          const currentStock = Number(form.getValues("stock"));
+          if (!Number.isFinite(currentStock) || currentStock <= 0) {
+            form.setValue("stock", 1);
+          }
+        }
+      } catch {
+        // Settings fetch failure should not block product edit/create.
+      }
+    };
+    void loadSettings();
+
+    return () => {
+      active = false;
+    };
+  }, [form, product]);
+
+  useEffect(() => {
+    if (!product?.id) return;
+    let active = true;
+    const loadSizeConfig = async () => {
+      try {
+        const response = await fetchWithTimeout(
+          `/api/admin/products/size-config?productId=${encodeURIComponent(product.id)}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) return;
+        const payload = (await response.json()) as {
+          config?: ProductSizeConfigForm;
+        };
+        if (!active) return;
+        const config = payload.config;
+        if (!config) return;
+        setSizeConfig({
+          enabled: Boolean(config.enabled),
+          options:
+            Array.isArray(config.options) && config.options.length > 0
+              ? config.options.map((item) => ({
+                  size: String(item.size ?? "")
+                    .trim()
+                    .slice(0, 8)
+                    .toUpperCase(),
+                  qty: String(item.qty ?? ""),
+                }))
+              : [{ size: "", qty: "" }],
+        });
+      } catch {
+        // keep default config
+      }
+    };
+    void loadSizeConfig();
+    return () => {
+      active = false;
+    };
+  }, [product?.id]);
+
+  const normalizedSizeConfig = useMemo(() => {
+    const dedup = new Map<string, { size: string; qty: number }>();
+    for (const option of sizeConfig.options) {
+      const size = String(option.size ?? "")
+        .trim()
+        .slice(0, 8)
+        .toUpperCase();
+      const qty = normalizeSizeQtyInput(option.qty);
+      if (!size && qty <= 0) continue;
+      const key = size || "__NO_LABEL__";
+      dedup.set(key, { size, qty });
+    }
+    return {
+      enabled: sizeConfig.enabled,
+      options: Array.from(dedup.values()),
+    };
+  }, [sizeConfig.enabled, sizeConfig.options]);
 
   const inBulkMode = !product && createMode === "bulk";
   const totalBulkImages = bulkFiles.length + selectedMediaIds.length;
@@ -300,6 +493,34 @@ function ProductFrom({ product }: ProductsFormProps) {
       bulkPhase !== "preparing",
     [bulkPhase, isPending, totalBulkImages],
   );
+
+  const bulkOverlay = useMemo(() => {
+    if (!inBulkMode || bulkPhase === "idle") return null;
+
+    let percent = 10;
+    let message = "Preparing...";
+    if (bulkPhase === "preparing") {
+      const total = prepareProgress?.total ?? 0;
+      const current = prepareProgress?.current ?? 0;
+      percent = total > 0 ? Math.round((current / total) * 45) : 10;
+      message = `Preparing images ${current}/${total}`;
+    } else if (bulkPhase === "uploading") {
+      const total = bulkProgress?.totalBatches ?? 1;
+      const current = bulkProgress?.currentBatch ?? 1;
+      percent = Math.min(95, Math.round(45 + (current / total) * 45));
+      message = `Uploading batch ${current}/${total}`;
+    } else {
+      const total = bulkProgress?.totalBatches ?? 1;
+      const current = bulkProgress?.currentBatch ?? 1;
+      percent = Math.min(99, Math.round(90 + (current / total) * 9));
+      message = `Creating products ${current}/${total}`;
+    }
+
+    return {
+      percent: Math.max(1, Math.min(99, percent)),
+      message,
+    };
+  }, [bulkPhase, bulkProgress, inBulkMode, prepareProgress]);
 
   const addLocalFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -331,16 +552,44 @@ function ProductFrom({ product }: ProductsFormProps) {
   const onSingleSubmit = async (data: InsertProducts) => {
     startTransition(async () => {
       try {
-        product
-          ? await updateProductAction(product.id, data)
-          : await createProductAction(data);
+        const normalizedStockRaw = Number(data.stock);
+        const normalizedStock = Number.isFinite(normalizedStockRaw)
+          ? Math.max(0, Math.round(normalizedStockRaw))
+          : stockControl.enabled
+            ? 1
+            : 0;
+        const payload: InsertProducts = {
+          ...data,
+          stock: normalizedStock,
+        };
+        const result = product
+          ? await updateProductAction(product.id, payload)
+          : await createProductAction(payload);
+        const productId = product?.id ?? result?.[0]?.id;
+        if (!productId) {
+          throw new Error("Product id missing after save.");
+        }
+        const sizeSave = await fetchWithTimeout(
+          "/api/admin/products/size-config",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              productId,
+              config: normalizedSizeConfig,
+            }),
+          },
+        );
+        if (!sizeSave.ok) {
+          throw new Error("Could not save size configuration.");
+        }
 
         router.push("/admin/products");
         router.refresh();
 
         toast({
           title: `Product is ${product ? "updated" : "created"}.`,
-          description: `${data.name}`,
+          description: `${payload.name}`,
         });
       } catch (err) {
         toast({
@@ -382,10 +631,15 @@ function ProductFrom({ product }: ProductsFormProps) {
       rating: String(values.rating ?? "4"),
       price: String(values.price ?? "0"),
       tags: Array.isArray(values.tags) ? values.tags : [],
+      stock: Number.isFinite(Number(values.stock))
+        ? Math.max(0, Math.round(Number(values.stock)))
+        : 0,
     };
 
     startTransition(async () => {
       try {
+        setBulkCreated([]);
+        setBulkErrors([]);
         setBulkPhase("uploading");
         const fileBatches = chunkFilesBySize(bulkFiles, MAX_BULK_REQUEST_BYTES);
         const effectiveBatches = fileBatches.length > 0 ? fileBatches : [[]];
@@ -461,9 +715,19 @@ function ProductFrom({ product }: ProductsFormProps) {
         setBulkCreated(aggregatedCreated);
         setBulkErrors(aggregatedErrors);
 
+        if (aggregatedCreated.length === 0) {
+          throw new Error(
+            aggregatedErrors[0] ||
+              "No products were created. Check selected images and shared details.",
+          );
+        }
+
         toast({
           title: "Bulk create finished",
-          description: `${aggregatedCreated.length} products created.`,
+          description:
+            aggregatedErrors.length > 0
+              ? `${aggregatedCreated.length} products created with ${aggregatedErrors.length} warning(s).`
+              : `${aggregatedCreated.length} products created.`,
         });
         setBulkFiles([]);
         setSelectedMediaIds([]);
@@ -490,8 +754,56 @@ function ProductFrom({ product }: ProductsFormProps) {
     void handleSubmit(onSingleSubmit)();
   };
 
+  const updateSizeOption = (
+    index: number,
+    key: keyof SizeOptionForm,
+    value: string,
+  ) => {
+    setSizeConfig((prev) => ({
+      ...prev,
+      options: prev.options.map((option, i) =>
+        i === index ? { ...option, [key]: value } : option,
+      ),
+    }));
+  };
+
+  const addSizeOption = () => {
+    setSizeConfig((prev) => ({
+      ...prev,
+      options: [...prev.options, { size: "", qty: "" }],
+    }));
+  };
+
+  const removeSizeOption = (index: number) => {
+    setSizeConfig((prev) => ({
+      ...prev,
+      options:
+        prev.options.length <= 1
+          ? [{ size: "", qty: "" }]
+          : prev.options.filter((_, i) => i !== index),
+    }));
+  };
+
   return (
     <Form {...form}>
+      {bulkOverlay ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/35 backdrop-blur-[1px]">
+          <div className="w-[320px] rounded-xl border border-[#E8A317]/40 bg-white p-5 shadow-2xl">
+            <p className="text-center text-sm font-semibold text-[#8A5A00]">
+              {bulkOverlay.message}
+            </p>
+            <p className="mt-2 text-center text-3xl font-bold text-[#8A5A00]">
+              {bulkOverlay.percent}%
+            </p>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#FDECC8]">
+              <div
+                className="h-full rounded-full bg-[#E8A317] transition-all"
+                style={{ width: `${bulkOverlay.percent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
       <form
         id="project-form"
         className="gap-x-5 flex gap-y-5 flex-col px-3"
@@ -712,6 +1024,121 @@ function ProductFrom({ product }: ProductsFormProps) {
             <FormMessage />
           </FormItem>
 
+          <FormItem>
+            <FormLabel className="text-sm">Stock</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min={0}
+                defaultValue={product?.stock ?? undefined}
+                aria-invalid={!!form.formState.errors.stock}
+                placeholder={
+                  stockControl.enabled
+                    ? "Stock quantity (default 1 for new product)"
+                    : "Stock quantity"
+                }
+                {...register("stock", { valueAsNumber: true })}
+              />
+            </FormControl>
+            <FormDescription>
+              {stockControl.enabled
+                ? `Low-stock notice appears below ${stockControl.lowStockThreshold}.`
+                : "Stock control is disabled; storefront behavior remains unchanged."}
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+
+          <FormItem>
+            <FormLabel className="text-sm">Enable Size</FormLabel>
+            <FormControl>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={sizeConfig.enabled}
+                  onChange={(event) =>
+                    setSizeConfig((prev) => ({
+                      ...prev,
+                      enabled: event.target.checked,
+                      options:
+                        event.target.checked &&
+                        !hasAnySizeOptionConfigured(prev.options)
+                          ? DEFAULT_SIZE_OPTIONS
+                          : prev.options,
+                    }))
+                  }
+                />
+                Allow customers to select available sizes.
+              </label>
+            </FormControl>
+            <FormDescription>
+              Size label supports up to 8 characters. Leave label empty to show
+              only the number.
+            </FormDescription>
+          </FormItem>
+
+          {sizeConfig.enabled ? (
+            <FormItem>
+              <FormLabel className="text-sm">Size options</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  {sizeConfig.options.map((option, index) => (
+                    <div
+                      key={index}
+                      className="grid grid-cols-[1fr,1fr,auto] gap-2"
+                    >
+                      <Input
+                        value={option.size}
+                        maxLength={8}
+                        placeholder="Size (e.g. 6.2 / S / XL)"
+                        onChange={(event) =>
+                          updateSizeOption(
+                            index,
+                            "size",
+                            event.target.value.trimStart().toUpperCase(),
+                          )
+                        }
+                      />
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={option.qty}
+                        placeholder="Value / Stock (e.g. 32 or 6.2)"
+                        onChange={(event) =>
+                          updateSizeOption(
+                            index,
+                            "qty",
+                            event.target.value.replace(/[^0-9.]/g, ""),
+                          )
+                        }
+                        onBlur={(event) =>
+                          updateSizeOption(
+                            index,
+                            "qty",
+                            String(normalizeSizeQtyInput(event.target.value)),
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => removeSizeOption(index)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addSizeOption}
+                  >
+                    Add size
+                  </Button>
+                </div>
+              </FormControl>
+            </FormItem>
+          ) : null}
+
           {inBulkMode ? (
             <FormItem>
               <FormLabel>Bulk Images*</FormLabel>
@@ -765,16 +1192,17 @@ function ProductFrom({ product }: ProductsFormProps) {
                   : ""}
               </p>
               {bulkPhase === "preparing" || (isPending && inBulkMode) ? (
-                <p className="inline-flex items-center gap-2 rounded-md border border-[#E8A317]/40 bg-[#FFF7E6] px-3 py-1.5 text-xs font-medium text-[#8A5A00]">
-                  <Spinner className="h-3.5 w-3.5 animate-spin" />
-                  {bulkPhase === "preparing"
-                    ? `Preparing images... ${prepareProgress?.current ?? 0}/${prepareProgress?.total ?? 0}`
-                    : bulkPhase === "uploading"
-                      ? `Uploading batch ${bulkProgress?.currentBatch ?? 1}/${bulkProgress?.totalBatches ?? 1}...`
-                      : bulkProgress
-                        ? `Creating products... batch ${bulkProgress.currentBatch}/${bulkProgress.totalBatches}`
-                        : "Creating products..."}
-                </p>
+                <AdminLoadingState
+                  message={
+                    bulkPhase === "preparing"
+                      ? `Preparing images... ${prepareProgress?.current ?? 0}/${prepareProgress?.total ?? 0}`
+                      : bulkPhase === "uploading"
+                        ? `Uploading batch ${bulkProgress?.currentBatch ?? 1}/${bulkProgress?.totalBatches ?? 1}...`
+                        : bulkProgress
+                          ? `Creating products... batch ${bulkProgress.currentBatch}/${bulkProgress.totalBatches}`
+                          : "Creating products..."
+                  }
+                />
               ) : null}
 
               {selectedMediaIds.length > 0 ? (
@@ -930,23 +1358,19 @@ function ProductFrom({ product }: ProductsFormProps) {
             variant={"outline"}
             form="project-form"
           >
-            {isPending && (
-              <Spinner
-                className="mr-2 h-4 w-4 animate-spin"
-                aria-hidden="true"
-              />
-            )}
-            {isPending
-              ? inBulkMode
-                ? "Creating bulk..."
-                : product
-                  ? "Updating..."
-                  : "Creating..."
-              : product
-                ? "Update"
-                : inBulkMode
-                  ? "Create Bulk"
-                  : "Create"}
+            <LoadingButtonLabel
+              isLoading={isPending}
+              loadingText={
+                inBulkMode
+                  ? "Creating bulk..."
+                  : product
+                    ? "Updating..."
+                    : "Creating..."
+              }
+              idleText={
+                product ? "Update" : inBulkMode ? "Create Bulk" : "Create"
+              }
+            />
           </Button>
           <Link href="/admin/products" className={buttonVariants()}>
             Cancel

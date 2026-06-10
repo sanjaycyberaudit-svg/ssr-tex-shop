@@ -24,6 +24,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { DocumentType, gql } from "@/gql";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ImageDialog } from "@/features/medias";
@@ -69,7 +70,7 @@ function CollectionForm({ collection }: CollectionFormProps) {
       };
 
       if (collection) {
-        const res = await fetch("/api/admin/collections", {
+        const res = await fetchWithTimeout("/api/admin/collections", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: collection.id, ...payload }),
@@ -88,7 +89,7 @@ function CollectionForm({ collection }: CollectionFormProps) {
         return;
       }
 
-      const res = await fetch("/api/admin/collections", {
+      const res = await fetchWithTimeout("/api/admin/collections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

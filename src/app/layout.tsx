@@ -10,6 +10,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Sakthi Textile | Silk & Cotton Sarees",
   description: "Authentic silk and cotton sarees — wholesale and retail",
+  icons: {
+    icon: [{ url: "/images/sakthi-st-emblem.svg", type: "image/svg+xml" }],
+    shortcut: ["/images/sakthi-st-emblem.svg"],
+    apple: [{ url: "/images/sakthi-st-emblem.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({

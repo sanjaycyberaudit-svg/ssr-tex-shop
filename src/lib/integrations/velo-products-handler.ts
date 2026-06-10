@@ -36,6 +36,16 @@ const badgeSchema = z
   .nullable()
   .optional();
 
+function parseDraftFlag(value: unknown): boolean {
+  if (value === true || value === 1) return true;
+  if (value === "true" || value === "1") return true;
+  return false;
+}
+
+const draftFlagSchema = z
+  .preprocess(parseDraftFlag, z.boolean())
+  .default(false);
+
 const sizeConfigSchema = z
   .object({
     enabled: z.boolean(),
@@ -64,7 +74,7 @@ const upsertDataSchema = z.object({
   rating: z.string().trim().optional().default("4"),
   price: z.string().trim().min(1),
   stock: z.number().int().min(0).optional().default(1),
-  isDraft: z.boolean().optional().default(false),
+  isDraft: draftFlagSchema,
   featuredImageMediaId: z.string().trim().optional(),
   imageBase64: z.string().trim().optional(),
   imageFileName: z.string().trim().optional(),
@@ -123,7 +133,7 @@ const bulkSharedSchema = z.object({
   rating: z.string().trim().optional().default("4"),
   price: z.string().trim().min(1),
   stock: z.number().int().min(0).optional().default(1),
-  isDraft: z.boolean().optional().default(false),
+  isDraft: draftFlagSchema,
   sizeConfig: sizeConfigSchema,
 });
 

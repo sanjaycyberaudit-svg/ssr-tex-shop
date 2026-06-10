@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AdminLoadingState,
+  LoadingButtonLabel,
+} from "@/components/admin/AdminLoadingState";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 
 type ApiSettingRecord = {
   key: string;
@@ -60,7 +65,7 @@ export function SocialUrlsForm() {
   const loadSettings = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/integrations", {
+      const res = await fetchWithTimeout("/api/admin/integrations", {
         cache: "no-store",
       });
       if (!res.ok) throw new Error("Could not load social URL settings");
@@ -91,7 +96,7 @@ export function SocialUrlsForm() {
   const onSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/integrations", {
+      const res = await fetchWithTimeout("/api/admin/integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -136,6 +141,9 @@ export function SocialUrlsForm() {
           <CardTitle>Storefront Social URLs</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isLoading ? (
+            <AdminLoadingState message="Loading social URLs..." />
+          ) : null}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -199,7 +207,11 @@ export function SocialUrlsForm() {
       </Card>
 
       <Button onClick={onSave} disabled={saveDisabled}>
-        {isSaving ? "Saving..." : "Save social URLs"}
+        <LoadingButtonLabel
+          isLoading={isSaving}
+          loadingText="Saving..."
+          idleText="Save social URLs"
+        />
       </Button>
     </div>
   );

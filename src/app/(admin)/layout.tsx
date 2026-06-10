@@ -7,6 +7,8 @@ import { ReactNode } from "react";
 
 type Props = { children: ReactNode };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({ children }: Props) {
   const user = await getSessionUser();
 

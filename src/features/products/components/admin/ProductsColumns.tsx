@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import DeleteDialog from "@/components/ui/deleteDialog";
 import { gql, DocumentType } from "@/gql";
 import { formatPrice } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
+import { useMemo, useState } from "react";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 
 export const ProductColumnFragment = gql(/* GraphQL */ `
   fragment ProductColumnFragment on products {
@@ -19,6 +22,7 @@ export const ProductColumnFragment = gql(/* GraphQL */ `
     slug
     badge
     price
+    stock
     badge
     featured
     featuredImage: medias {
@@ -44,7 +48,7 @@ function ProductRowActions({ productId }: { productId: string }) {
 
   const onDelete = async () => {
     try {
-      const res = await fetch("/api/admin/products/manage", {
+      const res = await fetchWithTimeout("/api/admin/products/manage", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [productId] }),
@@ -91,6 +95,77 @@ function ProductRowActions({ productId }: { productId: string }) {
         description="This action permanently removes the product if it has no order history."
         actionLabel="Delete"
       />
+    </div>
+  );
+}
+
+function ProductStockEditor({
+  productId,
+  stock,
+}: {
+  productId: string;
+  stock: number | null;
+}) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [value, setValue] = useState(String(stock ?? 0));
+  const [isSaving, setIsSaving] = useState(false);
+
+  const parsedValue = useMemo(() => Number(value), [value]);
+  const isValid =
+    Number.isInteger(parsedValue) && parsedValue >= 0 && parsedValue <= 99999;
+
+  const onSave = async () => {
+    if (!isValid) {
+      toast({
+        title: "Invalid stock",
+        description: "Stock must be a whole number between 0 and 99999.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetchWithTimeout("/api/admin/products/manage", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: productId, stock: parsedValue }),
+      });
+      const payload = (await res.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+
+      if (!res.ok) {
+        throw new Error(payload?.message || "Stock update failed");
+      }
+
+      toast({ title: "Stock updated." });
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Stock update failed",
+        description: error instanceof Error ? error.message : "Please retry.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 min-w-[170px]">
+      <Input
+        type="number"
+        min={0}
+        max={99999}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        className="h-8"
+      />
+      <Button size="sm" variant="outline" onClick={() => void onSave()}>
+        {isSaving ? "..." : "Save"}
+      </Button>
     </div>
   );
 }
@@ -175,6 +250,16 @@ const ProductsColumns: ColumnDef<ProductRow>[] = [
       const product = row.original.node;
 
       return <div className="font-medium">{formatPrice(product.price)}</div>;
+    },
+  },
+  {
+    accessorKey: "stock",
+    header: () => <div className="">Stock</div>,
+    cell: ({ row }) => {
+      const product = row.original.node;
+      return (
+        <ProductStockEditor productId={product.id} stock={product.stock} />
+      );
     },
   },
   {

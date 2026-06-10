@@ -31,6 +31,7 @@ const bulkSharedSchema = z.object({
   rating: z.string().trim().min(1).default("4"),
   price: z.string().trim().min(1).default("0"),
   tags: z.array(z.string()).default([]),
+  stock: z.number().int().min(0).max(99999).default(0),
 });
 
 function errorJson(
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
         rating: parsedShared.data.rating,
         price: parsedShared.data.price,
         tags: parsedShared.data.tags,
+        stock: parsedShared.data.stock,
       };
     }
 
@@ -174,7 +176,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (uploadedMedias.length === 0) {
-      return errorJson("No products were created.", 400, uploadErrors);
+      return errorJson(
+        "No products were created.",
+        400,
+        uploadErrors.length > 0
+          ? uploadErrors
+          : [
+              "No valid images were processed. Try smaller image set or retry once.",
+            ],
+      );
     }
 
     try {

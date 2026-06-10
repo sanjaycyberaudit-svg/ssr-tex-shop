@@ -3,6 +3,7 @@ export { ProductThumbnail } from "./ProductThumbnail";
 export { default as ProductCard, ProductCardFragment } from "./ProductCard";
 export { default as ProductCardSkeleton } from "./ProductCardSkeleton";
 export { default as ProductImageShowcase } from "./ProductImageShowcase";
+export { default as LowStockNotice } from "./LowStockNotice";
 export { default as RecommendationProducts } from "./RecommendationProducts";
 export { default as RecommendationProductsSkeleton } from "./RecommendationProductsSkeleton";
 export { default as SearchProductsGridSkeleton } from "../../search/components/SearchProductsGridSkeleton";

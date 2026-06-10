@@ -94,7 +94,7 @@ export function SakthiWordmark({ className, size = "md" }: Props) {
         aria-hidden
       >
         <Image
-          src="/images/sakthi-st-emblem.png"
+          src="/images/sakthi-st-emblem.svg"
           alt=""
           fill
           sizes="(max-width: 768px) 56px, 74px"

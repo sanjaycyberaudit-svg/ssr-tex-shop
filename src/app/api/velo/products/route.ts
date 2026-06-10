@@ -28,7 +28,10 @@ function veloCorsHeaders(request: NextRequest): HeadersInit {
 }
 
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, { status: 204, headers: veloCorsHeaders(request) });
+  return new NextResponse(null, {
+    status: 204,
+    headers: veloCorsHeaders(request),
+  });
 }
 
 function extractApiKey(request: NextRequest) {

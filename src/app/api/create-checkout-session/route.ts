@@ -3,13 +3,18 @@ import type { CartItems } from "@/features/carts";
 import { createPhonePePayment } from "@/lib/payments/phonepe";
 import { createCashfreePayment } from "@/lib/payments/cashfree";
 import { stripe } from "@/lib/stripe";
+import { getProductSizeConfigsByProductIds } from "@/lib/products/sizeConfig";
 import db from "@/lib/supabase/db";
 import { SelectProducts, orders } from "@/lib/supabase/schema";
 import {
+  calculateCourierCharge,
+  calculateGstAmount,
   getCashfreeConfig,
   getIntegrationSetting,
   getPhonePeConfig,
   INTEGRATION_KEYS,
+  resolveCourierChargesConfig,
+  resolveOfferCodesConfig,
 } from "@/lib/integrations/settings";
 import { getURL } from "@/lib/utils";
 import { eq } from "drizzle-orm";
@@ -26,16 +31,19 @@ const shippingSchema = z.object({
   fullName: z.string().min(2),
   email: z.string().email(),
   mobile: z.string().min(10),
+  state: z.string().min(1),
 });
 
 const orderProductsSchema = z.object({
   orderProducts: z.record(
     z.object({
       quantity: z.number().min(1),
+      size: z.string().trim().max(8).optional(),
     }),
   ),
   guest: z.boolean(),
   shipping: shippingSchema,
+  promoCode: z.string().trim().optional().nullable(),
 });
 
 type OrderProducts = CartItems;
@@ -46,6 +54,7 @@ export async function POST(request: Request) {
     orderProducts: OrderProducts;
     guest: boolean;
     shipping: z.infer<typeof shippingSchema>;
+    promoCode?: string | null;
   };
 
   const validation = orderProductsSchema.safeParse(data);
@@ -57,13 +66,24 @@ export async function POST(request: Request) {
     });
 
   try {
-    const [cashfreeConfig, phonePeConfig, cashfreeSetting, phonepeSetting] =
-      await Promise.all([
-        getCashfreeConfig(),
-        getPhonePeConfig(),
-        getIntegrationSetting(INTEGRATION_KEYS.cashfree),
-        getIntegrationSetting(INTEGRATION_KEYS.phonepe),
-      ]);
+    const [
+      cashfreeConfig,
+      phonePeConfig,
+      cashfreeSetting,
+      phonepeSetting,
+      courierConfig,
+      offerCodesConfig,
+    ] = await Promise.all([
+      getCashfreeConfig(),
+      getPhonePeConfig(),
+      getIntegrationSetting(INTEGRATION_KEYS.cashfree),
+      getIntegrationSetting(INTEGRATION_KEYS.phonepe),
+      resolveCourierChargesConfig(),
+      resolveOfferCodesConfig(),
+    ]);
+    const stockControlSetting = await getIntegrationSetting(
+      INTEGRATION_KEYS.stockControl,
+    );
 
     if (cashfreeSetting?.isEnabled && !cashfreeConfig) {
       return NextResponse.json(
@@ -91,8 +111,98 @@ export async function POST(request: Request) {
     const productsQuantity = await mergeProductDetailsWithQuantities(
       data.orderProducts,
     );
+    if (stockControlSetting?.isEnabled) {
+      const unavailable = productsQuantity.filter(
+        (line) => line.quantity > Math.max(0, Number(line.stock ?? 0)),
+      );
+      if (unavailable.length > 0) {
+        return NextResponse.json(
+          {
+            message: `${unavailable[0].name} has only ${Math.max(0, Number(unavailable[0].stock ?? 0))} in stock. Please reduce quantity and retry.`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+    const sizeConfigs = await getProductSizeConfigsByProductIds(
+      Object.keys(data.orderProducts),
+    );
+    for (const line of productsQuantity) {
+      const selectedSize = String(data.orderProducts[line.id]?.size ?? "")
+        .trim()
+        .toUpperCase();
+      const sizeConfig = sizeConfigs.get(line.id);
+      const selectableOptions =
+        sizeConfig?.options.filter((option) => Number(option.qty ?? 0) > 0) ??
+        [];
+      const hasConfiguredSizes =
+        Boolean(sizeConfig?.enabled) && selectableOptions.length > 0;
+      if (hasConfiguredSizes) {
+        const emptyLabelOption = selectableOptions.find(
+          (option) => !String(option.size ?? "").trim(),
+        );
+        if (!selectedSize && !emptyLabelOption) {
+          return NextResponse.json(
+            { message: `${line.name}: please select a size.` },
+            { status: 400 },
+          );
+        }
+        const sizeOption = selectedSize
+          ? selectableOptions.find((option) => option.size === selectedSize)
+          : emptyLabelOption ?? null;
+        if (!sizeOption) {
+          return NextResponse.json(
+            { message: `${line.name}: selected size is unavailable.` },
+            { status: 400 },
+          );
+        }
+        if (line.quantity > sizeOption.qty) {
+          return NextResponse.json(
+            {
+              message: `${line.name}${selectedSize ? ` (${selectedSize})` : ""} has only ${sizeOption.qty} left.`,
+            },
+            { status: 400 },
+          );
+        }
+      }
+    }
 
-    const amount = calcSubtotal(productsQuantity);
+    const subtotalAmount = calcSubtotal(productsQuantity);
+    const normalizedPromoCode = String(data.promoCode ?? "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "");
+    const matchedOffer =
+      offerCodesConfig.enabled && normalizedPromoCode
+        ? offerCodesConfig.codes.find(
+            (item) => item.enabled && item.code === normalizedPromoCode,
+          ) ?? null
+        : null;
+    if (normalizedPromoCode && !matchedOffer) {
+      return NextResponse.json(
+        { message: "Invalid or inactive promo code." },
+        { status: 400 },
+      );
+    }
+    const discountPercentage = matchedOffer?.percentage ?? 0;
+    const discountAmount =
+      Math.round(subtotalAmount * discountPercentage * 100) / 10000;
+    const discountedSubtotal = Math.max(0, subtotalAmount - discountAmount);
+    const totalQuantity = productsQuantity.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const courierBreakdown = calculateCourierCharge({
+      state: data.shipping.state,
+      quantity: totalQuantity,
+      config: courierConfig,
+    });
+    const courierCharge = courierConfig.enabled ? courierBreakdown.charge : 0;
+    const gstAmount = calculateGstAmount({
+      taxableAmount: discountedSubtotal + courierCharge,
+      config: courierConfig,
+    });
+    const amount = discountedSubtotal + courierCharge + gstAmount;
 
     const insertedOrder = await db.transaction(async (tx) => {
       const created = await tx
@@ -119,6 +229,28 @@ export async function POST(request: Request) {
               ? "phonepe"
               : "stripe",
           customer_mobile: data.shipping.mobile,
+          payment_meta: {
+            subtotalAmount,
+            discountAmount,
+            discountPercentage,
+            promoCode: matchedOffer?.code ?? null,
+            discountedSubtotal,
+            courierCharge,
+            gstAmount,
+            gstEnabled: courierConfig.gstEnabled,
+            gstPercentage: courierConfig.gstPercentage,
+            courierState: data.shipping.state,
+            courierRule: courierBreakdown.ruleApplied,
+            totalQuantity,
+            sizes: Object.fromEntries(
+              Object.entries(data.orderProducts).map(([id, value]) => [
+                id,
+                String(value.size ?? "")
+                  .trim()
+                  .toUpperCase(),
+              ]),
+            ),
+          },
         })
         .returning();
 
@@ -205,16 +337,46 @@ export async function POST(request: Request) {
         shipping_address_id: data.shipping.addressId,
       },
       client_reference_id: insertedOrder[0].id,
-      line_items: productsQuantity.map(({ name, price, quantity }) => ({
-        price_data: {
-          currency: "inr",
-          product_data: {
-            name: name,
+      line_items: [
+        {
+          price_data: {
+            currency: "inr",
+            product_data: {
+              name: "Order subtotal",
+            },
+            unit_amount: Math.round(discountedSubtotal * 100),
           },
-          unit_amount: parseFloat(price) * 100,
+          quantity: 1,
         },
-        quantity: quantity,
-      })),
+        ...(courierCharge > 0
+          ? [
+              {
+                price_data: {
+                  currency: "inr",
+                  product_data: {
+                    name: "Courier charge",
+                  },
+                  unit_amount: Math.round(courierCharge * 100),
+                },
+                quantity: 1,
+              },
+            ]
+          : []),
+        ...(gstAmount > 0
+          ? [
+              {
+                price_data: {
+                  currency: "inr",
+                  product_data: {
+                    name: `GST (${courierConfig.gstPercentage}%)`,
+                  },
+                  unit_amount: Math.round(gstAmount * 100),
+                },
+                quantity: 1,
+              },
+            ]
+          : []),
+      ],
       mode: "payment",
       allow_promotion_codes: true,
       success_url: `${getURL()}/orders/${insertedOrder[0].id}`,

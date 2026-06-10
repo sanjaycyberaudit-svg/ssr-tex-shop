@@ -20,6 +20,8 @@ import { BadgeType } from "@/lib/supabase/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/layouts/icons";
+import LowStockNotice from "./LowStockNotice";
+import ProductSizePreview from "./ProductSizePreview";
 
 type CardProps = React.ComponentProps<typeof Card>;
 
@@ -36,6 +38,7 @@ export const ProductCardFragment = gql(/* GraphQL */ `
     slug
     badge
     price
+    stock
     featuredImage: medias {
       id
       key
@@ -54,7 +57,7 @@ export function ProductCard({
   product,
   ...props
 }: ProductCardProps) {
-  const { id, name, slug, featuredImage, badge, price } = product;
+  const { id, name, slug, featuredImage, badge, price, stock } = product;
 
   return (
     <Card
@@ -90,6 +93,8 @@ export function ProductCard({
         </div>
 
         <div className="font-medium">{formatPrice(price)}</div>
+        <LowStockNotice stock={stock} />
+        <ProductSizePreview productId={id} />
 
         <div className="hidden md:block">
           <Rating value={product.rating} precision={0.5} readOnly />
@@ -104,7 +109,7 @@ export function ProductCard({
             </Button>
           }
         >
-          <AddToCartButton productId={id} />
+          <AddToCartButton productId={id} stock={stock} />
         </Suspense>
 
         <Suspense

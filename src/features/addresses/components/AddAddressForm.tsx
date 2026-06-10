@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { calculateCourierCharge } from "@/lib/courier/calculate";
+import { useCourierChargesConfig } from "@/providers/CourierChargesProvider";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { INDIAN_STATES } from "../constants/indianStates";
 import {
@@ -48,6 +50,7 @@ type Props = {
   persistDraft?: boolean;
   /** When the parent dialog opens, reload any saved draft. */
   dialogOpen?: boolean;
+  checkoutQuantity?: number;
 };
 
 function RequiredLabel({ children }: { children: React.ReactNode }) {
@@ -69,7 +72,9 @@ export function AddAddressForm({
   defaultValues,
   persistDraft = false,
   dialogOpen = true,
+  checkoutQuantity = 1,
 }: Props) {
+  const courierConfig = useCourierChargesConfig();
   const initialValues = useMemo(
     () =>
       persistDraft
@@ -116,6 +121,17 @@ export function AddAddressForm({
 
     return () => subscription.unsubscribe();
   }, [form, persistDraft]);
+
+  const selectedState = form.watch("state");
+  const courierPreview = useMemo(() => {
+    if (!courierConfig.enabled) return null;
+    if (!selectedState?.trim()) return null;
+    return calculateCourierCharge({
+      state: selectedState,
+      quantity: Math.max(1, Math.round(checkoutQuantity)),
+      config: courierConfig,
+    });
+  }, [checkoutQuantity, courierConfig, selectedState]);
 
   return (
     <Form {...form}>
@@ -352,6 +368,18 @@ export function AddAddressForm({
             )}
           />
         </div>
+
+        {courierPreview ? (
+          <div className="rounded-md border border-[#E8A317]/40 bg-[#FFF7E6] p-3 text-sm text-[#7a5200]">
+            <p className="font-medium">
+              Estimated courier charge: Rs {courierPreview.charge}
+            </p>
+            <p className="mt-1 text-xs">
+              Based on state and {courierPreview.quantity} item(s). This is
+              shown before payment so customers can confirm total cost.
+            </p>
+          </div>
+        ) : null}
 
         <div className="sticky bottom-0 -mx-4 flex flex-col-reverse gap-2 border-t bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-2 sm:backdrop-blur-none sm:flex-row sm:justify-end sm:gap-3">
           <Button

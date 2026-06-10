@@ -8,6 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getDefaultAnnouncementLines } from "@/lib/announcements/defaults";
 import type { StorefrontAnnouncement } from "@/lib/announcements/types";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
+import {
+  AdminLoadingState,
+  LoadingButtonLabel,
+} from "@/components/admin/AdminLoadingState";
 
 type ApiSettingRecord = {
   key: string;
@@ -60,7 +65,7 @@ export function AnnouncementBarForm() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/admin/integrations", {
+        const res = await fetchWithTimeout("/api/admin/integrations", {
           cache: "no-store",
         });
         if (!res.ok)
@@ -163,7 +168,7 @@ export function AnnouncementBarForm() {
         );
       }
 
-      const res = await fetch("/api/admin/integrations", {
+      const res = await fetchWithTimeout("/api/admin/integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -202,6 +207,9 @@ export function AnnouncementBarForm() {
           <CardTitle>Top Announcement Ribbon</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isLoading ? (
+            <AdminLoadingState message="Loading announcement bar..." />
+          ) : null}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -220,7 +228,7 @@ export function AnnouncementBarForm() {
       </Card>
 
       {form.lines.map((line, index) => (
-        <Card key={`${line.id}-${index}`}>
+        <Card key={index}>
           <CardHeader>
             <CardTitle className="text-base">Line {index + 1}</CardTitle>
           </CardHeader>
@@ -302,7 +310,11 @@ export function AnnouncementBarForm() {
           Add line
         </Button>
         <Button onClick={onSave} disabled={saveDisabled}>
-          {isSaving ? "Saving..." : "Save announcement bar"}
+          <LoadingButtonLabel
+            isLoading={isSaving}
+            loadingText="Saving..."
+            idleText="Save announcement bar"
+          />
         </Button>
       </div>
     </div>

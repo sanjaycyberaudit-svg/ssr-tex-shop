@@ -7,6 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageDialog } from "@/features/medias";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
+import {
+  AdminLoadingState,
+  LoadingButtonLabel,
+} from "@/components/admin/AdminLoadingState";
 
 type ApiSettingRecord = {
   key: string;
@@ -84,7 +89,7 @@ export function HomeBannerForm() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/admin/integrations", {
+        const res = await fetchWithTimeout("/api/admin/integrations", {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Could not load home banner settings");
@@ -191,7 +196,7 @@ export function HomeBannerForm() {
         );
       }
 
-      const res = await fetch("/api/admin/integrations", {
+      const res = await fetchWithTimeout("/api/admin/integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -234,6 +239,9 @@ export function HomeBannerForm() {
           <CardTitle>Homepage Banner Carousel</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isLoading ? (
+            <AdminLoadingState message="Loading home banner..." />
+          ) : null}
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -252,7 +260,7 @@ export function HomeBannerForm() {
       </Card>
 
       {form.slides.map((slide, index) => (
-        <Card key={`${slide.id}-${index}`}>
+        <Card key={index}>
           <CardHeader>
             <CardTitle className="text-base">Slide {index + 1}</CardTitle>
           </CardHeader>
@@ -375,7 +383,11 @@ export function HomeBannerForm() {
           Add Slide
         </Button>
         <Button onClick={onSave} disabled={saveDisabled}>
-          {isSaving ? "Saving..." : "Save home banner"}
+          <LoadingButtonLabel
+            isLoading={isSaving}
+            loadingText="Saving..."
+            idleText="Save home banner"
+          />
         </Button>
       </div>
     </div>

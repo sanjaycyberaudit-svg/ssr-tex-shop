@@ -11,8 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { siteConfig } from "@/config/site";
+import { useBulkOrderGuardConfig } from "@/providers/BulkOrderGuardProvider";
 import { useStorefrontSocial } from "@/providers/SocialLinksProvider";
-import { BULK_ORDER_MIN_QTY } from "../constants/bulkOrder";
 
 type BulkOrderGuardDialogProps = {
   open: boolean;
@@ -24,6 +24,7 @@ export function BulkOrderGuardDialog({
   onOpenChange,
 }: BulkOrderGuardDialogProps) {
   const social = useStorefrontSocial();
+  const { threshold } = useBulkOrderGuardConfig();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,14 +33,14 @@ export function BulkOrderGuardDialog({
           <DialogTitle>Bulk order verification required</DialogTitle>
           <DialogDescription className="space-y-2 pt-1 leading-relaxed text-left">
             <p>
-              For {BULK_ORDER_MIN_QTY}+ quantity, manufacturing/availability
-              confirmation is required. Please call or WhatsApp us and verify
-              before placing order.
+              For {threshold}+ quantity, manufacturing/availability confirmation
+              is required. Please call or WhatsApp us and verify before placing
+              order.
             </p>
             <p lang="ta">
-              {BULK_ORDER_MIN_QTY} அல்லது அதற்கு மேற்பட்ட அளவு ஆர்டருக்கு,
-              தயாரிப்பு / கிடைப்புத் தகவல் உறுதி அவசியம். ஆர்டர் வைக்கும் முன்
-              தயவுசெய்து எங்களை அழைக்கவும் அல்லது WhatsApp மூலம் தொடர்பு கொண்டு
+              {threshold} அல்லது அதற்கு மேற்பட்ட அளவு ஆர்டருக்கு, தயாரிப்பு /
+              கிடைப்புத் தகவல் உறுதி அவசியம். ஆர்டர் வைக்கும் முன் தயவுசெய்து
+              எங்களை அழைக்கவும் அல்லது WhatsApp மூலம் தொடர்பு கொண்டு
               உறுதிப்படுத்தவும்.
             </p>
           </DialogDescription>

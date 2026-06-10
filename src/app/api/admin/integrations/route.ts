@@ -15,6 +15,10 @@ const keySchema = z.enum([
   INTEGRATION_KEYS.storefrontSocial,
   INTEGRATION_KEYS.homeBannerSlides,
   INTEGRATION_KEYS.announcementBar,
+  INTEGRATION_KEYS.bulkOrderGuard,
+  INTEGRATION_KEYS.stockControl,
+  INTEGRATION_KEYS.courierCharges,
+  INTEGRATION_KEYS.offerCodes,
 ]);
 
 const saveSchema = z.object({
@@ -66,6 +70,39 @@ const announcementBarPayloadSchema = z.object({
   announcements: z.array(announcementLineSchema).min(1).max(20),
 });
 
+const bulkOrderGuardPayloadSchema = z.object({
+  threshold: z.number().int().min(2).max(99),
+});
+
+const stockControlPayloadSchema = z.object({
+  lowStockThreshold: z.number().int().min(1).max(99),
+});
+
+const courierChargesPayloadSchema = z.object({
+  tamilNaduBase: z.number().int().min(0).max(9999),
+  southStatesBase: z.number().int().min(0).max(9999),
+  restOfIndiaBase: z.number().int().min(0).max(9999),
+  qty2To4AddOn: z.number().int().min(0).max(9999),
+  qty5PlusFlat: z.number().int().min(0).max(9999),
+  gstEnabled: z.boolean(),
+  gstPercentage: z.number().min(0).max(50),
+});
+
+const offerCodeItemSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(3)
+    .max(32)
+    .transform((value) => value.toUpperCase().replace(/\s+/g, "")),
+  percentage: z.number().int().min(1).max(90),
+  enabled: z.boolean().default(true),
+});
+
+const offerCodesPayloadSchema = z.object({
+  codes: z.array(offerCodeItemSchema).max(200),
+});
+
 const cashfreePayloadSchema = z.object({
   clientId: z.string().trim().min(1),
   clientSecret: z.string().trim().min(1),
@@ -111,6 +148,10 @@ export async function GET() {
     storefrontSocial,
     homeBannerSlides,
     announcementBar,
+    bulkOrderGuard,
+    stockControl,
+    courierCharges,
+    offerCodes,
   ] = await Promise.all([
     getIntegrationSetting(INTEGRATION_KEYS.cashfree),
     getIntegrationSetting(INTEGRATION_KEYS.phonepe),
@@ -118,6 +159,10 @@ export async function GET() {
     getIntegrationSetting(INTEGRATION_KEYS.storefrontSocial),
     getIntegrationSetting(INTEGRATION_KEYS.homeBannerSlides),
     getIntegrationSetting(INTEGRATION_KEYS.announcementBar),
+    getIntegrationSetting(INTEGRATION_KEYS.bulkOrderGuard),
+    getIntegrationSetting(INTEGRATION_KEYS.stockControl),
+    getIntegrationSetting(INTEGRATION_KEYS.courierCharges),
+    getIntegrationSetting(INTEGRATION_KEYS.offerCodes),
   ]);
 
   return NextResponse.json({
@@ -127,6 +172,10 @@ export async function GET() {
     storefrontSocial: storefrontSocial ?? null,
     homeBannerSlides: homeBannerSlides ?? null,
     announcementBar: announcementBar ?? null,
+    bulkOrderGuard: bulkOrderGuard ?? null,
+    stockControl: stockControl ?? null,
+    courierCharges: courierCharges ?? null,
+    offerCodes: offerCodes ?? null,
   });
 }
 
@@ -312,6 +361,99 @@ export async function POST(request: NextRequest) {
     normalizedValue.announcements = announcementParsed.data.announcements;
   }
 
+  if (key === INTEGRATION_KEYS.bulkOrderGuard) {
+    const parsedThreshold = Number(incomingValue.threshold ?? 9);
+    const bulkOrderParsed = bulkOrderGuardPayloadSchema.safeParse({
+      threshold: parsedThreshold,
+    });
+    if (!bulkOrderParsed.success) {
+      const bulkOrderError = bulkOrderParsed as z.SafeParseError<
+        z.infer<typeof bulkOrderGuardPayloadSchema>
+      >;
+      return NextResponse.json(
+        {
+          message: "Invalid bulk order guard payload",
+          error: bulkOrderError.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    normalizedValue.threshold = bulkOrderParsed.data.threshold;
+  }
+
+  if (key === INTEGRATION_KEYS.stockControl) {
+    const parsedThreshold = Number(incomingValue.lowStockThreshold ?? 5);
+    const stockControlParsed = stockControlPayloadSchema.safeParse({
+      lowStockThreshold: parsedThreshold,
+    });
+    if (!stockControlParsed.success) {
+      const stockControlError = stockControlParsed as z.SafeParseError<
+        z.infer<typeof stockControlPayloadSchema>
+      >;
+      return NextResponse.json(
+        {
+          message: "Invalid stock control payload",
+          error: stockControlError.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    normalizedValue.lowStockThreshold =
+      stockControlParsed.data.lowStockThreshold;
+  }
+
+  if (key === INTEGRATION_KEYS.courierCharges) {
+    const courierChargesParsed = courierChargesPayloadSchema.safeParse({
+      tamilNaduBase: Number(incomingValue.tamilNaduBase ?? 40),
+      southStatesBase: Number(incomingValue.southStatesBase ?? 60),
+      restOfIndiaBase: Number(incomingValue.restOfIndiaBase ?? 75),
+      qty2To4AddOn: Number(incomingValue.qty2To4AddOn ?? 40),
+      qty5PlusFlat: Number(incomingValue.qty5PlusFlat ?? 200),
+      gstEnabled: Boolean(incomingValue.gstEnabled ?? true),
+      gstPercentage: Number(incomingValue.gstPercentage ?? 5),
+    });
+    if (!courierChargesParsed.success) {
+      const courierError = courierChargesParsed as z.SafeParseError<
+        z.infer<typeof courierChargesPayloadSchema>
+      >;
+      return NextResponse.json(
+        {
+          message: "Invalid courier charges payload",
+          error: courierError.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+    Object.assign(normalizedValue, courierChargesParsed.data);
+  }
+
+  if (key === INTEGRATION_KEYS.offerCodes) {
+    const rawCodes = Array.isArray(incomingValue.codes)
+      ? incomingValue.codes
+      : [];
+    const parsed = offerCodesPayloadSchema.safeParse({ codes: rawCodes });
+    if (!parsed.success) {
+      const parseError = parsed as z.SafeParseError<
+        z.infer<typeof offerCodesPayloadSchema>
+      >;
+      return NextResponse.json(
+        {
+          message: "Invalid offer codes payload",
+          error: parseError.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const dedup = new Map<string, z.infer<typeof offerCodeItemSchema>>();
+    parsed.data.codes.forEach((item) => {
+      dedup.set(item.code, item);
+    });
+    normalizedValue.codes = Array.from(dedup.values());
+  }
+
   const current = await getIntegrationSetting(key);
   const existingValue = (current?.value ?? {}) as Record<string, unknown>;
 
@@ -386,6 +528,33 @@ export async function POST(request: NextRequest) {
 
   if (key === INTEGRATION_KEYS.announcementBar) {
     revalidatePath("/", "layout");
+  }
+
+  if (key === INTEGRATION_KEYS.bulkOrderGuard) {
+    revalidatePath("/", "layout");
+    revalidatePath("/cart");
+    revalidatePath("/shop");
+  }
+
+  if (key === INTEGRATION_KEYS.stockControl) {
+    revalidatePath("/", "layout");
+    revalidatePath("/shop");
+    revalidatePath("/cart");
+    revalidatePath("/admin/products");
+  }
+
+  if (key === INTEGRATION_KEYS.courierCharges) {
+    revalidatePath("/", "layout");
+    revalidatePath("/cart");
+    revalidatePath("/shop");
+    revalidatePath("/admin/settings/courier");
+  }
+
+  if (key === INTEGRATION_KEYS.offerCodes) {
+    revalidatePath("/", "layout");
+    revalidatePath("/cart");
+    revalidatePath("/shop");
+    revalidatePath("/admin/settings/offer-codes");
   }
 
   return NextResponse.json({ ok: true });

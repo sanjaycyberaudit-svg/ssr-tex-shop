@@ -119,6 +119,30 @@ input[type="number"] {
   background: hsl(var(--primary));
 }
 
+.admin-scroll {
+  scrollbar-width: auto;
+  scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+  scrollbar-gutter: stable both-edges;
+}
+
+.admin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 9999px;
+}
+
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
 html,
 body {
   overflow-x: hidden;

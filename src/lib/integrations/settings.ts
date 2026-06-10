@@ -1,5 +1,13 @@
 import { getDefaultAnnouncementLines } from "@/lib/announcements/defaults";
 import { parseAnnouncementItems } from "@/lib/announcements/parse";
+import {
+  calculateCourierCharge,
+  calculateGstAmount,
+  normalizeStateForCourier,
+  type CourierChargeBreakdown,
+  type CourierChargesConfig,
+} from "@/lib/courier/calculate";
+import { cache } from "react";
 import type {
   ResolvedStorefrontAnnouncements,
   StorefrontAnnouncement,
@@ -17,6 +25,10 @@ export const INTEGRATION_KEYS = {
   storefrontSocial: "storefront_social",
   homeBannerSlides: "home_banner_slides",
   announcementBar: "announcement_bar",
+  bulkOrderGuard: "bulk_order_guard",
+  stockControl: "stock_control",
+  courierCharges: "courier_charges",
+  offerCodes: "offer_codes",
 } as const;
 
 export type IntegrationKey =
@@ -75,6 +87,26 @@ export type HomeBannerSlide = {
 
 export type { StorefrontAnnouncement, ResolvedStorefrontAnnouncements };
 
+export type BulkOrderGuardConfig = {
+  enabled: boolean;
+  threshold: number;
+};
+export type StockControlConfig = {
+  enabled: boolean;
+  lowStockThreshold: number;
+};
+export type { CourierChargeBreakdown, CourierChargesConfig };
+export { calculateCourierCharge, calculateGstAmount, normalizeStateForCourier };
+export type OfferCodeItem = {
+  code: string;
+  percentage: number;
+  enabled: boolean;
+};
+export type OfferCodesConfig = {
+  enabled: boolean;
+  codes: OfferCodeItem[];
+};
+
 /** Storefront top ribbon — admin-managed with site defaults as fallback. */
 export async function resolveStorefrontAnnouncements(): Promise<ResolvedStorefrontAnnouncements> {
   const base = getDefaultAnnouncementLines();
@@ -100,6 +132,169 @@ export async function resolveStorefrontAnnouncements(): Promise<ResolvedStorefro
   } catch (error) {
     console.error("[settings] resolveStorefrontAnnouncements failed:", error);
     return { enabled: true, items: base };
+  }
+}
+
+const DEFAULT_BULK_ORDER_THRESHOLD = 9;
+const DEFAULT_STOCK_LOW_THRESHOLD = 5;
+const DEFAULT_COURIER_CONFIG: Omit<CourierChargesConfig, "enabled"> = {
+  tamilNaduBase: 40,
+  southStatesBase: 60,
+  restOfIndiaBase: 75,
+  qty2To4AddOn: 40,
+  qty5PlusFlat: 200,
+  gstEnabled: true,
+  gstPercentage: 5,
+};
+const DEFAULT_OFFER_CODES_CONFIG: OfferCodesConfig = {
+  enabled: true,
+  codes: [],
+};
+
+export async function resolveBulkOrderGuardConfig(): Promise<BulkOrderGuardConfig> {
+  try {
+    const setting = await getIntegrationSetting(
+      INTEGRATION_KEYS.bulkOrderGuard,
+    );
+    if (!setting) {
+      return { enabled: true, threshold: DEFAULT_BULK_ORDER_THRESHOLD };
+    }
+
+    const value = setting.value as Record<string, unknown>;
+    const parsedThreshold = Number(
+      value.threshold ?? DEFAULT_BULK_ORDER_THRESHOLD,
+    );
+    const threshold = Number.isFinite(parsedThreshold)
+      ? Math.min(99, Math.max(2, Math.round(parsedThreshold)))
+      : DEFAULT_BULK_ORDER_THRESHOLD;
+
+    return {
+      enabled: setting.isEnabled,
+      threshold,
+    };
+  } catch (error) {
+    console.error("[settings] resolveBulkOrderGuardConfig failed:", error);
+    return { enabled: true, threshold: DEFAULT_BULK_ORDER_THRESHOLD };
+  }
+}
+
+export async function resolveStockControlConfig(): Promise<StockControlConfig> {
+  try {
+    const setting = await getIntegrationSetting(INTEGRATION_KEYS.stockControl);
+    if (!setting) {
+      return { enabled: false, lowStockThreshold: DEFAULT_STOCK_LOW_THRESHOLD };
+    }
+
+    const value = setting.value as Record<string, unknown>;
+    const parsedThreshold = Number(
+      value.lowStockThreshold ?? DEFAULT_STOCK_LOW_THRESHOLD,
+    );
+    const lowStockThreshold = Number.isFinite(parsedThreshold)
+      ? Math.min(99, Math.max(1, Math.round(parsedThreshold)))
+      : DEFAULT_STOCK_LOW_THRESHOLD;
+
+    return {
+      enabled: setting.isEnabled,
+      lowStockThreshold,
+    };
+  } catch (error) {
+    console.error("[settings] resolveStockControlConfig failed:", error);
+    return { enabled: false, lowStockThreshold: DEFAULT_STOCK_LOW_THRESHOLD };
+  }
+}
+
+function toRoundedAmount(value: unknown, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed)
+    ? Math.max(0, Math.round(parsed))
+    : Math.max(0, Math.round(fallback));
+}
+
+function toRoundedPercentage(value: unknown, fallback: number) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return Math.max(0, fallback);
+  return Math.min(50, Math.max(0, Math.round(parsed * 100) / 100));
+}
+
+export async function resolveCourierChargesConfig(): Promise<CourierChargesConfig> {
+  try {
+    const setting = await getIntegrationSettingCached(
+      INTEGRATION_KEYS.courierCharges,
+    );
+    const value = (setting?.value ?? {}) as Record<string, unknown>;
+    return {
+      enabled: setting?.isEnabled ?? true,
+      tamilNaduBase: toRoundedAmount(
+        value.tamilNaduBase,
+        DEFAULT_COURIER_CONFIG.tamilNaduBase,
+      ),
+      southStatesBase: toRoundedAmount(
+        value.southStatesBase,
+        DEFAULT_COURIER_CONFIG.southStatesBase,
+      ),
+      restOfIndiaBase: toRoundedAmount(
+        value.restOfIndiaBase,
+        DEFAULT_COURIER_CONFIG.restOfIndiaBase,
+      ),
+      qty2To4AddOn: toRoundedAmount(
+        value.qty2To4AddOn,
+        DEFAULT_COURIER_CONFIG.qty2To4AddOn,
+      ),
+      qty5PlusFlat: toRoundedAmount(
+        value.qty5PlusFlat,
+        DEFAULT_COURIER_CONFIG.qty5PlusFlat,
+      ),
+      gstEnabled: Boolean(
+        value.gstEnabled ?? DEFAULT_COURIER_CONFIG.gstEnabled,
+      ),
+      gstPercentage: toRoundedPercentage(
+        value.gstPercentage,
+        DEFAULT_COURIER_CONFIG.gstPercentage,
+      ),
+    };
+  } catch (error) {
+    console.error("[settings] resolveCourierChargesConfig failed:", error);
+    return { enabled: true, ...DEFAULT_COURIER_CONFIG };
+  }
+}
+
+function normalizeOfferCode(raw: unknown) {
+  return String(raw ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
+
+export async function resolveOfferCodesConfig(): Promise<OfferCodesConfig> {
+  try {
+    const setting = await getIntegrationSettingCached(
+      INTEGRATION_KEYS.offerCodes,
+    );
+    if (!setting) return DEFAULT_OFFER_CODES_CONFIG;
+
+    const value = setting.value as Record<string, unknown>;
+    const rawCodes = Array.isArray(value.codes) ? value.codes : [];
+    const dedup = new Map<string, OfferCodeItem>();
+
+    for (const rawCode of rawCodes) {
+      const item = rawCode as Record<string, unknown>;
+      const code = normalizeOfferCode(item.code);
+      if (!code) continue;
+      const percentageRaw = Number(item.percentage ?? 0);
+      const percentage = Number.isFinite(percentageRaw)
+        ? Math.min(90, Math.max(1, Math.round(percentageRaw)))
+        : 1;
+      const enabled = Boolean(item.enabled ?? true);
+      dedup.set(code, { code, percentage, enabled });
+    }
+
+    return {
+      enabled: setting.isEnabled,
+      codes: Array.from(dedup.values()),
+    };
+  } catch (error) {
+    console.error("[settings] resolveOfferCodesConfig failed:", error);
+    return DEFAULT_OFFER_CODES_CONFIG;
   }
 }
 
@@ -165,6 +360,10 @@ export async function getIntegrationSetting(key: IntegrationKey) {
 
   return setting ?? null;
 }
+
+const getIntegrationSettingCached = cache(async (key: IntegrationKey) =>
+  getIntegrationSetting(key),
+);
 
 export async function upsertIntegrationSetting(
   key: IntegrationKey,

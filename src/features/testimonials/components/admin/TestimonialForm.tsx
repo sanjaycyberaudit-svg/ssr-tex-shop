@@ -19,6 +19,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { DocumentType } from "@/gql";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import { nanoid } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -119,7 +120,7 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
       };
 
       if (testimonial) {
-        const res = await fetch("/api/admin/testimonials", {
+        const res = await fetchWithTimeout("/api/admin/testimonials", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: testimonial.id, ...payload }),
@@ -135,7 +136,7 @@ function TestimonialForm({ testimonial }: TestimonialFormProps) {
         router.refresh();
         toast({ title: "Testimonial updated." });
       } else {
-        const res = await fetch("/api/admin/testimonials", {
+        const res = await fetchWithTimeout("/api/admin/testimonials", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: nanoid(), ...payload }),

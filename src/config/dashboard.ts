@@ -78,5 +78,23 @@ export const dashboardConfig: DashboardConfig = {
       icon: "globe",
       items: [],
     },
+    {
+      title: "Bulk Order",
+      href: "/admin/settings/bulk-order",
+      icon: "tag",
+      items: [],
+    },
+    {
+      title: "Courier & GST",
+      href: "/admin/settings/courier",
+      icon: "globe",
+      items: [],
+    },
+    {
+      title: "Offer Codes",
+      href: "/admin/settings/offer-codes",
+      icon: "tag",
+      items: [],
+    },
   ],
 };

@@ -2111,37 +2111,6 @@ export type AdminCollectionsPageQueryQuery = {
   } | null;
 };
 
-export type AdminOrdersPageQueryQueryVariables = Exact<{
-  [key: string]: never;
-}>;
-
-export type AdminOrdersPageQueryQuery = {
-  __typename?: "Query";
-  ordersCollection?: {
-    __typename?: "ordersConnection";
-    edges: Array<{
-      __typename?: "ordersEdge";
-      node: {
-        __typename: "orders";
-        id: string;
-        payment_status: string;
-        order_status?: string | null;
-        order_linesCollection?: {
-          __typename?: "order_linesConnection";
-          edges: Array<{
-            __typename?: "order_linesEdge";
-            node: {
-              __typename?: "order_lines";
-              id: string;
-              product_id: string;
-            };
-          }>;
-        } | null;
-      };
-    }>;
-  } | null;
-};
-
 export type AdminProductsPageQueryQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -2161,6 +2130,7 @@ export type AdminProductsPageQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
+        stock?: number | null;
         featured?: boolean | null;
         featuredImage?: {
           __typename?: "medias";
@@ -2262,6 +2232,7 @@ export type CollectionRouteQueryQuery = {
               slug: string;
               badge?: string | null;
               price: any;
+              stock?: number | null;
               featuredImage?: {
                 __typename?: "medias";
                 id: string;
@@ -2460,6 +2431,7 @@ export type ProductDetailPageQueryQuery = {
         description?: string | null;
         rating: any;
         price: any;
+        stock?: number | null;
         tags: any;
         totalComments: number;
         commentsCollection?: {
@@ -2520,6 +2492,7 @@ export type ProductDetailPageQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
+        stock?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2543,6 +2516,7 @@ export type CartItemCardFragmentFragment = {
   slug: string;
   name: string;
   price: any;
+  stock?: number | null;
   featuredImage?: {
     __typename?: "medias";
     id: string;
@@ -2569,6 +2543,7 @@ export type FetchGuestCartQueryQuery = {
         slug: string;
         name: string;
         price: any;
+        stock?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2603,6 +2578,7 @@ export type FetchCartQueryQuery = {
           slug: string;
           name: string;
           price: any;
+          stock?: number | null;
           featuredImage?: {
             __typename?: "medias";
             id: string;
@@ -2637,6 +2613,7 @@ export type CreateCartMutationMutation = {
         slug: string;
         name: string;
         price: any;
+        stock?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2684,6 +2661,7 @@ export type UpdateCartsMutationMutation = {
         slug: string;
         name: string;
         price: any;
+        stock?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2920,6 +2898,7 @@ export type ProductCardFragmentFragment = {
   slug: string;
   badge?: string | null;
   price: any;
+  stock?: number | null;
   featuredImage?: {
     __typename?: "medias";
     id: string;
@@ -2988,6 +2967,7 @@ export type RecomendationProductsQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
+        stock?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -3027,6 +3007,7 @@ export type ProductColumnFragmentFragment = {
   slug: string;
   badge?: string | null;
   price: any;
+  stock?: number | null;
   featured?: boolean | null;
   featuredImage?: {
     __typename?: "medias";
@@ -3062,6 +3043,7 @@ export type FeaturedProductsQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
+        stock?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -3109,6 +3091,7 @@ export type SearchQuery = {
         slug: string;
         badge?: string | null;
         price: any;
+        stock?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -3276,6 +3259,7 @@ export const CartItemCardFragmentFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -3726,6 +3710,7 @@ export const ProductCardFragmentFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -3917,6 +3902,7 @@ export const ProductColumnFragmentFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "featured" } },
           {
@@ -4297,146 +4283,6 @@ export const AdminCollectionsPageQueryDocument = {
   AdminCollectionsPageQueryQuery,
   AdminCollectionsPageQueryQueryVariables
 >;
-export const AdminOrdersPageQueryDocument = {
-  kind: "Document",
-  definitions: [
-    {
-      kind: "OperationDefinition",
-      operation: "query",
-      name: { kind: "Name", value: "AdminOrdersPageQuery" },
-      selectionSet: {
-        kind: "SelectionSet",
-        selections: [
-          {
-            kind: "Field",
-            name: { kind: "Name", value: "ordersCollection" },
-            arguments: [
-              {
-                kind: "Argument",
-                name: { kind: "Name", value: "orderBy" },
-                value: {
-                  kind: "ListValue",
-                  values: [
-                    {
-                      kind: "ObjectValue",
-                      fields: [
-                        {
-                          kind: "ObjectField",
-                          name: { kind: "Name", value: "created_at" },
-                          value: { kind: "EnumValue", value: "DescNullsLast" },
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [
-                {
-                  kind: "Field",
-                  name: { kind: "Name", value: "edges" },
-                  selectionSet: {
-                    kind: "SelectionSet",
-                    selections: [
-                      {
-                        kind: "Field",
-                        name: { kind: "Name", value: "node" },
-                        selectionSet: {
-                          kind: "SelectionSet",
-                          selections: [
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "__typename" },
-                            },
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "id" },
-                            },
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "payment_status" },
-                            },
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "order_status" },
-                            },
-                            {
-                              kind: "FragmentSpread",
-                              name: {
-                                kind: "Name",
-                                value: "OrderColumnsFragment",
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: "FragmentDefinition",
-      name: { kind: "Name", value: "OrderColumnsFragment" },
-      typeCondition: {
-        kind: "NamedType",
-        name: { kind: "Name", value: "orders" },
-      },
-      selectionSet: {
-        kind: "SelectionSet",
-        selections: [
-          { kind: "Field", name: { kind: "Name", value: "id" } },
-          { kind: "Field", name: { kind: "Name", value: "order_status" } },
-          { kind: "Field", name: { kind: "Name", value: "payment_status" } },
-          {
-            kind: "Field",
-            name: { kind: "Name", value: "order_linesCollection" },
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [
-                {
-                  kind: "Field",
-                  name: { kind: "Name", value: "edges" },
-                  selectionSet: {
-                    kind: "SelectionSet",
-                    selections: [
-                      {
-                        kind: "Field",
-                        name: { kind: "Name", value: "node" },
-                        selectionSet: {
-                          kind: "SelectionSet",
-                          selections: [
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "id" },
-                            },
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "product_id" },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  AdminOrdersPageQueryQuery,
-  AdminOrdersPageQueryQueryVariables
->;
 export const AdminProductsPageQueryDocument = {
   kind: "Document",
   definitions: [
@@ -4526,6 +4372,7 @@ export const AdminProductsPageQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "featured" } },
           {
@@ -5053,6 +4900,7 @@ export const CollectionRouteQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -5978,6 +5826,10 @@ export const ProductDetailPageQueryDocument = {
                             },
                             {
                               kind: "Field",
+                              name: { kind: "Name", value: "stock" },
+                            },
+                            {
+                              kind: "Field",
                               name: { kind: "Name", value: "tags" },
                             },
                             {
@@ -6254,6 +6106,7 @@ export const ProductDetailPageQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -6431,6 +6284,7 @@ export const FetchGuestCartQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -6614,6 +6468,7 @@ export const FetchCartQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -6775,6 +6630,7 @@ export const CreateCartMutationDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -7073,6 +6929,7 @@ export const UpdateCartsMutationDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -7827,6 +7684,7 @@ export const RecomendationProductsQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -8101,6 +7959,7 @@ export const FeaturedProductsQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -8425,6 +8284,7 @@ export const SearchDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },

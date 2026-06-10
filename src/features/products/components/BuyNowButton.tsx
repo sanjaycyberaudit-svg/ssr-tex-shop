@@ -9,15 +9,21 @@ import { createShippingAddress } from "@/_actions/address";
 import { clearCheckoutAddressDraft } from "@/features/addresses/lib/checkoutAddressDraft";
 import { startCheckout } from "@/features/checkout/startCheckout";
 import { useAuth } from "@/providers/AuthProvider";
+import { useStockControlConfig } from "@/providers/StockControlProvider";
 
 type BuyNowButtonProps = {
   productId: string;
   quantity?: number;
+  stock?: number | null;
 };
 
-function BuyNowButton({ productId, quantity = 1 }: BuyNowButtonProps) {
+function BuyNowButton({ productId, quantity = 1, stock }: BuyNowButtonProps) {
   const { user } = useAuth();
+  const stockControl = useStockControlConfig();
   const { toast } = useToast();
+  const isOutOfStock =
+    stockControl.enabled && typeof stock === "number" && stock <= 0;
+
   const [open, setOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -58,10 +64,14 @@ function BuyNowButton({ productId, quantity = 1 }: BuyNowButtonProps) {
     <>
       <Button
         type="button"
-        disabled={isProcessing}
+        disabled={isProcessing || isOutOfStock}
         onClick={() => setOpen(true)}
       >
-        {isProcessing ? "Processing…" : "Buy Now"}
+        {isOutOfStock
+          ? "Out of Stock"
+          : isProcessing
+            ? "Processing…"
+            : "Buy Now"}
       </Button>
 
       <AddAddressDialog
