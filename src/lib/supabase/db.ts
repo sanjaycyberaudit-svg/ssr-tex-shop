@@ -10,7 +10,13 @@ if (!connectionString) {
   console.log("🔴 no database URL");
 }
 
-const client = postgres(connectionString, { prepare: false });
+/** Serverless: one connection per lambda; pooler handles concurrency. */
+const client = postgres(connectionString, {
+  prepare: false,
+  max: 1,
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
 
 const db = drizzle(client, { schema });
 

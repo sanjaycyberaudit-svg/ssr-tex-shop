@@ -365,6 +365,175 @@ const getIntegrationSettingCached = cache(async (key: IntegrationKey) =>
   getIntegrationSetting(key),
 );
 
+type ApiSettingRow = NonNullable<Awaited<ReturnType<typeof getIntegrationSetting>>>;
+
+const STOREFRONT_RUNTIME_KEYS: IntegrationKey[] = [
+  INTEGRATION_KEYS.storefrontSocial,
+  INTEGRATION_KEYS.announcementBar,
+  INTEGRATION_KEYS.bulkOrderGuard,
+  INTEGRATION_KEYS.stockControl,
+  INTEGRATION_KEYS.courierCharges,
+  INTEGRATION_KEYS.offerCodes,
+];
+
+const loadStorefrontSettingsMap = cache(async () => {
+  try {
+    const rows = await db
+      .select()
+      .from(apiSettings)
+      .where(inArray(apiSettings.key, STOREFRONT_RUNTIME_KEYS));
+    return new Map(rows.map((row) => [row.key as IntegrationKey, row]));
+  } catch (error) {
+    console.error("[settings] loadStorefrontSettingsMap failed:", error);
+    return new Map<IntegrationKey, ApiSettingRow>();
+  }
+});
+
+function parseSocialFromRow(
+  setting: ApiSettingRow | undefined,
+): ResolvedStorefrontSocial {
+  const base = defaultSocial();
+  if (!setting?.isEnabled) return base;
+  const value = setting.value as Record<string, unknown>;
+  return {
+    instagram: String(value.instagram ?? "").trim() || base.instagram,
+    youtube: String(value.youtube ?? "").trim() || base.youtube,
+    facebook: String(value.facebook ?? "").trim() || base.facebook,
+    whatsapp: String(value.whatsapp ?? "").trim() || base.whatsapp,
+  };
+}
+
+function parseAnnouncementsFromRow(
+  setting: ApiSettingRow | undefined,
+): ResolvedStorefrontAnnouncements {
+  const base = getDefaultAnnouncementLines();
+  if (!setting) return { enabled: true, items: base };
+  if (!setting.isEnabled) return { enabled: false, items: [] };
+  const parsed = parseAnnouncementItems(
+    (setting.value as Record<string, unknown>).announcements,
+  );
+  return { enabled: true, items: parsed.length > 0 ? parsed : base };
+}
+
+function parseBulkOrderFromRow(
+  setting: ApiSettingRow | undefined,
+): BulkOrderGuardConfig {
+  if (!setting) {
+    return { enabled: true, threshold: DEFAULT_BULK_ORDER_THRESHOLD };
+  }
+  const value = setting.value as Record<string, unknown>;
+  const parsedThreshold = Number(value.threshold ?? DEFAULT_BULK_ORDER_THRESHOLD);
+  const threshold = Number.isFinite(parsedThreshold)
+    ? Math.min(99, Math.max(2, Math.round(parsedThreshold)))
+    : DEFAULT_BULK_ORDER_THRESHOLD;
+  return { enabled: setting.isEnabled, threshold };
+}
+
+function parseStockControlFromRow(
+  setting: ApiSettingRow | undefined,
+): StockControlConfig {
+  if (!setting) {
+    return { enabled: false, lowStockThreshold: DEFAULT_STOCK_LOW_THRESHOLD };
+  }
+  const value = setting.value as Record<string, unknown>;
+  const parsedThreshold = Number(
+    value.lowStockThreshold ?? DEFAULT_STOCK_LOW_THRESHOLD,
+  );
+  const lowStockThreshold = Number.isFinite(parsedThreshold)
+    ? Math.min(99, Math.max(1, Math.round(parsedThreshold)))
+    : DEFAULT_STOCK_LOW_THRESHOLD;
+  return { enabled: setting.isEnabled, lowStockThreshold };
+}
+
+function parseCourierFromRow(
+  setting: ApiSettingRow | undefined,
+): CourierChargesConfig {
+  const value = (setting?.value ?? {}) as Record<string, unknown>;
+  return {
+    enabled: setting?.isEnabled ?? true,
+    tamilNaduBase: toRoundedAmount(
+      value.tamilNaduBase,
+      DEFAULT_COURIER_CONFIG.tamilNaduBase,
+    ),
+    southStatesBase: toRoundedAmount(
+      value.southStatesBase,
+      DEFAULT_COURIER_CONFIG.southStatesBase,
+    ),
+    restOfIndiaBase: toRoundedAmount(
+      value.restOfIndiaBase,
+      DEFAULT_COURIER_CONFIG.restOfIndiaBase,
+    ),
+    qty2To4AddOn: toRoundedAmount(
+      value.qty2To4AddOn,
+      DEFAULT_COURIER_CONFIG.qty2To4AddOn,
+    ),
+    qty5PlusFlat: toRoundedAmount(
+      value.qty5PlusFlat,
+      DEFAULT_COURIER_CONFIG.qty5PlusFlat,
+    ),
+    gstEnabled: Boolean(value.gstEnabled ?? DEFAULT_COURIER_CONFIG.gstEnabled),
+    gstPercentage: toRoundedPercentage(
+      value.gstPercentage,
+      DEFAULT_COURIER_CONFIG.gstPercentage,
+    ),
+  };
+}
+
+function parseOfferCodesFromRow(
+  setting: ApiSettingRow | undefined,
+): OfferCodesConfig {
+  if (!setting) return DEFAULT_OFFER_CODES_CONFIG;
+  const value = setting.value as Record<string, unknown>;
+  const rawCodes = Array.isArray(value.codes) ? value.codes : [];
+  const dedup = new Map<string, OfferCodeItem>();
+  for (const rawCode of rawCodes) {
+    const item = rawCode as Record<string, unknown>;
+    const code = normalizeOfferCode(item.code);
+    if (!code) continue;
+    const percentageRaw = Number(item.percentage ?? 0);
+    const percentage = Number.isFinite(percentageRaw)
+      ? Math.min(90, Math.max(1, Math.round(percentageRaw)))
+      : 1;
+    dedup.set(code, { code, percentage, enabled: Boolean(item.enabled ?? true) });
+  }
+  return {
+    enabled: setting.isEnabled,
+    codes: Array.from(dedup.values()),
+  };
+}
+
+export type StorefrontRuntimeBundle = {
+  social: ResolvedStorefrontSocial;
+  announcements: ResolvedStorefrontAnnouncements;
+  bulkOrderGuard: BulkOrderGuardConfig;
+  stockControl: StockControlConfig;
+  courierCharges: CourierChargesConfig;
+  offerCodes: OfferCodesConfig;
+};
+
+/** One DB round-trip for all storefront providers (avoids serverless connection storms). */
+export const resolveStorefrontRuntimeBundle = cache(
+  async (): Promise<StorefrontRuntimeBundle> => {
+    const map = await loadStorefrontSettingsMap();
+    return {
+      social: parseSocialFromRow(map.get(INTEGRATION_KEYS.storefrontSocial)),
+      announcements: parseAnnouncementsFromRow(
+        map.get(INTEGRATION_KEYS.announcementBar),
+      ),
+      bulkOrderGuard: parseBulkOrderFromRow(
+        map.get(INTEGRATION_KEYS.bulkOrderGuard),
+      ),
+      stockControl: parseStockControlFromRow(
+        map.get(INTEGRATION_KEYS.stockControl),
+      ),
+      courierCharges: parseCourierFromRow(
+        map.get(INTEGRATION_KEYS.courierCharges),
+      ),
+      offerCodes: parseOfferCodesFromRow(map.get(INTEGRATION_KEYS.offerCodes)),
+    };
+  },
+);
+
 export async function upsertIntegrationSetting(
   key: IntegrationKey,
   value: Record<string, unknown>,
@@ -468,57 +637,62 @@ export async function getStorefrontSocialLinks(): Promise<StorefrontSocialLinks 
 }
 
 export async function getHomeBannerSlides(): Promise<HomeBannerSlide[] | null> {
-  const setting = await getIntegrationSetting(
-    INTEGRATION_KEYS.homeBannerSlides,
-  );
-  if (!setting || !setting.isEnabled) return null;
+  try {
+    const setting = await getIntegrationSetting(
+      INTEGRATION_KEYS.homeBannerSlides,
+    );
+    if (!setting || !setting.isEnabled) return null;
 
-  const rawSlides = (setting.value as Record<string, unknown>).slides;
-  if (!Array.isArray(rawSlides)) return null;
+    const rawSlides = (setting.value as Record<string, unknown>).slides;
+    if (!Array.isArray(rawSlides)) return null;
 
-  const mediaIds = rawSlides
-    .map((slide) =>
-      String((slide as Record<string, unknown>).imageMediaId ?? "").trim(),
-    )
-    .filter(Boolean);
+    const mediaIds = rawSlides
+      .map((slide) =>
+        String((slide as Record<string, unknown>).imageMediaId ?? "").trim(),
+      )
+      .filter(Boolean);
 
-  const mediaLookup = new Map<string, string>();
-  if (mediaIds.length > 0) {
-    const mediaRows = await db
-      .select({ id: medias.id, key: medias.key })
-      .from(medias)
-      .where(inArray(medias.id, mediaIds));
-    mediaRows.forEach((row) => mediaLookup.set(row.id, keytoUrl(row.key)));
+    const mediaLookup = new Map<string, string>();
+    if (mediaIds.length > 0) {
+      const mediaRows = await db
+        .select({ id: medias.id, key: medias.key })
+        .from(medias)
+        .where(inArray(medias.id, mediaIds));
+      mediaRows.forEach((row) => mediaLookup.set(row.id, keytoUrl(row.key)));
+    }
+
+    const slides = rawSlides
+      .map((slide, index) => {
+        const item = slide as Record<string, unknown>;
+        const title = String(item.title ?? "").trim();
+        const subtitle = String(item.subtitle ?? "").trim();
+        const href = String(item.href ?? "").trim();
+        const cta = String(item.cta ?? "").trim();
+        const imageMediaId = String(item.imageMediaId ?? "").trim();
+        const image =
+          mediaLookup.get(imageMediaId) ?? String(item.image ?? "").trim();
+        const imageAlt = String(item.imageAlt ?? "").trim();
+        const id = String(item.id ?? "").trim() || `slide-${index + 1}`;
+
+        if (!title || !subtitle || !href || !cta || !image || !imageAlt) {
+          return null;
+        }
+
+        return {
+          id,
+          title,
+          subtitle,
+          href,
+          cta,
+          image,
+          imageAlt,
+        } satisfies HomeBannerSlide;
+      })
+      .filter((slide): slide is HomeBannerSlide => Boolean(slide));
+
+    return slides.length > 0 ? slides : null;
+  } catch (error) {
+    console.error("[settings] getHomeBannerSlides failed:", error);
+    return null;
   }
-
-  const slides = rawSlides
-    .map((slide, index) => {
-      const item = slide as Record<string, unknown>;
-      const title = String(item.title ?? "").trim();
-      const subtitle = String(item.subtitle ?? "").trim();
-      const href = String(item.href ?? "").trim();
-      const cta = String(item.cta ?? "").trim();
-      const imageMediaId = String(item.imageMediaId ?? "").trim();
-      const image =
-        mediaLookup.get(imageMediaId) ?? String(item.image ?? "").trim();
-      const imageAlt = String(item.imageAlt ?? "").trim();
-      const id = String(item.id ?? "").trim() || `slide-${index + 1}`;
-
-      if (!title || !subtitle || !href || !cta || !image || !imageAlt) {
-        return null;
-      }
-
-      return {
-        id,
-        title,
-        subtitle,
-        href,
-        cta,
-        image,
-        imageAlt,
-      } satisfies HomeBannerSlide;
-    })
-    .filter((slide): slide is HomeBannerSlide => Boolean(slide));
-
-  return slides.length > 0 ? slides : null;
 }

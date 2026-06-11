@@ -4,14 +4,7 @@ import { MobileMenuProvider } from "@/components/layouts/MobileMenuContext";
 import Navbar from "@/components/layouts/MainNavbar";
 import { StoreFloatingActions } from "@/components/layouts/StoreFloatingActions";
 import { MobileBottomNav } from "@/components/layouts/MobileBottomNav";
-import {
-  resolveCourierChargesConfig,
-  resolveBulkOrderGuardConfig,
-  resolveOfferCodesConfig,
-  resolveStockControlConfig,
-  resolveStorefrontAnnouncements,
-  resolveStorefrontSocial,
-} from "@/lib/integrations/settings";
+import { resolveStorefrontRuntimeBundle } from "@/lib/integrations/settings";
 import { AnnouncementsProvider } from "@/providers/AnnouncementsProvider";
 import { BulkOrderGuardProvider } from "@/providers/BulkOrderGuardProvider";
 import { CourierChargesProvider } from "@/providers/CourierChargesProvider";
@@ -25,21 +18,14 @@ type Props = { children: ReactNode };
 export const revalidate = 60;
 
 async function StoreLayout({ children }: Props) {
-  const [
+  const {
     social,
     announcements,
     bulkOrderGuard,
     stockControl,
     courierCharges,
     offerCodes,
-  ] = await Promise.all([
-    resolveStorefrontSocial(),
-    resolveStorefrontAnnouncements(),
-    resolveBulkOrderGuardConfig(),
-    resolveStockControlConfig(),
-    resolveCourierChargesConfig(),
-    resolveOfferCodesConfig(),
-  ]);
+  } = await resolveStorefrontRuntimeBundle();
 
   return (
     <SocialLinksProvider social={social}>

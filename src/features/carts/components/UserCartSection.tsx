@@ -193,24 +193,29 @@ function UserCartSection({ user }: UserCartSectionProps) {
     }
 
     const loadSizeConfigs = async () => {
-      const entries = await Promise.all(
-        productIds.map(async (productId) => {
-          try {
-            const res = await fetchWithTimeout(
-              `/api/products/size-config?productId=${encodeURIComponent(productId)}`,
-              { cache: "no-store" },
-            );
-            if (!res.ok)
-              return [productId, { enabled: false, options: [] }] as const;
-            const payload = (await res.json()) as CartSizeConfig;
-            return [productId, payload] as const;
-          } catch {
-            return [productId, { enabled: false, options: [] }] as const;
-          }
-        }),
-      );
-      if (!active) return;
-      setSizeConfigsByProductId(Object.fromEntries(entries));
+      try {
+        const res = await fetchWithTimeout(
+          `/api/products/size-config?productIds=${encodeURIComponent(productIds.join(","))}`,
+          { cache: "no-store" },
+        );
+        if (!active) return;
+        if (!res.ok) {
+          setSizeConfigsByProductId({});
+          return;
+        }
+        const payload = (await res.json()) as Record<string, CartSizeConfig>;
+        const entries = productIds.map(
+          (productId) =>
+            [
+              productId,
+              payload[productId] ?? { enabled: false, options: [] },
+            ] as const,
+        );
+        setSizeConfigsByProductId(Object.fromEntries(entries));
+      } catch {
+        if (!active) return;
+        setSizeConfigsByProductId({});
+      }
     };
 
     void loadSizeConfigs();
@@ -378,9 +383,7 @@ function UserCartSection({ user }: UserCartSectionProps) {
       promoCode={appliedPromoCode}
       missingSizeProductNames={missingSizeProductNames}
       requireDeliveryStateSelection={courierEnabled}
-      hasDeliveryStateSelected={
-        !courierEnabled || hasDeliveryStateSelected
-      }
+      hasDeliveryStateSelected={!courierEnabled || hasDeliveryStateSelected}
     />
   );
 
@@ -462,9 +465,7 @@ function UserCartSection({ user }: UserCartSectionProps) {
           <CartCheckoutSummary
             mobileStickyOnly
             productCount={productCount}
-            headlineAmount={
-              checkoutTotalReady ? totalAmount : subtotal
-            }
+            headlineAmount={checkoutTotalReady ? totalAmount : subtotal}
             headlineLabel={checkoutTotalReady ? "Total" : "Subtotal"}
             checkout={checkoutButton}
           />
