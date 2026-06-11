@@ -2,6 +2,7 @@ import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import db from "@/lib/supabase/db";
 import { orderLines, products } from "@/lib/supabase/schema";
 import { eq, inArray } from "drizzle-orm";
+import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -78,6 +79,7 @@ export async function DELETE(request: NextRequest) {
   revalidatePath("/shop");
   revalidatePath("/featured");
   revalidatePath("/collections");
+  await invalidateStorefrontCache();
 
   return NextResponse.json({
     deletedIds: deletableIds,
@@ -137,6 +139,7 @@ export async function PATCH(request: NextRequest) {
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   revalidatePath("/cart");
+  await invalidateStorefrontCache();
 
   return NextResponse.json({ ok: true, product: updated });
 }

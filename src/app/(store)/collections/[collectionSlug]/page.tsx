@@ -7,11 +7,13 @@ import {
   FilterSelections,
   SearchProductsInifiteScroll,
 } from "@/features/search";
-import { gql } from "@/gql";
-import { getClient } from "@/lib/urql";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
+import { getCollectionPageCached } from "@/lib/storefront/collection-detail";
 import { toTitleCase, unslugify } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 interface CategoryPageProps {
   params: {
@@ -30,42 +32,10 @@ export function generateMetadata({ params }: CategoryPageProps) {
   };
 }
 
-const CollectionRouteQuery = gql(/* GraphQL */ `
-  query CollectionRouteQuery($collectionSlug: String) {
-    collectionsCollection(
-      filter: { slug: { eq: $collectionSlug } }
-      orderBy: [{ order: DescNullsLast }]
-      first: 1
-    ) {
-      edges {
-        node {
-          title
-          label
-          description
-          ...CollectionBannerFragment
-          productsCollection(orderBy: [{ created_at: DescNullsLast }]) {
-            pageInfo {
-              hasNextPage
-            }
-            edges {
-              node {
-                id
-                ...ProductCardFragment
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`);
-
-async function CategoryPage({ params, searchParams }: CategoryPageProps) {
+async function CategoryPage({ params }: CategoryPageProps) {
   const { collectionSlug } = params;
 
-  const { data } = await getClient().query(CollectionRouteQuery, {
-    collectionSlug,
-  });
+  const data = await getCollectionPageCached(collectionSlug);
 
   if (
     data === null ||

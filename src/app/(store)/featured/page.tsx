@@ -4,6 +4,9 @@ import { SearchProductsGridSkeleton } from "@/features/products";
 import { FeaturedProductsScroll } from "@/features/search";
 import { Suspense } from "react";
 import { Metadata } from "next";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
+
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 export const metadata: Metadata = {
   title: "Featured Products | Sakthi Textile",

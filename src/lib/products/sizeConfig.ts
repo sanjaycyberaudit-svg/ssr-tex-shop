@@ -1,3 +1,6 @@
+import { CACHE_TAGS } from "@/lib/cache/constants";
+import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
+import { withStorefrontCache } from "@/lib/cache/storefront-cache";
 import db from "@/lib/supabase/db";
 import { apiSettings } from "@/lib/supabase/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -51,7 +54,7 @@ export function normalizeProductSizeConfig(raw: unknown): ProductSizeConfig {
   };
 }
 
-export async function getProductSizeConfig(
+async function loadProductSizeConfig(
   productId: string,
 ): Promise<ProductSizeConfig> {
   const key = getProductSizeConfigKey(productId);
@@ -61,7 +64,17 @@ export async function getProductSizeConfig(
   return normalizeProductSizeConfig(row?.value);
 }
 
-export async function getProductSizeConfigsByProductIds(productIds: string[]) {
+export async function getProductSizeConfig(
+  productId: string,
+): Promise<ProductSizeConfig> {
+  return withStorefrontCache(
+    `sf:size:${productId}`,
+    () => loadProductSizeConfig(productId),
+    { tags: [CACHE_TAGS.sizeConfig] },
+  );
+}
+
+async function loadProductSizeConfigsByProductIds(productIds: string[]) {
   const unique = [...new Set(productIds.filter(Boolean))];
   if (unique.length === 0) return new Map<string, ProductSizeConfig>();
 
@@ -73,10 +86,26 @@ export async function getProductSizeConfigsByProductIds(productIds: string[]) {
 
   const map = new Map<string, ProductSizeConfig>();
   rows.forEach((row) => {
-    const productId = row.key.replace(KEY_PREFIX, "");
-    map.set(productId, normalizeProductSizeConfig(row.value));
+    const id = row.key.replace(KEY_PREFIX, "");
+    map.set(id, normalizeProductSizeConfig(row.value));
   });
   return map;
+}
+
+export async function getProductSizeConfigsByProductIds(productIds: string[]) {
+  const unique = [...new Set(productIds.filter(Boolean))].sort();
+  if (unique.length === 0) return new Map<string, ProductSizeConfig>();
+
+  const serialized = await withStorefrontCache(
+    `sf:size:batch:${unique.join(",")}`,
+    async () => {
+      const map = await loadProductSizeConfigsByProductIds(unique);
+      return Object.fromEntries(map.entries());
+    },
+    { tags: [CACHE_TAGS.sizeConfig] },
+  );
+
+  return new Map(Object.entries(serialized));
 }
 
 export async function upsertProductSizeConfig(params: {
@@ -104,4 +133,6 @@ export async function upsertProductSizeConfig(params: {
         updatedAt: new Date().toISOString(),
       },
     });
+
+  await invalidateStorefrontCache();
 }

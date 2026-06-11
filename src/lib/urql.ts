@@ -22,10 +22,10 @@ export const makeClient = (access_token?: string) => {
 
       return {
         headers,
-        cache: "no-store" as RequestCache,
+        next: { revalidate: 120 },
       };
     },
-    requestPolicy: "network-only",
+    requestPolicy: "cache-first",
   });
 };
 

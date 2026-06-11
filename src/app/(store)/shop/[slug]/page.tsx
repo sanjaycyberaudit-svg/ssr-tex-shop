@@ -15,13 +15,15 @@ import {
   ProductCard,
   ProductImageShowcase,
 } from "@/features/products";
-import { getProductSizeConfig } from "@/lib/products/sizeConfig";
 import { AddToWishListButton } from "@/features/wishlists";
-import { gql } from "@/gql";
-import { getClient } from "@/lib/urql";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
+import { getProductSizeConfig } from "@/lib/products/sizeConfig";
+import { getProductDetailCached } from "@/lib/storefront/product-detail";
 import { formatPrice } from "@/lib/utils";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 type Props = {
   params: {
@@ -29,9 +31,7 @@ type Props = {
   };
 };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { data } = await getClient().query(ProductDetailPageQuery, {
-    productSlug: params.slug,
-  });
+  const data = await getProductDetailCached(params.slug);
   const productName = data?.productsCollection?.edges?.[0]?.node?.name;
   if (productName) {
     return {
@@ -45,50 +45,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const ProductDetailPageQuery = gql(/* GraphQL */ `
-  query ProductDetailPageQuery($productSlug: String) {
-    productsCollection(filter: { slug: { eq: $productSlug } }) {
-      edges {
-        node {
-          id
-          name
-          description
-          rating
-          price
-          stock
-          tags
-          totalComments
-          ...ProductImageShowcaseFragment
-          commentsCollection(first: 5) {
-            edges {
-              node {
-                ...ProductCommentsSectionFragment
-              }
-            }
-          }
-          collections {
-            id
-            label
-            slug
-          }
-        }
-      }
-    }
-    recommendations: productsCollection(first: 4) {
-      edges {
-        node {
-          id
-          ...ProductCardFragment
-        }
-      }
-    }
-  }
-`);
-
 async function ProductDetailPage({ params }: Props) {
-  const { data } = await getClient().query(ProductDetailPageQuery, {
-    productSlug: params.slug as string,
-  });
+  const data = await getProductDetailCached(params.slug);
 
   const productEdge = data?.productsCollection?.edges?.[0];
   if (!productEdge?.node) return notFound();

@@ -1,34 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { gql } from "@/gql";
-import { useQuery } from "@urql/next";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard, ProductCardFragment } from "@/features/products";
 import { DocumentType } from "@/gql";
+import {
+  useDraftProductIds,
+  useStorefrontFeaturedProducts,
+} from "@/hooks/useStorefrontProducts";
 import SearchProductsGridSkeleton from "./SearchProductsGridSkeleton";
-
-const FeaturedProductsQuery = gql(/* GraphQL */ `
-  query FeaturedProductsQuery($first: Int!, $after: Cursor) {
-    productsCollection(
-      filter: { featured: { eq: true } }
-      first: $first
-      after: $after
-      orderBy: [{ created_at: DescNullsLast }]
-    ) {
-      edges {
-        node {
-          id
-          ...ProductCardFragment
-        }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-`);
 
 type ProductNode = DocumentType<typeof ProductCardFragment>;
 
@@ -43,75 +23,49 @@ export function FeaturedProductsResultPage({
   isLastPage,
   onLoadMore,
 }: Props) {
-  const [{ data, fetching, error }] = useQuery({
-    query: FeaturedProductsQuery,
-    variables,
-  });
-  const [draftIds, setDraftIds] = useState<Set<string>>(new Set());
-  const [draftLoaded, setDraftLoaded] = useState(false);
+  const { productsCollection, fetching, error } =
+    useStorefrontFeaturedProducts(variables);
+  const { draftIds, draftLoaded } = useDraftProductIds();
 
-  const products = data?.productsCollection;
   const visibleEdges = useMemo(
-    () => products?.edges.filter(({ node }) => !draftIds.has(node.id)) ?? [],
-    [draftIds, products?.edges],
+    () =>
+      productsCollection?.edges.filter(({ node }) => !draftIds.has(node.id)) ??
+      [],
+    [draftIds, productsCollection?.edges],
   );
 
-  useEffect(() => {
-    let active = true;
-    const loadDraftIds = async () => {
-      try {
-        const res = await fetch("/api/products/drafts", { cache: "no-store" });
-        if (!res.ok) throw new Error("failed");
-        const payload = (await res.json()) as { ids?: string[] };
-        if (active) {
-          setDraftIds(new Set(payload.ids ?? []));
-        }
-      } catch {
-        if (active) {
-          setDraftIds(new Set());
-        }
-      }
-      if (active) {
-        setDraftLoaded(true);
-      }
-    };
-    void loadDraftIds();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (error) {
-    return <p className="py-8 text-center text-destructive">{error.message}</p>;
-  }
-
-  if ((fetching && !products) || !draftLoaded) {
+  if ((fetching && !productsCollection) || !draftLoaded) {
     return <SearchProductsGridSkeleton />;
   }
 
-  if (!variables.after && products && visibleEdges.length === 0) {
-    return (
-      <p className="py-12 text-center text-muted-foreground">
-        No featured products yet. Mark products as featured in Admin.
-      </p>
-    );
+  if (error) {
+    return <p>Oh no... {error}</p>;
   }
 
-  if (!products || visibleEdges.length === 0) {
+  if (!productsCollection) {
     return null;
   }
 
   return (
     <div>
-      <section className="grid w-full grid-cols-2 gap-x-3 gap-y-8 py-5 lg:grid-cols-4">
-        {visibleEdges.map(({ node }) => (
-          <ProductCard key={node.id} product={node as ProductNode} />
-        ))}
-      </section>
-      {isLastPage && products.pageInfo.hasNextPage && (
-        <div className="mt-3 flex w-full items-center justify-center">
-          <Button onClick={() => onLoadMore(products.pageInfo.endCursor)}>
-            Load more
+      {visibleEdges.length === 0 ? (
+        <p>No featured products yet.</p>
+      ) : (
+        <section className="grid grid-cols-2 lg:grid-cols-4 w-full gap-y-8 gap-x-3 py-5">
+          {visibleEdges.map(({ node }) => (
+            <ProductCard key={node.id} product={node as ProductNode} />
+          ))}
+        </section>
+      )}
+
+      {isLastPage && productsCollection.pageInfo.hasNextPage && (
+        <div className="w-full flex justify-center items-center mt-3">
+          <Button
+            onClick={() =>
+              onLoadMore(productsCollection.pageInfo.endCursor ?? "")
+            }
+          >
+            load more
           </Button>
         </div>
       )}

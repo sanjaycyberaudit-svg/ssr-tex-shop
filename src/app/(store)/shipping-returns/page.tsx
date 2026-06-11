@@ -2,6 +2,9 @@ import InfoPage from "@/components/layouts/InfoPage";
 import { siteConfig } from "@/config/site";
 import Link from "next/link";
 import { Metadata } from "next";
+import { STOREFRONT_STATIC_REVALIDATE_SECONDS } from "@/lib/cache/constants";
+
+export const revalidate = STOREFRONT_STATIC_REVALIDATE_SECONDS;
 
 export const metadata: Metadata = {
   title: "Shipping & Returns | Sakthi Textile",

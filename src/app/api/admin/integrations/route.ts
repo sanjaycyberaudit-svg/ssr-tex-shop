@@ -4,6 +4,7 @@ import {
   upsertIntegrationSetting,
   getIntegrationSetting,
 } from "@/lib/integrations/settings";
+import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -556,6 +557,8 @@ export async function POST(request: NextRequest) {
     revalidatePath("/shop");
     revalidatePath("/admin/settings/offer-codes");
   }
+
+  await invalidateStorefrontCache();
 
   return NextResponse.json({ ok: true });
 }

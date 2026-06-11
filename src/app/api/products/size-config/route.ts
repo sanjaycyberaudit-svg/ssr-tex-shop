@@ -3,7 +3,11 @@ import {
   getProductSizeConfigsByProductIds,
   type ProductSizeConfig,
 } from "@/lib/products/sizeConfig";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 function toApiPayload(config: ProductSizeConfig) {
   const configuredOptions = config.options.filter(
@@ -59,9 +63,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(toApiPayload(config));
   } catch (error) {
     console.error("[size-config] GET failed:", error);
-    return NextResponse.json(
-      { enabled: false, options: [] },
-      { status: 200 },
-    );
+    return NextResponse.json({ enabled: false, options: [] }, { status: 200 });
   }
 }

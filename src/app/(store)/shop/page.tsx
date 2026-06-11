@@ -8,6 +8,9 @@ import {
   SearchProductsInifiteScroll,
 } from "@/features/search";
 import { Suspense } from "react";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
+
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 interface ProductsPageProps {
   searchParams: {

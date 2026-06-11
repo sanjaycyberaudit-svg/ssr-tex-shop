@@ -2,6 +2,7 @@ import {
   BulkDraftSharedData,
   createDraftProductsFromMedia,
 } from "@/_actions/products";
+import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import { processUploadedImage } from "@/lib/image/processUpload";
 import { uploadMediaToSupabase } from "@/lib/storage/uploadMedia";
@@ -192,6 +193,8 @@ export async function POST(request: NextRequest) {
         uploadedMedias,
         shared,
       );
+
+      await invalidateStorefrontCache();
 
       if (uploadErrors.length > 0) {
         return NextResponse.json(
