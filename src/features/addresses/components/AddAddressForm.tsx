@@ -1,21 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import {
   mergeCheckoutAddressDefaults,
   saveCheckoutAddressDraft,
 } from "../lib/checkoutAddressDraft";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   Form,
   FormControl,
@@ -25,16 +17,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { calculateCourierCharge } from "@/lib/courier/calculate";
 import { useCourierChargesConfig } from "@/providers/CourierChargesProvider";
-import { Check, ChevronsUpDown } from "lucide-react";
 import { INDIAN_STATES } from "../constants/indianStates";
 import {
   addressFormSchema,
@@ -99,9 +85,6 @@ export function AddAddressForm({
   });
 
   const isSubmitting = form.formState.isSubmitting;
-  const [statePickerOpen, setStatePickerOpen] = useState(false);
-  const normalizeStateValue = (value: string) =>
-    value.toLowerCase().replace(/\s+/g, " ").trim();
 
   const wasDialogOpen = useRef(false);
   useEffect(() => {
@@ -271,70 +254,24 @@ export function AddAddressForm({
                 <FormLabel>
                   <RequiredLabel>State</RequiredLabel>
                 </FormLabel>
-                <Popover
-                  open={statePickerOpen}
-                  onOpenChange={setStatePickerOpen}
-                >
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={statePickerOpen}
-                        className={cn(
-                          "w-full justify-between font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        {field.value || "Select state"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="start"
-                    className="z-[220] w-[var(--radix-popover-trigger-width)] p-0"
+                <FormControl>
+                  <select
+                    className={cn(
+                      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                      !field.value && "text-muted-foreground",
+                    )}
+                    value={field.value}
+                    autoComplete="address-level1"
+                    onChange={(event) => field.onChange(event.target.value)}
                   >
-                    <Command>
-                      <CommandInput placeholder="Search state..." />
-                      <CommandList>
-                        <CommandEmpty>No state found.</CommandEmpty>
-                        <CommandGroup>
-                          {INDIAN_STATES.map((state) => (
-                            <CommandItem
-                              key={state}
-                              value={`${state} ${state.replace(/\s+/g, "")}`}
-                              className="cursor-pointer"
-                              onSelect={(selectedValue) => {
-                                const normalizedSelected =
-                                  normalizeStateValue(selectedValue);
-                                const matchedState =
-                                  INDIAN_STATES.find((candidate) =>
-                                    normalizedSelected.includes(
-                                      normalizeStateValue(candidate),
-                                    ),
-                                  ) ?? state;
-                                field.onChange(matchedState);
-                                setStatePickerOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  state === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {state}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                    <option value="">Select state</option>
+                    {INDIAN_STATES.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
