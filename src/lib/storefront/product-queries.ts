@@ -1,14 +1,16 @@
-import {
-  FeaturedProductsQueryDocument,
-  SearchDocument,
-  type FeaturedProductsQueryQuery,
-  type FeaturedProductsQueryQueryVariables,
-  type SearchQuery,
-  type SearchQueryVariables,
+import type {
+  FeaturedProductsQueryQuery,
+  FeaturedProductsQueryQueryVariables,
+  SearchQuery,
+  SearchQueryVariables,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/urql";
 import { CACHE_TAGS } from "@/lib/cache/constants";
 import { withStorefrontCache } from "@/lib/cache/storefront-cache";
+import {
+  FeaturedProductsQueryDocument,
+  SearchQueryDocument,
+} from "./documents";
 
 function stableKey(parts: Record<string, unknown>) {
   return JSON.stringify(parts);
@@ -23,7 +25,7 @@ export async function fetchProductSearchCached(variables: SearchQueryVariables) 
       const { data, error } = await getClient().query<
         SearchQuery,
         SearchQueryVariables
-      >(SearchDocument, variables);
+      >(SearchQueryDocument, variables);
       if (error) throw error;
       return data?.productsCollection ?? null;
     },

@@ -1,11 +1,11 @@
-import {
-  CollectionRouteQueryDocument,
-  type CollectionRouteQueryQuery,
-  type CollectionRouteQueryQueryVariables,
+import type {
+  CollectionRouteQueryQuery,
+  CollectionRouteQueryQueryVariables,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/urql";
 import { CACHE_TAGS } from "@/lib/cache/constants";
 import { withStorefrontCache } from "@/lib/cache/storefront-cache";
+import { CollectionRouteQueryDocument } from "./documents";
 
 export async function getCollectionPageCached(collectionSlug: string) {
   return withStorefrontCache(

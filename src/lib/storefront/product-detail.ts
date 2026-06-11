@@ -1,11 +1,11 @@
-import {
-  ProductDetailPageQueryDocument,
-  type ProductDetailPageQueryQuery,
-  type ProductDetailPageQueryQueryVariables,
+import type {
+  ProductDetailPageQueryQuery,
+  ProductDetailPageQueryQueryVariables,
 } from "@/gql/graphql";
 import { getClient } from "@/lib/urql";
 import { CACHE_TAGS } from "@/lib/cache/constants";
 import { withStorefrontCache } from "@/lib/cache/storefront-cache";
+import { ProductDetailPageQueryDocument } from "./documents";
 
 export async function getProductDetailCached(productSlug: string) {
   return withStorefrontCache(
