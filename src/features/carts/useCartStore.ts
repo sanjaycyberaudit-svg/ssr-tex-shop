@@ -11,6 +11,8 @@ export type ProductData = { productId: string; quantity: number };
 type CartStore = {
   cart: CartItems;
   addProductToCart: (id: string, quantity: number) => void;
+  setProductQuantity: (id: string, quantity: number) => void;
+  replaceCart: (cart: CartItems) => void;
   removeProduct: (id: string) => void;
   removeAllProducts: () => void;
 };
@@ -42,6 +44,21 @@ const useCartStore = create<CartStore>(
           };
         });
       },
+      setProductQuantity: (id, quantity) =>
+        set((state) => {
+          if (quantity <= 0) {
+            const updatedCart = { ...state.cart };
+            delete updatedCart[id];
+            return { cart: updatedCart };
+          }
+          return {
+            cart: {
+              ...state.cart,
+              [id]: { quantity },
+            },
+          };
+        }),
+      replaceCart: (cart) => set({ cart }),
       removeProduct: (id) =>
         set((state) => {
           const updatedCart = { ...state.cart };

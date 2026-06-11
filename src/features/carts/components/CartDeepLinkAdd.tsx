@@ -3,11 +3,19 @@
 import { useAuth } from "@/providers/AuthProvider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useClient, useMutation } from "@urql/next";
 import useCartStore from "../useCartStore";
-import useCartActions from "../hooks/useCartActions";
+import { FetchCartQuery } from "./UserCartSection";
+import {
+  createCartMutation,
+  RemoveCartsMutation,
+  updateCartsMutation,
+} from "../query";
 import {
   claimDeepLink,
+  isReplaceEntireCartDeepLink,
   linesFingerprint,
+  linesToCartItems,
   parseDeepLinkLines,
   releaseDeepLinkInflight,
   type CartDeepLinkLine,
@@ -16,42 +24,24 @@ import {
 
 export { parseCartItemsParam } from "./cart-deeplink-utils";
 
-function AuthCartLineAdd({
-  productId,
-  quantity,
-  onDone,
-}: {
-  productId: string;
-  quantity: number;
-  onDone: (ok: boolean) => void;
-}) {
-  const { user } = useAuth();
-  const { addProductToCart } = useCartActions(user, productId);
-  const ran = useRef(false);
-
-  useEffect(() => {
-    if (ran.current) return;
-    ran.current = true;
-    void addProductToCart(quantity, { silent: true })
-      .then((result) => onDone(result.added))
-      .catch(() => onDone(false));
-  }, [addProductToCart, onDone, quantity]);
-
-  return null;
-}
-
 function CartDeepLinkAddRunner({
   lines,
   fingerprint,
+  replaceEntireCart,
 }: {
   lines: CartDeepLinkLine[];
   fingerprint: string;
+  replaceEntireCart: boolean;
 }) {
   const { user } = useAuth();
-  const guestAdd = useCartStore((s) => s.addProductToCart);
-  const guestRan = useRef(false);
-  const [authIndex, setAuthIndex] = useState(0);
+  const urqlClient = useClient();
+  const replaceCart = useCartStore((s) => s.replaceCart);
+  const setProductQuantity = useCartStore((s) => s.setProductQuantity);
+  const ran = useRef(false);
   const finishedRef = useRef(false);
+  const [, createCart] = useMutation(createCartMutation);
+  const [, updateCart] = useMutation(updateCartsMutation);
+  const [, removeCart] = useMutation(RemoveCartsMutation);
 
   const finish = useCallback(() => {
     if (finishedRef.current) return;
@@ -60,34 +50,85 @@ function CartDeepLinkAddRunner({
   }, [fingerprint]);
 
   useEffect(() => {
-    if (user || lines.length === 0 || guestRan.current) return;
-    guestRan.current = true;
-    for (const line of lines) {
-      guestAdd(line.productId, line.quantity);
-    }
-    finish();
-  }, [finish, guestAdd, lines, user]);
+    if (ran.current || lines.length === 0) return;
+    ran.current = true;
 
-  useEffect(() => {
-    if (!user || authIndex < lines.length) return;
-    finish();
-  }, [authIndex, finish, lines.length, user]);
+    const apply = async () => {
+      try {
+        if (!user) {
+          if (replaceEntireCart) {
+            replaceCart(linesToCartItems(lines));
+          } else {
+            for (const line of lines) {
+              setProductQuantity(line.productId, line.quantity);
+            }
+          }
+          return;
+        }
 
-  if (!user || lines.length === 0) return null;
-  if (authIndex >= lines.length) return null;
+        const cartResult = await urqlClient
+          .query(FetchCartQuery, { userId: user.id })
+          .toPromise();
+        const edges = cartResult.data?.cartsCollection?.edges ?? [];
+        const targetIds = new Set(lines.map((line) => line.productId));
 
-  const line = lines[authIndex]!;
-  return (
-    <AuthCartLineAdd
-      key={`${line.productId}-${authIndex}`}
-      productId={line.productId}
-      quantity={line.quantity}
-      onDone={(ok) => {
-        if (!ok) finish();
-        setAuthIndex((i) => i + 1);
-      }}
-    />
-  );
+        if (replaceEntireCart) {
+          for (const edge of edges) {
+            if (!targetIds.has(edge.node.product_id)) {
+              await removeCart({
+                productId: edge.node.product_id,
+                userId: user.id,
+              });
+            }
+          }
+        }
+
+        for (const line of lines) {
+          const existed = edges.some(
+            (edge) => edge.node.product_id === line.productId,
+          );
+          if (existed) {
+            await updateCart({
+              productId: line.productId,
+              userId: user.id,
+              newQuantity: line.quantity,
+            });
+          } else {
+            await createCart({
+              productId: line.productId,
+              userId: user.id,
+              quantity: line.quantity,
+            });
+          }
+        }
+
+        if (replaceEntireCart) {
+          replaceCart(linesToCartItems(lines));
+        } else {
+          for (const line of lines) {
+            setProductQuantity(line.productId, line.quantity);
+          }
+        }
+      } finally {
+        finish();
+      }
+    };
+
+    void apply();
+  }, [
+    createCart,
+    finish,
+    lines,
+    removeCart,
+    replaceCart,
+    replaceEntireCart,
+    setProductQuantity,
+    updateCart,
+    urqlClient,
+    user,
+  ]);
+
+  return null;
 }
 
 function CartDeepLinkAddContent() {
@@ -97,6 +138,7 @@ function CartDeepLinkAddContent() {
   const [pending, setPending] = useState<{
     lines: CartDeepLinkLine[];
     fingerprint: string;
+    replaceEntireCart: boolean;
   } | null>(null);
 
   const queryKey = searchParams.toString();
@@ -105,6 +147,11 @@ function CartDeepLinkAddContent() {
     () => parseDeepLinkLines(searchParams),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- queryKey captures param changes
     [queryKey],
+  );
+
+  const replaceEntireCart = useMemo(
+    () => isReplaceEntireCartDeepLink(searchParams),
+    [searchParams],
   );
 
   useEffect(() => {
@@ -125,14 +172,15 @@ function CartDeepLinkAddContent() {
 
     if (queryKey) router.replace("/cart", { scroll: false });
 
-    setPending({ lines: urlLines, fingerprint });
-  }, [queryKey, router, urlLines]);
+    setPending({ lines: urlLines, fingerprint, replaceEntireCart });
+  }, [queryKey, replaceEntireCart, router, urlLines]);
 
   if (!pending?.lines.length) return null;
   return (
     <CartDeepLinkAddRunner
       lines={pending.lines}
       fingerprint={pending.fingerprint}
+      replaceEntireCart={pending.replaceEntireCart}
     />
   );
 }

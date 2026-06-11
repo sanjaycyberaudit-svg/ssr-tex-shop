@@ -29,7 +29,7 @@ function GuestCartSection() {
     query: FetchGuestCartQuery,
     variables: {
       cartItems: cartProductIds,
-      first: 8,
+      first: Math.max(cartProductIds.length, 1),
     },
     pause: cartProductIds.length === 0,
   });

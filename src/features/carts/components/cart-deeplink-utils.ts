@@ -59,6 +59,17 @@ export function parseDeepLinkLines(searchParams: URLSearchParams): CartDeepLinkL
   return [{ productId, quantity }];
 }
 
+/** Velo `items=` multi-share replaces cart; single `add=` sets one line only. */
+export function isReplaceEntireCartDeepLink(searchParams: URLSearchParams) {
+  return Boolean(searchParams.get("items")?.trim());
+}
+
+export function linesToCartItems(lines: CartDeepLinkLine[]) {
+  return Object.fromEntries(
+    lines.map((line) => [line.productId, { quantity: line.quantity }]),
+  );
+}
+
 const DEEPLINK_STORAGE_PREFIX = "velo_cart_deeplink_v1:";
 const DEEPLINK_INFLIGHT_PREFIX = "velo_cart_deeplink_inflight_v1:";
 export const DEEPLINK_TTL_MS = 10 * 60 * 1000;
