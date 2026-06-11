@@ -22,7 +22,7 @@ export function CartItemsList({ children, className }: CartItemsListProps) {
   );
 }
 
-/** Bottom space so last line + recommendations clear the mobile sticky checkout bar. */
+/** Bottom space so summary clears the mobile sticky checkout bar + bottom nav. */
 export function cartPageBottomSpacerClass() {
-  return "pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0";
+  return "pb-[calc(var(--mobile-nav-height)+5rem)] md:pb-0";
 }

@@ -111,6 +111,9 @@ function GuestCartSection() {
   const discountAmount = Math.round(subtotal * promoPercentage * 100) / 10000;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   const hasDeliveryStateSelected = deliveryState.trim().length > 0;
+  const courierEnabled = courierConfig.enabled;
+  const offerCodesEnabled = offerCodesConfig.enabled;
+  const checkoutTotalReady = !courierEnabled || Boolean(courierBreakdown);
   const gstAmount = calculateGstAmount({
     taxableAmount: discountedSubtotal + courierCharge,
     config: courierConfig,
@@ -265,6 +268,8 @@ function GuestCartSection() {
 
   const summaryFields = {
     productCount,
+    courierEnabled,
+    offerCodesEnabled,
     deliveryState,
     onStateChange,
     hasDeliveryStateSelected,
@@ -289,8 +294,10 @@ function GuestCartSection() {
       order={cartItems}
       promoCode={appliedPromoCode}
       missingSizeProductNames={missingSizeProductNames}
-      requireDeliveryStateSelection
-      hasDeliveryStateSelected={hasDeliveryStateSelected}
+      requireDeliveryStateSelection={courierEnabled}
+      hasDeliveryStateSelected={
+        !courierEnabled || hasDeliveryStateSelected
+      }
     />
   );
 
@@ -361,7 +368,7 @@ function GuestCartSection() {
               <CartOrderSummaryFields {...summaryFields} />
             </CardContent>
 
-            <CardFooter className="hidden gap-x-2 px-3 md:flex md:gap-x-5">
+            <CardFooter className="flex gap-x-2 px-3 pb-3 md:gap-x-5">
               {checkoutButton}
             </CardFooter>
           </Card>
@@ -369,8 +376,10 @@ function GuestCartSection() {
           <CartCheckoutSummary
             mobileStickyOnly
             productCount={productCount}
-            headlineAmount={courierBreakdown ? totalAmount : subtotal}
-            headlineLabel={courierBreakdown ? "Total" : "Subtotal"}
+            headlineAmount={
+              checkoutTotalReady ? totalAmount : subtotal
+            }
+            headlineLabel={checkoutTotalReady ? "Total" : "Subtotal"}
             checkout={checkoutButton}
           />
         </section>

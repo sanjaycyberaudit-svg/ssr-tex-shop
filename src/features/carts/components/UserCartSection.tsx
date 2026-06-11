@@ -134,6 +134,9 @@ function UserCartSection({ user }: UserCartSectionProps) {
   const discountAmount = Math.round(subtotal * promoPercentage * 100) / 10000;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   const hasDeliveryStateSelected = deliveryState.trim().length > 0;
+  const courierEnabled = courierConfig.enabled;
+  const offerCodesEnabled = offerCodesConfig.enabled;
+  const checkoutTotalReady = !courierEnabled || Boolean(courierBreakdown);
   const gstAmount = calculateGstAmount({
     taxableAmount: discountedSubtotal + courierCharge,
     config: courierConfig,
@@ -347,6 +350,8 @@ function UserCartSection({ user }: UserCartSectionProps) {
 
   const summaryFields = {
     productCount,
+    courierEnabled,
+    offerCodesEnabled,
     deliveryState,
     onStateChange,
     hasDeliveryStateSelected,
@@ -372,8 +377,10 @@ function UserCartSection({ user }: UserCartSectionProps) {
       order={order}
       promoCode={appliedPromoCode}
       missingSizeProductNames={missingSizeProductNames}
-      requireDeliveryStateSelection
-      hasDeliveryStateSelected={hasDeliveryStateSelected}
+      requireDeliveryStateSelection={courierEnabled}
+      hasDeliveryStateSelected={
+        !courierEnabled || hasDeliveryStateSelected
+      }
     />
   );
 
@@ -447,7 +454,7 @@ function UserCartSection({ user }: UserCartSectionProps) {
               <CartOrderSummaryFields {...summaryFields} />
             </CardContent>
 
-            <CardFooter className="hidden gap-x-2 px-3 md:flex md:gap-x-5">
+            <CardFooter className="flex gap-x-2 px-3 pb-3 md:gap-x-5">
               {checkoutButton}
             </CardFooter>
           </Card>
@@ -455,8 +462,10 @@ function UserCartSection({ user }: UserCartSectionProps) {
           <CartCheckoutSummary
             mobileStickyOnly
             productCount={productCount}
-            headlineAmount={courierBreakdown ? totalAmount : subtotal}
-            headlineLabel={courierBreakdown ? "Total" : "Subtotal"}
+            headlineAmount={
+              checkoutTotalReady ? totalAmount : subtotal
+            }
+            headlineLabel={checkoutTotalReady ? "Total" : "Subtotal"}
             checkout={checkoutButton}
           />
         </section>
