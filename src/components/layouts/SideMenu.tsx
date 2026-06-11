@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -17,9 +18,10 @@ import { BrandLogo } from "./BrandLogo";
 import { useMobileMenu } from "./MobileMenuContext";
 import SocialMedias from "./SocialMedias";
 import { cn } from "@/lib/utils";
+import { useRobustNavigate } from "@/hooks/useRobustNavigate";
 
 const navLinkBase =
-  "flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors";
+  "flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors touch-manipulation";
 
 type NavItem = { title: string; href: string };
 
@@ -47,31 +49,34 @@ function SideNavLink({
 }: {
   item: NavItem;
   pathname: string;
-  onNavigate: () => void;
+  onNavigate: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }) {
   const active = isNavActive(pathname, item.href);
 
   return (
-    <Link
-      href={item.href}
-      onClick={onNavigate}
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        navLinkBase,
-        active
-          ? "border-l-[3px] border-[#00542E] bg-[#00542E]/12 pl-[calc(0.75rem-3px)] font-semibold text-[#00542E]"
-          : "border-l-[3px] border-transparent text-foreground hover:bg-[#00542E]/10",
-      )}
-    >
-      <span className="flex-1">{item.title}</span>
-      {active ? (
-        <Check
-          className="h-4 w-4 shrink-0 text-[#00542E]"
-          strokeWidth={2.5}
-          aria-hidden
-        />
-      ) : null}
-    </Link>
+    <SheetClose asChild>
+      <Link
+        href={item.href}
+        prefetch
+        onClick={onNavigate}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          navLinkBase,
+          active
+            ? "border-l-[3px] border-[#00542E] bg-[#00542E]/12 pl-[calc(0.75rem-3px)] font-semibold text-[#00542E]"
+            : "border-l-[3px] border-transparent text-foreground hover:bg-[#00542E]/10",
+        )}
+      >
+        <span className="flex-1">{item.title}</span>
+        {active ? (
+          <Check
+            className="h-4 w-4 shrink-0 text-[#00542E]"
+            strokeWidth={2.5}
+            aria-hidden
+          />
+        ) : null}
+      </Link>
+    </SheetClose>
   );
 }
 
@@ -79,6 +84,7 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { setOpen: setMenuOpenGlobal } = useMobileMenu();
+  const { onNavigateClick } = useRobustNavigate();
 
   const closeMenu = () => setOpen(false);
 
@@ -129,7 +135,10 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
               key={item.href}
               item={item}
               pathname={pathname}
-              onNavigate={closeMenu}
+              onNavigate={(event) => {
+                closeMenu();
+                onNavigateClick(item.href)(event);
+              }}
             />
           ))}
         </nav>

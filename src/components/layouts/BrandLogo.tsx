@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { RobustNavLink } from "@/components/layouts/RobustNavLink";
 import { SakthiWordmark } from "@/components/layouts/SakthiWordmark";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -49,12 +49,12 @@ export function BrandLogo({ className, size = "nav" }: Props) {
         className,
       )}
     >
-      <Link
+      <RobustNavLink
         href="/"
-        className="inline-flex w-fit shrink-0 items-center justify-start"
+        className="inline-flex w-fit shrink-0 items-center justify-start touch-manipulation"
       >
         <SakthiWordmark size={visualSize} />
-      </Link>
+      </RobustNavLink>
 
       <div
         className={cn(
