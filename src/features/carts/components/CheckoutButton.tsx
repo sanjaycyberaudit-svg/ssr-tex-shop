@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import type { CartItems } from "@/features/carts";
 import { AddAddressDialog } from "@/features/addresses";
 import type { AddressFormValues } from "@/features/addresses";
@@ -15,42 +14,21 @@ import { startCheckout } from "@/features/checkout/startCheckout";
 import BulkOrderGuardDialog from "@/features/carts/components/BulkOrderGuardDialog";
 import { isBulkOrderQuantity } from "@/features/carts/constants/bulkOrder";
 import { useAuth } from "@/providers/AuthProvider";
-import { useBulkOrderGuardConfig } from "@/providers/BulkOrderGuardProvider";
 
 type CheckoutButtonProps = React.ComponentProps<typeof Button> & {
   order: CartItems;
   guest: boolean;
-  promoCode?: string | null;
-  missingSizeProductNames?: string[];
-  requireDeliveryStateSelection?: boolean;
-  hasDeliveryStateSelected?: boolean;
 };
 
-function CheckoutButton({
-  order,
-  guest,
-  promoCode,
-  missingSizeProductNames = [],
-  requireDeliveryStateSelection = false,
-  hasDeliveryStateSelected = true,
-  ...props
-}: CheckoutButtonProps) {
+function CheckoutButton({ order, guest, ...props }: CheckoutButtonProps) {
   const { user } = useAuth();
-  const bulkOrder = useBulkOrderGuardConfig();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [bulkGuardOpen, setBulkGuardOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const hasBulkLineItem = useMemo(
     () =>
-      bulkOrder.enabled &&
-      Object.values(order).some((item) =>
-        isBulkOrderQuantity(item.quantity, bulkOrder.threshold),
-      ),
-    [bulkOrder.enabled, bulkOrder.threshold, order],
-  );
-  const checkoutQuantity = useMemo(
-    () => Object.values(order).reduce((sum, item) => sum + item.quantity, 0),
+      Object.values(order).some((item) => isBulkOrderQuantity(item.quantity)),
     [order],
   );
 
@@ -77,7 +55,6 @@ function CheckoutButton({
         order,
         guest,
         shipping: saved,
-        promoCode: promoCode ?? null,
       });
       clearCheckoutAddressDraft();
     } catch (err) {
@@ -97,59 +74,7 @@ function CheckoutButton({
       <Button
         {...props}
         className={cn("w-full", props.className)}
-        onClick={async () => {
-          if (requireDeliveryStateSelection && !hasDeliveryStateSelected) {
-            toast({
-              title: "Select delivery state",
-              description:
-                "Please select your delivery state in cart summary before checkout.",
-              variant: "destructive",
-            });
-            return;
-          }
-          if (missingSizeProductNames.length > 0) {
-            toast({
-              title: "Select size in cart",
-              description: `${missingSizeProductNames[0]}: please select a size before checkout.`,
-              variant: "destructive",
-            });
-            return;
-          }
-          const uncheckedIds = Object.entries(order)
-            .filter(
-              ([, item]) =>
-                !String(item.size ?? "")
-                  .trim()
-                  .toUpperCase(),
-            )
-            .map(([productId]) => productId);
-          if (uncheckedIds.length > 0) {
-            const results = await Promise.all(
-              uncheckedIds.map(async (productId) => {
-                try {
-                  const res = await fetchWithTimeout(
-                    `/api/products/size-config?productId=${encodeURIComponent(productId)}`,
-                    { cache: "no-store" },
-                  );
-                  if (!res.ok) return { productId, required: false };
-                  const payload = (await res.json()) as { enabled?: boolean };
-                  return { productId, required: Boolean(payload.enabled) };
-                } catch {
-                  return { productId, required: false };
-                }
-              }),
-            );
-            const requiredMissing = results.find((result) => result.required);
-            if (requiredMissing) {
-              toast({
-                title: "Select size in cart",
-                description:
-                  "Please select size for all size-enabled products before checkout.",
-                variant: "destructive",
-              });
-              return;
-            }
-          }
+        onClick={() => {
           if (hasBulkLineItem) {
             setBulkGuardOpen(true);
             return;
@@ -171,7 +96,6 @@ function CheckoutButton({
         persistDraft
         submitLabel="Continue to payment"
         defaultValues={accountDefaults}
-        checkoutQuantity={checkoutQuantity}
       />
 
       <BulkOrderGuardDialog

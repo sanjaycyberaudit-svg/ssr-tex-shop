@@ -42,10 +42,6 @@ type CartItemCardProps = React.ComponentProps<typeof Card> & {
   minusOneHandler: () => void;
   removeHandler: () => void;
   quantity: number;
-  selectedSize?: string;
-  sizeRequired?: boolean;
-  sizeOptions?: { value: string; label: string }[];
-  onSizeChange?: (size: string) => void;
 };
 
 function CartItemCard({
@@ -55,16 +51,7 @@ function CartItemCard({
   minusOneHandler,
   removeHandler,
   quantity,
-  selectedSize,
-  sizeRequired,
-  sizeOptions = [],
-  onSizeChange,
 }: CartItemCardProps) {
-  const normalizedSelectedSize = String(selectedSize ?? "")
-    .trim()
-    .toUpperCase();
-  const missingRequiredSize = Boolean(sizeRequired && !normalizedSelectedSize);
-
   return (
     <Card className="flex items-start gap-3 border-0 bg-transparent px-3 py-3 shadow-none md:items-center md:gap-6 md:px-5">
       <CardContent className="relative shrink-0 overflow-hidden p-0">
@@ -83,34 +70,6 @@ function CartItemCard({
             {product.name}
           </Link>
         </CardTitle>
-        {sizeRequired ? (
-          <div className="mt-1 space-y-1">
-            <label className="text-xs text-muted-foreground">Size</label>
-            <select
-              value={normalizedSelectedSize}
-              disabled={disabled || sizeOptions.length === 0}
-              className="h-8 w-full max-w-[220px] rounded border bg-background px-2 text-xs"
-              onChange={(event) => onSizeChange?.(event.target.value)}
-            >
-              <option value="">Select size</option>
-              {sizeOptions.map((option) => (
-                <option
-                  key={`${option.value}-${option.label}`}
-                  value={option.value}
-                >
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {missingRequiredSize ? (
-              <p className="text-[11px] text-destructive">
-                Please select size to continue checkout.
-              </p>
-            ) : null}
-          </div>
-        ) : selectedSize ? (
-          <p className="text-xs text-muted-foreground">Size: {selectedSize}</p>
-        ) : null}
 
         <QuantityInput
           value={quantity}

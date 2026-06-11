@@ -1,3 +1,4 @@
+import CartDeepLinkAdd from "@/features/carts/components/CartDeepLinkAdd";
 import CartSection from "@/features/carts/components/CartSection";
 import CartSectionSkeleton from "@/features/carts/components/CartSectionSkeleton";
 import { Shell } from "@/components/layouts/Shell";
@@ -5,7 +6,6 @@ import {
   RecommendationProducts,
   RecommendationProductsSkeleton,
 } from "@/features/products";
-import CartDeepLinkAdd from "@/features/carts/components/CartDeepLinkAdd";
 
 import Link from "next/link";
 import { Suspense } from "react";
@@ -13,9 +13,6 @@ import { Suspense } from "react";
 async function CartPage() {
   return (
     <Shell>
-      <Suspense fallback={null}>
-        <CartDeepLinkAdd />
-      </Suspense>
       <section className="flex items-center justify-between gap-3 py-4 md:py-8">
         <h1 className="text-2xl font-bold md:text-3xl">Your Cart</h1>
         <Link
@@ -25,6 +22,8 @@ async function CartPage() {
           Continue shopping
         </Link>
       </section>
+
+      <CartDeepLinkAdd />
 
       <Suspense fallback={<CartSectionSkeleton />}>
         <CartSection />
