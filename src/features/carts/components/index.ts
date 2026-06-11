@@ -4,4 +4,3 @@ export { default as AddProductToCartForm } from "./AddProductToCartForm";
 export { default as CartLink } from "./CartLink";
 export { default as CartNav } from "./CartNav";
 export { default as CartSheet } from "./CartSheet";
-export { default as CartDeepLinkAdd } from "./CartDeepLinkAdd";
