@@ -31,8 +31,8 @@ function CollectionsCard({
     >
       <CollectionCardSurface
         label={label}
-        imageSrc={keytoUrl(featuredImage.key)}
-        imageAlt={featuredImage.alt || label}
+        imageSrc={keytoUrl(featuredImage?.key)}
+        imageAlt={featuredImage?.alt || label}
         sizes="(max-width: 640px) 48vw, (max-width: 1024px) 31vw, 260px"
       />
     </Link>

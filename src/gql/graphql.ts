@@ -3105,36 +3105,6 @@ export type CollectionRouteQueryQuery = {
         description: string;
         id: string;
         slug: string;
-        productsCollection?: {
-          __typename?: "productsConnection";
-          pageInfo: { __typename?: "PageInfo"; hasNextPage: boolean };
-          edges: Array<{
-            __typename?: "productsEdge";
-            node: {
-              __typename?: "products";
-              id: string;
-              name: string;
-              description?: string | null;
-              rating: any;
-              slug: string;
-              badge?: string | null;
-              price: any;
-              stock?: number | null;
-              featuredImage?: {
-                __typename?: "medias";
-                id: string;
-                key: string;
-                alt: string;
-              } | null;
-              collections?: {
-                __typename?: "collections";
-                id: string;
-                label: string;
-                slug: string;
-              } | null;
-            };
-          }>;
-        } | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -8405,93 +8375,6 @@ export const CollectionRouteQueryDocument = {
                                 value: "CollectionBannerFragment",
                               },
                             },
-                            {
-                              kind: "Field",
-                              name: {
-                                kind: "Name",
-                                value: "productsCollection",
-                              },
-                              arguments: [
-                                {
-                                  kind: "Argument",
-                                  name: { kind: "Name", value: "orderBy" },
-                                  value: {
-                                    kind: "ListValue",
-                                    values: [
-                                      {
-                                        kind: "ObjectValue",
-                                        fields: [
-                                          {
-                                            kind: "ObjectField",
-                                            name: {
-                                              kind: "Name",
-                                              value: "created_at",
-                                            },
-                                            value: {
-                                              kind: "EnumValue",
-                                              value: "DescNullsLast",
-                                            },
-                                          },
-                                        ],
-                                      },
-                                    ],
-                                  },
-                                },
-                              ],
-                              selectionSet: {
-                                kind: "SelectionSet",
-                                selections: [
-                                  {
-                                    kind: "Field",
-                                    name: { kind: "Name", value: "pageInfo" },
-                                    selectionSet: {
-                                      kind: "SelectionSet",
-                                      selections: [
-                                        {
-                                          kind: "Field",
-                                          name: {
-                                            kind: "Name",
-                                            value: "hasNextPage",
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: "Field",
-                                    name: { kind: "Name", value: "edges" },
-                                    selectionSet: {
-                                      kind: "SelectionSet",
-                                      selections: [
-                                        {
-                                          kind: "Field",
-                                          name: { kind: "Name", value: "node" },
-                                          selectionSet: {
-                                            kind: "SelectionSet",
-                                            selections: [
-                                              {
-                                                kind: "Field",
-                                                name: {
-                                                  kind: "Name",
-                                                  value: "id",
-                                                },
-                                              },
-                                              {
-                                                kind: "FragmentSpread",
-                                                name: {
-                                                  kind: "Name",
-                                                  value: "ProductCardFragment",
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
                           ],
                         },
                       },
@@ -8527,52 +8410,6 @@ export const CollectionRouteQueryDocument = {
                 { kind: "Field", name: { kind: "Name", value: "id" } },
                 { kind: "Field", name: { kind: "Name", value: "key" } },
                 { kind: "Field", name: { kind: "Name", value: "alt" } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: "FragmentDefinition",
-      name: { kind: "Name", value: "ProductCardFragment" },
-      typeCondition: {
-        kind: "NamedType",
-        name: { kind: "Name", value: "products" },
-      },
-      selectionSet: {
-        kind: "SelectionSet",
-        selections: [
-          { kind: "Field", name: { kind: "Name", value: "id" } },
-          { kind: "Field", name: { kind: "Name", value: "name" } },
-          { kind: "Field", name: { kind: "Name", value: "description" } },
-          { kind: "Field", name: { kind: "Name", value: "rating" } },
-          { kind: "Field", name: { kind: "Name", value: "slug" } },
-          { kind: "Field", name: { kind: "Name", value: "badge" } },
-          { kind: "Field", name: { kind: "Name", value: "price" } },
-          { kind: "Field", name: { kind: "Name", value: "stock" } },
-          {
-            kind: "Field",
-            alias: { kind: "Name", value: "featuredImage" },
-            name: { kind: "Name", value: "medias" },
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "key" } },
-                { kind: "Field", name: { kind: "Name", value: "alt" } },
-              ],
-            },
-          },
-          {
-            kind: "Field",
-            name: { kind: "Name", value: "collections" },
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "label" } },
-                { kind: "Field", name: { kind: "Name", value: "slug" } },
               ],
             },
           },

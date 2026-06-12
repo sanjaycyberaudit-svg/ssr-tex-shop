@@ -49,8 +49,18 @@ const searchParamsVariablesFactory = (
 ) => {
   const priceRange = searchParams.get("price_range");
   const range = priceRange ? priceRange.split("-") : undefined;
-  const collections =
-    (JSON.parse(searchParams.get("collections")) as string[]) ?? [];
+  let collections: string[] = [];
+  const collectionsRaw = searchParams.get("collections");
+  if (collectionsRaw) {
+    try {
+      const parsed = JSON.parse(collectionsRaw) as unknown;
+      collections = Array.isArray(parsed)
+        ? parsed.filter((id): id is string => typeof id === "string")
+        : [];
+    } catch {
+      collections = [];
+    }
+  }
   const sort = searchParams.get("sort") ?? undefined;
   const search = searchParams.get("search") ?? undefined;
 

@@ -22,11 +22,14 @@ function CollectionBanner({
   collectionBannerData: DocumentType<typeof CollectionBannerFragment>;
 }) {
   const { label, featuredImage } = collectionBannerData;
+  const imageKey = featuredImage?.key;
+  const imageAlt = featuredImage?.alt || label;
+
   return (
     <div className="relative mx-auto mb-8 h-[220px] w-full overflow-hidden md:container md:h-[280px]">
       <Image
-        src={keytoUrl(featuredImage.key)}
-        alt={featuredImage.alt || label}
+        src={keytoUrl(imageKey)}
+        alt={imageAlt}
         fill
         priority
         sizes="100vw"

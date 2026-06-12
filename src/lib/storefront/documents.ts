@@ -72,17 +72,6 @@ export const CollectionRouteQueryDocument = gql(/* GraphQL */ `
           label
           description
           ...CollectionBannerFragment
-          productsCollection(orderBy: [{ created_at: DescNullsLast }]) {
-            pageInfo {
-              hasNextPage
-            }
-            edges {
-              node {
-                id
-                ...ProductCardFragment
-              }
-            }
-          }
         }
       }
     }

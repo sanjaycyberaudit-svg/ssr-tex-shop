@@ -1,9 +1,19 @@
+import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import db from "@/lib/supabase/db";
 import { collections } from "@/lib/supabase/schema";
 import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+
+async function revalidateCollectionPages() {
+  revalidatePath("/collections");
+  revalidatePath("/collections", "layout");
+  revalidatePath("/shop");
+  revalidatePath("/admin/collections");
+  await invalidateStorefrontCache();
+}
 
 const collectionPayloadSchema = z.object({
   slug: z.string().trim().min(1),
@@ -50,6 +60,7 @@ export async function POST(request: NextRequest) {
       featuredImageId: parsed.data.featuredImageId,
     };
     await db.insert(collections).values(insertValues);
+    await revalidateCollectionPages();
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message =
@@ -111,10 +122,51 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    await revalidateCollectionPages();
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to update collection.";
+    return NextResponse.json({ message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const user = await ensureAdmin();
+  if (!user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const payload = await request.json().catch(() => null);
+  const parsed = z
+    .object({ id: z.string().trim().min(1) })
+    .safeParse(payload);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: "Collection id is required." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const rows = await db
+      .delete(collections)
+      .where(eq(collections.id, parsed.data.id))
+      .returning({ id: collections.id });
+
+    if (rows.length < 1) {
+      return NextResponse.json(
+        { message: "Collection not found." },
+        { status: 404 },
+      );
+    }
+
+    await revalidateCollectionPages();
+    return NextResponse.json({ ok: true, deletedId: parsed.data.id });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to delete collection.";
     return NextResponse.json({ message }, { status: 400 });
   }
 }

@@ -33,29 +33,15 @@ export function generateMetadata({ params }: CategoryPageProps) {
 }
 
 async function CategoryPage({ params }: CategoryPageProps) {
-  const { collectionSlug } = params;
-
+  const collectionSlug = decodeURIComponent(params.collectionSlug).trim();
   const data = await getCollectionPageCached(collectionSlug);
+  const collection = data?.collectionsCollection?.edges?.[0]?.node;
 
-  if (
-    data === null ||
-    !data?.collectionsCollection?.edges[0].node ||
-    data?.collectionsCollection === null ||
-    data?.collectionsCollection?.edges[0].node.productsCollection === null
-  )
-    return notFound();
+  if (!collection?.id) return notFound();
 
-  const productsList =
-    data?.collectionsCollection?.edges[0].node.productsCollection;
-
-  if (!productsList) return notFound();
-
-  const collection = data.collectionsCollection.edges[0].node;
   return (
     <Shell>
-      <CollectionBanner
-        collectionBannerData={data.collectionsCollection.edges[0].node}
-      />
+      <CollectionBanner collectionBannerData={collection} />
       <SectionHeading
         heading={collection.title}
         description={collection.description}
@@ -73,9 +59,7 @@ async function CategoryPage({ params }: CategoryPageProps) {
       </Suspense>
 
       <Suspense fallback={<SearchProductsGridSkeleton />}>
-        <SearchProductsInifiteScroll
-          collectionId={data.collectionsCollection.edges[0].node.id}
-        />
+        <SearchProductsInifiteScroll collectionId={collection.id} />
       </Suspense>
     </Shell>
   );
