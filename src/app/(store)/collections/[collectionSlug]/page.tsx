@@ -10,7 +10,7 @@ import {
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import { getCollectionPageCached } from "@/lib/storefront/collection-detail";
 import { toTitleCase, unslugify } from "@/lib/utils";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
@@ -33,11 +33,15 @@ export function generateMetadata({ params }: CategoryPageProps) {
 }
 
 async function CategoryPage({ params }: CategoryPageProps) {
-  const collectionSlug = decodeURIComponent(params.collectionSlug).trim();
-  const data = await getCollectionPageCached(collectionSlug);
+  const requestedSlug = decodeURIComponent(params.collectionSlug).trim();
+  const data = await getCollectionPageCached(requestedSlug);
   const collection = data?.collectionsCollection?.edges?.[0]?.node;
 
   if (!collection?.id) return notFound();
+
+  if (requestedSlug !== collection.slug) {
+    redirect(`/collections/${encodeURIComponent(collection.slug)}`);
+  }
 
   return (
     <Shell>

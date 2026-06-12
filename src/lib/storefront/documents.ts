@@ -60,9 +60,20 @@ export const FeaturedProductsQueryDocument = gql(/* GraphQL */ `
 `);
 
 export const CollectionRouteQueryDocument = gql(/* GraphQL */ `
-  query CollectionRouteQuery($collectionSlug: String) {
+  query CollectionRouteQuery(
+    $exactSlug: String
+    $slugified: String
+    $labelPattern: String
+  ) {
     collectionsCollection(
-      filter: { slug: { eq: $collectionSlug } }
+      filter: {
+        or: [
+          { slug: { eq: $exactSlug } }
+          { slug: { eq: $slugified } }
+          { slug: { ilike: $exactSlug } }
+          { label: { ilike: $labelPattern } }
+        ]
+      }
       orderBy: [{ order: DescNullsLast }]
       first: 1
     ) {
@@ -71,6 +82,7 @@ export const CollectionRouteQueryDocument = gql(/* GraphQL */ `
           title
           label
           description
+          slug
           ...CollectionBannerFragment
         }
       }

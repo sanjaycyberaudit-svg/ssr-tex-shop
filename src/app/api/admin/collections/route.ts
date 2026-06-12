@@ -2,10 +2,20 @@ import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import db from "@/lib/supabase/db";
 import { collections } from "@/lib/supabase/schema";
+import { slugify } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+
+function normalizeCollectionSlug(slug: string, label: string) {
+  const fromLabel = slugify(label);
+  const fromSlug = slugify(slug);
+  const slugNeedsFix =
+    /\s/.test(slug) || slug !== slug.toLowerCase() || slug !== fromSlug;
+  if (slugNeedsFix) return fromLabel || fromSlug;
+  return fromSlug || fromLabel;
+}
 
 async function revalidateCollectionPages() {
   revalidatePath("/collections");
@@ -53,7 +63,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const insertValues = {
-      slug: parsed.data.slug,
+      slug: normalizeCollectionSlug(parsed.data.slug, parsed.data.label),
       label: parsed.data.label,
       title: parsed.data.title,
       description: parsed.data.description,
@@ -101,7 +111,7 @@ export async function PUT(request: NextRequest) {
 
   const id = parsed.data.id;
   const setValues = {
-    slug: parsed.data.slug,
+    slug: normalizeCollectionSlug(parsed.data.slug, parsed.data.label),
     label: parsed.data.label,
     title: parsed.data.title,
     description: parsed.data.description,
@@ -138,9 +148,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   const payload = await request.json().catch(() => null);
-  const parsed = z
-    .object({ id: z.string().trim().min(1) })
-    .safeParse(payload);
+  const parsed = z.object({ id: z.string().trim().min(1) }).safeParse(payload);
 
   if (!parsed.success) {
     return NextResponse.json(
