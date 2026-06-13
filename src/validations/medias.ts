@@ -1,4 +1,4 @@
-import { UPLOAD_LIMIT_BYTES } from "@/lib/image/processUpload";
+import { UPLOAD_LIMIT_BYTES } from "@/lib/image/uploadLimits";
 import { FileWithPath } from "react-dropzone";
 import { z } from "zod";
 

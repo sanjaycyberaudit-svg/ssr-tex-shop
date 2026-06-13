@@ -39,6 +39,14 @@ import {
   SelectProducts,
   products,
 } from "@/lib/supabase/schema";
+import {
+  mergeUniqueFiles,
+  prepareImageFilesForDirect,
+  runBulkDraftUpload,
+  type UploadFileFailure,
+  type UploadProgressUpdate,
+  UPLOAD_LIMIT_MB,
+} from "@/lib/admin/client-image-upload";
 import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@urql/next";
@@ -69,17 +77,7 @@ type CreatedDraftProduct = {
   slug: string;
 };
 
-type BulkDraftResponse = {
-  message?: string;
-  created: CreatedDraftProduct[];
-  errors: string[];
-};
-
 const MAX_BULK_FILES = 50;
-const MAX_BULK_REQUEST_BYTES = 3.5 * 1024 * 1024;
-const CLIENT_PREPROCESS_MAX_EDGE = 2400;
-const CLIENT_TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
-const CLIENT_QUALITY_STEPS = [0.9, 0.86, 0.82, 0.78, 0.74] as const;
 const BULK_SHARED_FIELDS = [
   "name",
   "description",
@@ -134,107 +132,6 @@ function hasAnySizeOptionConfigured(options: SizeOptionForm[]) {
   });
 }
 
-function mergeUniqueFiles(prev: File[], next: File[]) {
-  const map = new Map<string, File>();
-  [...prev, ...next].forEach((file) => {
-    const key = `${file.name}:${file.size}:${file.lastModified}`;
-    map.set(key, file);
-  });
-  return Array.from(map.values());
-}
-
-function chunkFilesBySize(files: File[], maxBytes: number): File[][] {
-  if (files.length === 0) return [];
-
-  const chunks: File[][] = [];
-  let currentChunk: File[] = [];
-  let currentSize = 0;
-
-  for (const file of files) {
-    if (currentChunk.length > 0 && currentSize + file.size > maxBytes) {
-      chunks.push(currentChunk);
-      currentChunk = [];
-      currentSize = 0;
-    }
-
-    currentChunk.push(file);
-    currentSize += file.size;
-  }
-
-  if (currentChunk.length > 0) {
-    chunks.push(currentChunk);
-  }
-
-  return chunks;
-}
-
-function replaceExt(fileName: string, ext: string) {
-  return fileName.replace(/\.[^/.]+$/, "") + ext;
-}
-
-async function compressImageForBulk(file: File): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
-  if (file.type === "image/gif") return file;
-
-  const objectUrl = URL.createObjectURL(file);
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Unsupported image format."));
-      img.src = objectUrl;
-    });
-
-    const originalWidth = image.naturalWidth || image.width;
-    const originalHeight = image.naturalHeight || image.height;
-    if (!originalWidth || !originalHeight) return file;
-
-    const scale = Math.min(
-      1,
-      CLIENT_PREPROCESS_MAX_EDGE / Math.max(originalWidth, originalHeight),
-    );
-    const targetWidth = Math.max(1, Math.round(originalWidth * scale));
-    const targetHeight = Math.max(1, Math.round(originalHeight * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-
-    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
-
-    let bestBlob: Blob | null = null;
-    for (const quality of CLIENT_QUALITY_STEPS) {
-      // eslint-disable-next-line no-await-in-loop
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, "image/webp", quality),
-      );
-      if (!blob) continue;
-
-      if (!bestBlob || blob.size < bestBlob.size) {
-        bestBlob = blob;
-      }
-      if (blob.size <= CLIENT_TARGET_IMAGE_BYTES) {
-        bestBlob = blob;
-        break;
-      }
-    }
-
-    if (!bestBlob) return file;
-    if (bestBlob.size >= file.size) return file;
-
-    return new File([bestBlob], replaceExt(file.name, ".webp"), {
-      type: "image/webp",
-      lastModified: file.lastModified,
-    });
-  } catch {
-    return file;
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
-}
-
 type BulkSharedPayload = {
   name: string;
   description: string;
@@ -246,89 +143,6 @@ type BulkSharedPayload = {
   tags: string[];
   stock: number;
 };
-
-type BulkBatchResponse = {
-  payload: BulkDraftResponse;
-  status: number;
-  isRequestTooLarge: boolean;
-};
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function submitBulkBatch(params: {
-  files: File[];
-  selectedMediaIds: string[];
-  includeMediaIds: boolean;
-  shared: BulkSharedPayload;
-}): Promise<BulkBatchResponse> {
-  const formData = new FormData();
-  params.files.forEach((file) => formData.append("files", file));
-  formData.append(
-    "mediaIds",
-    JSON.stringify(params.includeMediaIds ? params.selectedMediaIds : []),
-  );
-  formData.append("shared", JSON.stringify(params.shared));
-
-  let res: Response | null = null;
-  let attempts = 0;
-  while (attempts < 3) {
-    try {
-      // Retry transient bulk failures to reduce random client/network breakage.
-      // eslint-disable-next-line no-await-in-loop
-      res = await fetchWithTimeout("/api/admin/products/bulk-draft", {
-        method: "POST",
-        body: formData,
-        timeoutMs: 45000,
-      });
-      if (res.status < 500) break;
-    } catch {
-      // continue to retry
-    }
-    attempts += 1;
-    if (attempts < 3) {
-      // eslint-disable-next-line no-await-in-loop
-      await delay(400 * attempts);
-    }
-  }
-
-  if (!res) {
-    return {
-      payload: {
-        message: "Bulk request failed after retries. Please retry once.",
-        created: [],
-        errors: ["Bulk request failed after retries. Please retry once."],
-      },
-      status: 503,
-      isRequestTooLarge: false,
-    };
-  }
-
-  const raw = await res.text();
-  let payload: BulkDraftResponse;
-  try {
-    payload = JSON.parse(raw) as BulkDraftResponse;
-  } catch {
-    const isRequestTooLarge =
-      res.status === 413 || /request entity too large/i.test(raw);
-    const fallbackMessage = isRequestTooLarge
-      ? "Bulk upload too large. Auto-splitting and retrying..."
-      : raw.trim() || "Bulk create failed";
-    payload = {
-      message: fallbackMessage,
-      created: [],
-      errors: [fallbackMessage],
-    };
-  }
-
-  const isRequestTooLarge =
-    res.status === 413 ||
-    /request entity too large/i.test(payload.message ?? "") ||
-    /request entity too large/i.test(raw);
-
-  return { payload, status: res.status, isRequestTooLarge };
-}
 
 export const ProductFormQuery = gql(/* GraphQL */ `
   query ProductFormQuery {
@@ -354,10 +168,9 @@ function ProductFrom({ product }: ProductsFormProps) {
   const [isMediaDialogOpen, setIsMediaDialogOpen] = useState(false);
   const [bulkCreated, setBulkCreated] = useState<CreatedDraftProduct[]>([]);
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
-  const [bulkProgress, setBulkProgress] = useState<{
-    currentBatch: number;
-    totalBatches: number;
-  } | null>(null);
+  const [bulkFailures, setBulkFailures] = useState<UploadFileFailure[]>([]);
+  const [bulkProgress, setBulkProgress] =
+    useState<UploadProgressUpdate | null>(null);
   const [bulkPhase, setBulkPhase] = useState<
     "idle" | "preparing" | "uploading" | "creating"
   >("idle");
@@ -496,47 +309,51 @@ function ProductFrom({ product }: ProductsFormProps) {
 
   const bulkOverlay = useMemo(() => {
     if (!inBulkMode || bulkPhase === "idle") return null;
-
-    let percent = 10;
-    let message = "Preparing...";
-    if (bulkPhase === "preparing") {
-      const total = prepareProgress?.total ?? 0;
-      const current = prepareProgress?.current ?? 0;
-      percent = total > 0 ? Math.round((current / total) * 45) : 10;
-      message = `Preparing images ${current}/${total}`;
-    } else if (bulkPhase === "uploading") {
-      const total = bulkProgress?.totalBatches ?? 1;
-      const current = bulkProgress?.currentBatch ?? 1;
-      percent = Math.min(95, Math.round(45 + (current / total) * 45));
-      message = `Uploading batch ${current}/${total}`;
-    } else {
-      const total = bulkProgress?.totalBatches ?? 1;
-      const current = bulkProgress?.currentBatch ?? 1;
-      percent = Math.min(99, Math.round(90 + (current / total) * 9));
-      message = `Creating products ${current}/${total}`;
+    if (bulkProgress) {
+      return {
+        percent: bulkProgress.percent,
+        message: bulkProgress.message,
+      };
     }
-
     return {
-      percent: Math.max(1, Math.min(99, percent)),
-      message,
+      percent: 10,
+      message: "Working...",
     };
-  }, [bulkPhase, bulkProgress, inBulkMode, prepareProgress]);
+  }, [bulkPhase, bulkProgress, inBulkMode]);
 
   const addLocalFiles = async (files: File[]) => {
     if (files.length === 0) return;
     setBulkPhase("preparing");
     setPrepareProgress({ current: 0, total: files.length });
 
-    const processed: File[] = [];
-    for (let index = 0; index < files.length; index += 1) {
-      const file = files[index];
-      // eslint-disable-next-line no-await-in-loop
-      const compressed = await compressImageForBulk(file);
-      processed.push(compressed);
-      setPrepareProgress({ current: index + 1, total: files.length });
+    const { prepared, rejected } = await prepareImageFilesForDirect(
+      files,
+      (current, total) => {
+        setPrepareProgress({ current, total });
+      },
+    );
+
+    if (rejected.length > 0) {
+      toast({
+        title: `${rejected.length} file(s) skipped`,
+        description: rejected
+          .slice(0, 3)
+          .map((entry) => entry.reason)
+          .join(" "),
+        variant: "destructive",
+      });
+      setBulkErrors((prev) => [
+        ...prev,
+        ...rejected.map((entry) => entry.reason),
+      ]);
     }
 
-    setBulkFiles((prev) => mergeUniqueFiles(prev, processed));
+    setBulkFiles((prev) =>
+      mergeUniqueFiles(
+        prev,
+        prepared.map((item) => item.file),
+      ),
+    );
     setPrepareProgress(null);
     setBulkPhase("idle");
   };
@@ -640,84 +457,28 @@ function ProductFrom({ product }: ProductsFormProps) {
       try {
         setBulkCreated([]);
         setBulkErrors([]);
+        setBulkFailures([]);
         setBulkPhase("uploading");
-        const fileBatches = chunkFilesBySize(bulkFiles, MAX_BULK_REQUEST_BYTES);
-        const effectiveBatches = fileBatches.length > 0 ? fileBatches : [[]];
-        setBulkProgress({
-          currentBatch: 1,
-          totalBatches: effectiveBatches.length,
+
+        const result = await runBulkDraftUpload({
+          files: bulkFiles,
+          selectedMediaIds,
+          shared,
+          onProgress: (update) => {
+            setBulkProgress(update);
+            setBulkPhase(
+              update.phase === "complete" ? "creating" : "uploading",
+            );
+          },
         });
 
-        let aggregatedCreated: CreatedDraftProduct[] = [];
-        let aggregatedErrors: string[] = [];
-        const queue: { files: File[]; includeMediaIds: boolean }[] =
-          effectiveBatches.map((files, index) => ({
-            files,
-            includeMediaIds: index === 0,
-          }));
+        setBulkCreated(result.created);
+        setBulkErrors(result.errors);
+        setBulkFailures(result.failures);
 
-        let processedBatches = 0;
-        while (queue.length > 0) {
-          const nextBatch = queue.shift();
-          if (!nextBatch) break;
-
-          setBulkProgress({
-            currentBatch: processedBatches + 1,
-            totalBatches: processedBatches + queue.length + 1,
-          });
-
-          const batchResult = await submitBulkBatch({
-            files: nextBatch.files,
-            selectedMediaIds,
-            includeMediaIds: nextBatch.includeMediaIds,
-            shared,
-          });
-          setBulkPhase("creating");
-
-          if (batchResult.isRequestTooLarge && nextBatch.files.length > 1) {
-            const mid = Math.ceil(nextBatch.files.length / 2);
-            const firstHalf = nextBatch.files.slice(0, mid);
-            const secondHalf = nextBatch.files.slice(mid);
-            queue.unshift(
-              { files: secondHalf, includeMediaIds: false },
-              { files: firstHalf, includeMediaIds: nextBatch.includeMediaIds },
-            );
-            continue;
-          }
-
-          if (batchResult.isRequestTooLarge && nextBatch.files.length === 1) {
-            throw new Error(
-              `${nextBatch.files[0].name} is too large to upload. Please compress this file and retry.`,
-            );
-          }
-
-          aggregatedCreated = [
-            ...aggregatedCreated,
-            ...(batchResult.payload.created ?? []),
-          ];
-          aggregatedErrors = [
-            ...aggregatedErrors,
-            ...(batchResult.payload.errors ?? []),
-          ];
-
-          if (
-            batchResult.status >= 400 &&
-            (batchResult.payload.created?.length ?? 0) === 0
-          ) {
-            throw new Error(
-              batchResult.payload.message || "Bulk create failed",
-            );
-          }
-
-          processedBatches += 1;
-        }
-
-        setBulkCreated(aggregatedCreated);
-        setBulkErrors(aggregatedErrors);
-
-        if (aggregatedCreated.length === 0) {
+        if (result.created.length === 0) {
           throw new Error(
-            aggregatedErrors[0] ||
+            result.errors[0] ||
               "No products were created. Check selected images and shared details.",
           );
         }
@@ -725,12 +486,19 @@ function ProductFrom({ product }: ProductsFormProps) {
         toast({
           title: "Bulk create finished",
           description:
-            aggregatedErrors.length > 0
-              ? `${aggregatedCreated.length} products created with ${aggregatedErrors.length} warning(s).`
-              : `${aggregatedCreated.length} products created.`,
+            result.errors.length > 0
+              ? `${result.created.length} products created with ${result.errors.length} warning(s).`
+              : `${result.created.length} products created.`,
         });
-        setBulkFiles([]);
-        setSelectedMediaIds([]);
+
+        if (result.failures.length === 0) {
+          setBulkFiles([]);
+        } else {
+          setBulkFiles(result.failures.map((entry) => entry.file));
+        }
+        if (result.created.length > 0) {
+          setSelectedMediaIds([]);
+        }
         router.refresh();
       } catch (error) {
         toast({
@@ -1179,9 +947,9 @@ function ProductFrom({ product }: ProductsFormProps) {
               </FormControl>
               <FormDescription>
                 Select up to {MAX_BULK_FILES} images. Each image becomes one
-                product using the shared details above. Any photo size or ratio
-                is fine — portrait and full-length model shots display with the
-                face kept visible on the shop grid.
+                product using the shared details above. Max {UPLOAD_LIMIT_MB} MB
+                per image; uploads go directly to storage, then are optimized on
+                the server.
               </FormDescription>
               <FormMessage />
               <p className="text-xs text-muted-foreground">
@@ -1196,11 +964,7 @@ function ProductFrom({ product }: ProductsFormProps) {
                   message={
                     bulkPhase === "preparing"
                       ? `Preparing images... ${prepareProgress?.current ?? 0}/${prepareProgress?.total ?? 0}`
-                      : bulkPhase === "uploading"
-                        ? `Uploading batch ${bulkProgress?.currentBatch ?? 1}/${bulkProgress?.totalBatches ?? 1}...`
-                        : bulkProgress
-                          ? `Creating products... batch ${bulkProgress.currentBatch}/${bulkProgress.totalBatches}`
-                          : "Creating products..."
+                      : bulkProgress?.message ?? "Creating products..."
                   }
                 />
               ) : null}
@@ -1340,10 +1104,22 @@ function ProductFrom({ product }: ProductsFormProps) {
                 Upload issues
               </h4>
               <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-                {bulkErrors.map((error) => (
-                  <li key={error}>{error}</li>
+                {bulkErrors.map((error, index) => (
+                  <li key={`${error}-${index}`}>{error}</li>
                 ))}
               </ul>
+            </div>
+          ) : null}
+
+          {bulkFailures.length > 0 ? (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
+              <p className="text-sm font-medium text-destructive">
+                {bulkFailures.length} file(s) still need upload
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Failed files remain in the Computer list. Fix or compress them,
+                then click Create again to retry only those files.
+              </p>
             </div>
           ) : null}
         </div>

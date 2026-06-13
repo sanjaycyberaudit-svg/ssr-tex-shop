@@ -8,7 +8,15 @@ import {
   AdminLoadingState,
   LoadingButtonLabel,
 } from "@/components/admin/AdminLoadingState";
-import { fetchWithRetry, fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
+import {
+  type UploadFileFailure,
+  type UploadProgressUpdate,
+  uploadMediaFilesQueue,
+} from "@/lib/admin/client-image-upload";
+import {
+  fetchWithRetry,
+  fetchWithTimeout,
+} from "@/lib/network/fetchWithTimeout";
 import { cn, keytoUrl } from "@/lib/utils";
 
 type MediaSection = "banner" | "product";
@@ -42,20 +50,7 @@ type DragState = {
   startSelection: Set<string>;
 };
 
-type MediaUploadPhase = "idle" | "preparing" | "uploading" | "refreshing";
-
-type MediaUploadProgress = {
-  phase: MediaUploadPhase;
-  current: number;
-  total: number;
-  percent: number;
-  message: string;
-};
-
-const MAX_MEDIA_REQUEST_BYTES = 3.5 * 1024 * 1024;
-const CLIENT_PREPROCESS_MAX_EDGE = 2400;
-const CLIENT_TARGET_IMAGE_BYTES = 2 * 1024 * 1024;
-const CLIENT_QUALITY_STEPS = [0.9, 0.86, 0.82, 0.78, 0.74] as const;
+const MEDIA_LIBRARY_PAGE_SIZE = 48;
 
 function intersects(a: DOMRect, b: DOMRect) {
   return !(
@@ -65,169 +60,6 @@ function intersects(a: DOMRect, b: DOMRect) {
     a.top > b.bottom
   );
 }
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function replaceExt(fileName: string, ext: string) {
-  return fileName.replace(/\.[^/.]+$/, "") + ext;
-}
-
-function chunkFilesBySize(files: File[], maxBytes: number): File[][] {
-  if (files.length === 0) return [];
-  const chunks: File[][] = [];
-  let currentChunk: File[] = [];
-  let currentSize = 0;
-
-  for (const file of files) {
-    if (currentChunk.length > 0 && currentSize + file.size > maxBytes) {
-      chunks.push(currentChunk);
-      currentChunk = [];
-      currentSize = 0;
-    }
-    currentChunk.push(file);
-    currentSize += file.size;
-  }
-
-  if (currentChunk.length > 0) chunks.push(currentChunk);
-  return chunks;
-}
-
-async function compressImageForMediaUpload(file: File): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
-  if (file.type === "image/gif") return file;
-
-  const objectUrl = URL.createObjectURL(file);
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new window.Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("Unsupported image format."));
-      img.src = objectUrl;
-    });
-
-    const originalWidth = image.naturalWidth || image.width;
-    const originalHeight = image.naturalHeight || image.height;
-    if (!originalWidth || !originalHeight) return file;
-
-    const scale = Math.min(
-      1,
-      CLIENT_PREPROCESS_MAX_EDGE / Math.max(originalWidth, originalHeight),
-    );
-    const targetWidth = Math.max(1, Math.round(originalWidth * scale));
-    const targetHeight = Math.max(1, Math.round(originalHeight * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
-
-    let bestBlob: Blob | null = null;
-    for (const quality of CLIENT_QUALITY_STEPS) {
-      // eslint-disable-next-line no-await-in-loop
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, "image/webp", quality),
-      );
-      if (!blob) continue;
-      if (!bestBlob || blob.size < bestBlob.size) bestBlob = blob;
-      if (blob.size <= CLIENT_TARGET_IMAGE_BYTES) {
-        bestBlob = blob;
-        break;
-      }
-    }
-
-    if (!bestBlob) return file;
-    if (bestBlob.size >= file.size) return file;
-
-    return new File([bestBlob], replaceExt(file.name, ".webp"), {
-      type: "image/webp",
-      lastModified: file.lastModified,
-    });
-  } catch {
-    return file;
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
-}
-
-async function uploadMediaBatch(files: File[]) {
-  const formData = new FormData();
-  files.forEach((file, index) => formData.append(`files[${index}]`, file));
-
-  let response: Response | null = null;
-  let attempts = 0;
-  while (attempts < 3) {
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      response = await fetchWithTimeout("/api/medias", {
-        method: "POST",
-        body: formData,
-        timeoutMs: 45000,
-      });
-      if (response.status < 500) break;
-    } catch {
-      // transient failure, retry
-    }
-    attempts += 1;
-    if (attempts < 3) {
-      // eslint-disable-next-line no-await-in-loop
-      await delay(400 * attempts);
-    }
-  }
-
-  if (!response) {
-    return {
-      status: 503,
-      uploaded: [] as string[],
-      errors: ["Upload request failed after retries."],
-      message: "Upload request failed after retries.",
-      isRequestTooLarge: false,
-    };
-  }
-
-  const raw = await response.text();
-  let payload:
-    | string[]
-    | { message?: string; uploaded?: string[]; errors?: string[] }
-    | null = null;
-  try {
-    payload = JSON.parse(raw) as
-      | string[]
-      | { message?: string; uploaded?: string[]; errors?: string[] };
-  } catch {
-    payload = null;
-  }
-
-  const isRequestTooLarge =
-    response.status === 413 || /request entity too large/i.test(raw);
-
-  if (Array.isArray(payload)) {
-    return {
-      status: response.status,
-      uploaded: payload,
-      errors: [],
-      message: "",
-      isRequestTooLarge,
-    };
-  }
-
-  const uploaded = payload?.uploaded ?? [];
-  const errors = payload?.errors ?? [];
-  const message = payload?.message ?? "";
-
-  return {
-    status: response.status,
-    uploaded,
-    errors,
-    message,
-    isRequestTooLarge,
-  };
-}
-
-const MEDIA_LIBRARY_PAGE_SIZE = 48;
 
 export function AdminMediaManager() {
   const { toast } = useToast();
@@ -243,7 +75,8 @@ export function AdminMediaManager() {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [counts, setCounts] = useState({ banner: 0, product: 0 });
   const [uploadProgress, setUploadProgress] =
-    useState<MediaUploadProgress | null>(null);
+    useState<UploadProgressUpdate | null>(null);
+  const [failedUploads, setFailedUploads] = useState<UploadFileFailure[]>([]);
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -296,12 +129,11 @@ export function AdminMediaManager() {
       setPage(payload.pageInfo?.page ?? targetPage);
       setHasNextPage(Boolean(payload.pageInfo?.hasNextPage));
       setMedias((prev) =>
-        reset ? (payload.medias ?? []) : [...prev, ...(payload.medias ?? [])],
+        reset ? payload.medias ?? [] : [...prev, ...(payload.medias ?? [])],
       );
       setLoadError(null);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Please retry.";
+      const message = error instanceof Error ? error.message : "Please retry.";
       setLoadError(message);
       if (reset) {
         setMedias([]);
@@ -380,117 +212,62 @@ export function AdminMediaManager() {
     setSelectedIds([...merged]);
   }, [drag, sectionItems]);
 
-  const onUploadFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const selectedFiles = Array.from(files);
+  const runUpload = async (files: File[], options?: { retry?: boolean }) => {
+    if (files.length === 0) return;
 
     setIsUploading(true);
+    setUploadProgress({
+      phase: "validating",
+      current: 0,
+      total: files.length,
+      percent: 1,
+      message: options?.retry
+        ? `Retrying ${files.length} failed image(s)...`
+        : `Checking ${files.length} image(s)...`,
+    });
+
     try {
-      setUploadProgress({
-        phase: "preparing",
-        current: 0,
-        total: selectedFiles.length,
-        percent: 1,
-        message: `Preparing images 0/${selectedFiles.length}`,
+      const result = await uploadMediaFilesQueue(files, {
+        onProgress: setUploadProgress,
+        skipPrepare: options?.retry,
+        preparedItems: options?.retry
+          ? files.map((file) => ({ sourceName: file.name, file }))
+          : undefined,
       });
 
-      const preparedFiles: File[] = [];
-      for (let index = 0; index < selectedFiles.length; index += 1) {
-        // eslint-disable-next-line no-await-in-loop
-        const compressed = await compressImageForMediaUpload(
-          selectedFiles[index],
-        );
-        preparedFiles.push(compressed);
-        const prepPercent = Math.max(
-          1,
-          Math.round(((index + 1) / selectedFiles.length) * 45),
-        );
-        setUploadProgress({
-          phase: "preparing",
-          current: index + 1,
-          total: selectedFiles.length,
-          percent: prepPercent,
-          message: `Preparing images ${index + 1}/${selectedFiles.length}`,
-        });
-      }
-
-      const initialBatches = chunkFilesBySize(
-        preparedFiles,
-        MAX_MEDIA_REQUEST_BYTES,
-      );
-      const queue = initialBatches.length > 0 ? [...initialBatches] : [[]];
-      let processedBatches = 0;
-      let uploadedCount = 0;
-      const errors: string[] = [];
-
-      while (queue.length > 0) {
-        const filesBatch = queue.shift();
-        if (!filesBatch) break;
-        const totalNow = processedBatches + queue.length + 1;
-        const currentNow = processedBatches + 1;
-        const uploadPercent = Math.min(
-          95,
-          Math.round(45 + (currentNow / Math.max(1, totalNow)) * 45),
-        );
-        setUploadProgress({
-          phase: "uploading",
-          current: currentNow,
-          total: totalNow,
-          percent: uploadPercent,
-          message: `Uploading batch ${currentNow}/${totalNow}`,
-        });
-
-        // eslint-disable-next-line no-await-in-loop
-        const result = await uploadMediaBatch(filesBatch);
-        if (result.isRequestTooLarge && filesBatch.length > 1) {
-          const mid = Math.ceil(filesBatch.length / 2);
-          const firstHalf = filesBatch.slice(0, mid);
-          const secondHalf = filesBatch.slice(mid);
-          queue.unshift(secondHalf, firstHalf);
-          continue;
-        }
-
-        if (result.isRequestTooLarge && filesBatch.length === 1) {
-          throw new Error(
-            `${filesBatch[0].name} is too large to upload. Compress this image and retry.`,
-          );
-        }
-
-        if (
-          result.status >= 400 &&
-          result.uploaded.length === 0 &&
-          (result.errors.length === 0 || result.message)
-        ) {
-          throw new Error(result.message || "Media upload failed.");
-        }
-
-        uploadedCount += result.uploaded.length;
-        errors.push(...result.errors);
-        processedBatches += 1;
-      }
-
       setUploadProgress({
-        phase: "refreshing",
-        current: 1,
-        total: 1,
+        phase: "complete",
+        current: files.length,
+        total: files.length,
         percent: 98,
         message: "Refreshing media library...",
       });
       await loadLibrary({ reset: true, section: activeSection });
 
-      if (uploadedCount === 0) {
-        throw new Error(errors[0] || "No images were uploaded.");
+      const validationMessages = result.validationErrors.map(
+        (entry) => entry.reason,
+      );
+      const allIssues = [
+        ...validationMessages,
+        ...result.failures.map((entry) => entry.reason),
+      ];
+
+      setFailedUploads(result.failures);
+
+      if (result.uploadedCount === 0) {
+        throw new Error(allIssues[0] || "No images were uploaded.");
       }
 
       toast({
         title: "Upload complete",
         description:
-          errors.length > 0
-            ? `${uploadedCount} image(s) uploaded with ${errors.length} warning(s).`
-            : `${uploadedCount} image(s) uploaded successfully.`,
+          allIssues.length > 0
+            ? `${result.uploadedCount} uploaded, ${allIssues.length} skipped or failed.`
+            : `${result.uploadedCount} image(s) uploaded successfully.`,
       });
-      if (errors.length > 0) {
-        console.warn("[media-upload] partial errors:", errors);
+
+      if (allIssues.length > 0) {
+        console.warn("[media-upload] issues:", allIssues);
       }
     } catch (error) {
       toast({
@@ -503,6 +280,19 @@ export function AdminMediaManager() {
       setUploadProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const onUploadFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setFailedUploads([]);
+    await runUpload(Array.from(files));
+  };
+
+  const onRetryFailedUploads = async () => {
+    if (failedUploads.length === 0) return;
+    const retryFiles = failedUploads.map((entry) => entry.file);
+    setFailedUploads([]);
+    await runUpload(retryFiles, { retry: true });
   };
 
   const onDeleteSelected = async () => {
@@ -626,6 +416,16 @@ export function AdminMediaManager() {
               idleText="Upload Images"
             />
           </Button>
+          {failedUploads.length > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void onRetryFailedUploads()}
+              disabled={isUploading}
+            >
+              Retry failed ({failedUploads.length})
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"
@@ -659,8 +459,22 @@ export function AdminMediaManager() {
 
       <p className="text-xs text-muted-foreground">
         Tip: click to multi-select. Drag on empty space to box-select many
-        images quickly.
+        images quickly. Max 15 MB per image; uploads go directly to storage,
+        then are optimized on the server.
       </p>
+
+      {failedUploads.length > 0 ? (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
+          <p className="text-sm font-medium text-destructive">
+            {failedUploads.length} image(s) failed to upload
+          </p>
+          <ul className="mt-2 max-h-32 list-disc space-y-1 overflow-y-auto pl-5 text-xs text-muted-foreground">
+            {failedUploads.map((entry) => (
+              <li key={`${entry.fileName}:${entry.reason}`}>{entry.reason}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <input
         ref={fileInputRef}
@@ -702,61 +516,63 @@ export function AdminMediaManager() {
               </p>
             ) : null}
             {sectionItems.map((item) => {
-            const selected = selectedIds.includes(item.id);
-            return (
-              <button
-                key={item.id}
-                data-media-id={item.id}
-                ref={(el) => {
-                  itemRefs.current[item.id] = el;
-                }}
-                type="button"
-                className={cn(
-                  "relative overflow-hidden rounded-md border text-left",
-                  selected ? "ring-2 ring-primary ring-offset-2" : "",
-                )}
-                onClick={(event) => {
-                  const multi = event.ctrlKey || event.metaKey;
-                  setSelectedIds((prev) => {
-                    if (multi) {
-                      return prev.includes(item.id)
-                        ? prev.filter((id) => id !== item.id)
-                        : [...prev, item.id];
-                    }
-                    return prev.includes(item.id) && prev.length === 1
-                      ? []
-                      : [item.id];
-                  });
-                }}
-              >
-                <Image
-                  src={keytoUrl(item.key)}
-                  alt={item.alt || "media"}
-                  width={120}
-                  height={120}
-                  className="h-[120px] w-full object-cover"
-                />
-                <div className="space-y-0.5 bg-background/95 p-1.5 text-[10px]">
-                  <p className="truncate font-medium">{item.alt || "image"}</p>
-                  <p className="text-muted-foreground">
-                    Products: {item.usage.productCount}
-                  </p>
-                  {activeSection === "banner" ? (
-                    <p className="text-muted-foreground">
-                      Slides: {item.usage.bannerSlideCount}
+              const selected = selectedIds.includes(item.id);
+              return (
+                <button
+                  key={item.id}
+                  data-media-id={item.id}
+                  ref={(el) => {
+                    itemRefs.current[item.id] = el;
+                  }}
+                  type="button"
+                  className={cn(
+                    "relative overflow-hidden rounded-md border text-left",
+                    selected ? "ring-2 ring-primary ring-offset-2" : "",
+                  )}
+                  onClick={(event) => {
+                    const multi = event.ctrlKey || event.metaKey;
+                    setSelectedIds((prev) => {
+                      if (multi) {
+                        return prev.includes(item.id)
+                          ? prev.filter((id) => id !== item.id)
+                          : [...prev, item.id];
+                      }
+                      return prev.includes(item.id) && prev.length === 1
+                        ? []
+                        : [item.id];
+                    });
+                  }}
+                >
+                  <Image
+                    src={keytoUrl(item.key)}
+                    alt={item.alt || "media"}
+                    width={120}
+                    height={120}
+                    className="h-[120px] w-full object-cover"
+                  />
+                  <div className="space-y-0.5 bg-background/95 p-1.5 text-[10px]">
+                    <p className="truncate font-medium">
+                      {item.alt || "image"}
                     </p>
-                  ) : null}
-                </div>
-              </button>
-            );
-          })}
+                    <p className="text-muted-foreground">
+                      Products: {item.usage.productCount}
+                    </p>
+                    {activeSection === "banner" ? (
+                      <p className="text-muted-foreground">
+                        Slides: {item.usage.bannerSlideCount}
+                      </p>
+                    ) : null}
+                  </div>
+                </button>
+              );
+            })}
 
-          {dragOverlayStyle ? (
-            <div
-              className="pointer-events-none absolute z-20 border border-primary/70 bg-primary/15"
-              style={dragOverlayStyle}
-            />
-          ) : null}
+            {dragOverlayStyle ? (
+              <div
+                className="pointer-events-none absolute z-20 border border-primary/70 bg-primary/15"
+                style={dragOverlayStyle}
+              />
+            ) : null}
           </div>
 
           {hasNextPage ? (

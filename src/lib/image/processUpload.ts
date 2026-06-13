@@ -1,7 +1,7 @@
 import sharp from "sharp";
+import { UPLOAD_LIMIT_BYTES } from "./uploadLimits";
 
-/** Max size before processing (phone camera originals). */
-export const UPLOAD_LIMIT_BYTES = 15 * 1024 * 1024;
+export { UPLOAD_LIMIT_BYTES } from "./uploadLimits";
 
 /** Max width stored in S3 — detail/zoom; Next.js Image serves smaller sizes. */
 export const MAX_IMAGE_WIDTH = 2000;

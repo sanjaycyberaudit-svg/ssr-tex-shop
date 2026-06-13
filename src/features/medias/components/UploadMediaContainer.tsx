@@ -1,11 +1,16 @@
 "use client";
 import { Icons } from "@/components/layouts/icons";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import { gql } from "@/gql";
+import {
+  UPLOAD_LIMIT_BYTES,
+  uploadMediaFilesQueue,
+} from "@/lib/admin/client-image-upload";
 import { FileWithPreview } from "@/types";
 import { useQuery } from "@urql/next";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import ImagesGrid from "./ImageGrid";
 import ImageGridSkeleton from "./ImageGridSkeleton";
@@ -15,13 +20,18 @@ interface UploadMediaContainerProps {
   defaultImageId?: string;
   selectedImageIds?: string[];
 }
+
 function UploadMediaContainer({
   onClickItemsHandler,
   defaultImageId,
   selectedImageIds,
 }: UploadMediaContainerProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [uploadingImages, setUploadingImages] = useState<FileWithPreview[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const previewUrlsRef = useRef<string[]>([]);
   const [lastCursor, setLastCursor] = React.useState<string | undefined>(
     undefined,
   );
@@ -40,58 +50,90 @@ function UploadMediaContainer({
   };
 
   const onDrop = async (acceptedFiles: FileWithPath[]) => {
+    if (acceptedFiles.length === 0 || isUploading) return;
+
     const uploadFiles = acceptedFiles.map((file) =>
       Object.assign(file, {
         preview: URL.createObjectURL(file),
       }),
     );
+    previewUrlsRef.current.push(...uploadFiles.map((file) => file.preview));
 
-    setUploadingImages([...uploadingImages, ...uploadFiles]);
-
-    const formData = new FormData();
-    for (let i = 0; i < uploadFiles.length; i++) {
-      formData.append(`files[${i}]`, uploadFiles[i]);
-    }
+    setUploadingImages((prev) => [...prev, ...uploadFiles]);
+    setIsUploading(true);
+    setUploadMessage(`Uploading 0/${acceptedFiles.length}...`);
 
     try {
-      const response = await fetch("/api/medias", {
-        method: "POST",
-        body: formData,
+      const result = await uploadMediaFilesQueue(acceptedFiles, {
+        onProgress: (update) => {
+          setUploadMessage(update.message);
+        },
       });
 
-      const payload = (await response.json()) as
-        | string[]
-        | { message?: string; uploaded?: string[]; errors?: string[] };
-
-      const uploadedNames = Array.isArray(payload)
-        ? payload
-        : payload.uploaded ?? [];
-
-      if (uploadedNames.length > 0) {
+      const uploadedNames = new Set(result.uploadedNames);
+      if (uploadedNames.size > 0) {
         refetch({ requestPolicy: "network-only" });
         setUploadingImages((prev) =>
-          prev.filter((item) => !uploadedNames.includes(item.name)),
+          prev.filter((item) => !uploadedNames.has(item.name)),
         );
       }
 
-      if (!response.ok && !Array.isArray(payload) && payload.message) {
-        console.error(payload.message, payload.errors);
+      const issueCount =
+        result.validationErrors.length + result.failures.length;
+
+      if (result.uploadedCount > 0) {
+        toast({
+          title: "Upload complete",
+          description:
+            issueCount > 0
+              ? `${result.uploadedCount} uploaded, ${issueCount} failed or skipped.`
+              : `${result.uploadedCount} image(s) uploaded.`,
+        });
+      } else {
+        toast({
+          title: "Upload failed",
+          description:
+            result.validationErrors[0]?.reason ??
+            result.failures[0]?.reason ??
+            "No images were uploaded.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      console.error("Error uploading files:", error);
+
+      if (issueCount > 0) {
+        console.warn("[media-picker-upload] issues:", [
+          ...result.validationErrors.map((entry) => entry.reason),
+          ...result.failures.map((entry) => entry.reason),
+        ]);
+      }
+    } catch (uploadError) {
+      toast({
+        title: "Upload failed",
+        description:
+          uploadError instanceof Error
+            ? uploadError.message
+            : "Please retry.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadMessage(null);
     }
   };
 
   useEffect(() => {
-    return () =>
-      uploadingImages.forEach((file) => URL.revokeObjectURL(file.preview));
+    return () => {
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      previewUrlsRef.current = [];
+    };
   }, []);
 
   const { getRootProps, getInputProps, open, isDragActive } = useDropzone({
     accept: { "image/*": [] },
-    maxSize: 15 * 1024 * 1024,
-    onDrop,
+    maxSize: UPLOAD_LIMIT_BYTES,
     multiple: true,
+    disabled: isUploading,
+    onDrop,
     noClick: true,
     noKeyboard: true,
   });
@@ -99,6 +141,10 @@ function UploadMediaContainer({
   return (
     <div>
       {error && <p>Oh no... {error.message}</p>}
+
+      {uploadMessage ? (
+        <p className="mb-2 text-xs text-muted-foreground">{uploadMessage}</p>
+      ) : null}
 
       {fetching && <ImageGridSkeleton />}
 
@@ -109,7 +155,7 @@ function UploadMediaContainer({
               <ImagesGrid
                 medias={medias.edges}
                 AddMediaButtonComponent={
-                  <AddMediaButtonComponent open={open} />
+                  <AddMediaButtonComponent open={open} disabled={isUploading} />
                 }
                 uploadingFiles={uploadingImages}
                 onClickHandler={onClickItemsHandler}
@@ -143,11 +189,18 @@ function UploadMediaContainer({
   );
 }
 
-const AddMediaButtonComponent = ({ open }: { open: () => void }) => {
+const AddMediaButtonComponent = ({
+  open,
+  disabled,
+}: {
+  open: () => void;
+  disabled?: boolean;
+}) => {
   return (
     <button
       onClick={open}
-      className=" h-[120px] w-[120px] border-2 border-dashed border-zinc-400 text-zinc-400 flex flex-col justify-center items-center"
+      disabled={disabled}
+      className=" h-[120px] w-[120px] border-2 border-dashed border-zinc-400 text-zinc-400 flex flex-col justify-center items-center disabled:opacity-50"
     >
       <Icons.add size={32} />
     </button>
