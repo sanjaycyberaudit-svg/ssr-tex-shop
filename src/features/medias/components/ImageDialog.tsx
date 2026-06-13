@@ -55,16 +55,18 @@ function ImageDialog({
           </div>
         </DialogTrigger>
 
-        <DialogContent className="max-w-[1080px] min-h-full md:min-h-[480px]">
-          <DialogHeader>
-            <DialogTitle className="mb-5">Image Gallery</DialogTitle>
+        <DialogContent className="flex max-h-[90vh] max-w-[1080px] flex-col overflow-hidden sm:max-w-[1080px]">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>Image Gallery</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-hidden">
             <Suspense>
               <UploadMediaContainer
                 onClickItemsHandler={onClickHandler}
                 defaultImageId={defaultValue}
               />
             </Suspense>
-          </DialogHeader>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

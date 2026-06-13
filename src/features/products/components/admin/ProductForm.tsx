@@ -169,8 +169,9 @@ function ProductFrom({ product }: ProductsFormProps) {
   const [bulkCreated, setBulkCreated] = useState<CreatedDraftProduct[]>([]);
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
   const [bulkFailures, setBulkFailures] = useState<UploadFileFailure[]>([]);
-  const [bulkProgress, setBulkProgress] =
-    useState<UploadProgressUpdate | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<UploadProgressUpdate | null>(
+    null,
+  );
   const [bulkPhase, setBulkPhase] = useState<
     "idle" | "preparing" | "uploading" | "creating"
   >("idle");
@@ -1053,19 +1054,19 @@ function ProductFrom({ product }: ProductsFormProps) {
               open={isMediaDialogOpen}
               onOpenChange={setIsMediaDialogOpen}
             >
-              <DialogContent className="max-w-[1080px] min-h-full md:min-h-[480px]">
-                <DialogHeader>
-                  <DialogTitle className="mb-5">
-                    Select images from Media Library
-                  </DialogTitle>
+              <DialogContent className="flex max-h-[90vh] max-w-[1080px] flex-col overflow-hidden sm:max-w-[1080px]">
+                <DialogHeader className="shrink-0">
+                  <DialogTitle>Select images from Media Library</DialogTitle>
                 </DialogHeader>
-                <Suspense>
-                  <UploadMediaContainer
-                    onClickItemsHandler={toggleSelectedMediaId}
-                    selectedImageIds={selectedMediaIds}
-                  />
-                </Suspense>
-                <div className="flex items-center justify-between pt-2">
+                <div className="min-h-0 flex-1 overflow-hidden">
+                  <Suspense>
+                    <UploadMediaContainer
+                      onClickItemsHandler={toggleSelectedMediaId}
+                      selectedImageIds={selectedMediaIds}
+                    />
+                  </Suspense>
+                </div>
+                <div className="flex shrink-0 items-center justify-between border-t pt-3">
                   <p className="text-xs text-muted-foreground">
                     Selected from media: {selectedMediaIds.length}
                   </p>

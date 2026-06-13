@@ -1,6 +1,7 @@
 "use client";
 import { Icons } from "@/components/layouts/icons";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/use-toast";
 import { gql } from "@/gql";
 import {
@@ -9,8 +10,7 @@ import {
 } from "@/lib/admin/client-image-upload";
 import { FileWithPreview } from "@/types";
 import { useQuery } from "@urql/next";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import ImagesGrid from "./ImageGrid";
 import ImageGridSkeleton from "./ImageGridSkeleton";
@@ -21,33 +21,114 @@ interface UploadMediaContainerProps {
   selectedImageIds?: string[];
 }
 
+type MediaEdge = {
+  node: {
+    id: string;
+    key: string;
+    alt: string;
+  };
+};
+
+const GALLERY_PAGE_SIZE = 40;
+
 function UploadMediaContainer({
   onClickItemsHandler,
   defaultImageId,
   selectedImageIds,
 }: UploadMediaContainerProps) {
-  const router = useRouter();
   const { toast } = useToast();
   const [uploadingImages, setUploadingImages] = useState<FileWithPreview[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const previewUrlsRef = useRef<string[]>([]);
-  const [lastCursor, setLastCursor] = React.useState<string | undefined>(
-    undefined,
-  );
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const [pageCursor, setPageCursor] = useState<string | undefined>(undefined);
+  const [accumulatedEdges, setAccumulatedEdges] = useState<MediaEdge[]>([]);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const pendingCursorRef = useRef<string | null>(null);
+
   const [{ data, fetching, error }, refetch] = useQuery({
     query: MediasPageContentQuery,
     variables: {
-      first: 16,
-      after: lastCursor,
+      first: GALLERY_PAGE_SIZE,
+      after: pageCursor,
     },
   });
 
   const medias = data?.mediasCollection;
+  const isInitialLoading = fetching && accumulatedEdges.length === 0;
 
-  const openMediaDetails = (mediaId: string) => {
-    router.push(`/admin/medias/${mediaId}`);
-  };
+  const resetGallery = useCallback(() => {
+    pendingCursorRef.current = null;
+    setPageCursor(undefined);
+    setAccumulatedEdges([]);
+    setHasNextPage(false);
+    setIsLoadingMore(false);
+  }, []);
+
+  useEffect(() => {
+    if (!medias) return;
+
+    setHasNextPage(Boolean(medias.pageInfo.hasNextPage));
+
+    setAccumulatedEdges((prev) => {
+      const incoming = medias.edges as MediaEdge[];
+      if (pageCursor === undefined) {
+        return incoming;
+      }
+
+      const existingIds = new Set(prev.map((edge) => edge.node.id));
+      const merged = [...prev];
+      incoming.forEach((edge) => {
+        if (!existingIds.has(edge.node.id)) {
+          merged.push(edge);
+        }
+      });
+      return merged;
+    });
+
+    setIsLoadingMore(false);
+    pendingCursorRef.current = null;
+  }, [medias, pageCursor]);
+
+  const loadMore = useCallback(() => {
+    if (
+      !medias?.pageInfo.hasNextPage ||
+      fetching ||
+      isLoadingMore ||
+      pendingCursorRef.current
+    ) {
+      return;
+    }
+
+    const nextCursor = medias.pageInfo.endCursor;
+    if (!nextCursor) return;
+
+    pendingCursorRef.current = nextCursor;
+    setIsLoadingMore(true);
+    setPageCursor(nextCursor);
+  }, [fetching, isLoadingMore, medias]);
+
+  useEffect(() => {
+    const root = scrollRef.current;
+    const sentinel = loadMoreSentinelRef.current;
+    if (!root || !sentinel || !hasNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadMore();
+        }
+      },
+      { root, rootMargin: "160px", threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, loadMore, accumulatedEdges.length]);
 
   const onDrop = async (acceptedFiles: FileWithPath[]) => {
     if (acceptedFiles.length === 0 || isUploading) return;
@@ -72,6 +153,7 @@ function UploadMediaContainer({
 
       const uploadedNames = new Set(result.uploadedNames);
       if (uploadedNames.size > 0) {
+        resetGallery();
         refetch({ requestPolicy: "network-only" });
         setUploadingImages((prev) =>
           prev.filter((item) => !uploadedNames.has(item.name)),
@@ -110,9 +192,7 @@ function UploadMediaContainer({
       toast({
         title: "Upload failed",
         description:
-          uploadError instanceof Error
-            ? uploadError.message
-            : "Please retry.",
+          uploadError instanceof Error ? uploadError.message : "Please retry.",
         variant: "destructive",
       });
     } finally {
@@ -139,52 +219,81 @@ function UploadMediaContainer({
   });
 
   return (
-    <div>
-      {error && <p>Oh no... {error.message}</p>}
+    <div className="flex min-h-0 flex-col">
+      {error ? (
+        <p className="mb-2 text-sm text-destructive">Could not load images.</p>
+      ) : null}
 
       {uploadMessage ? (
         <p className="mb-2 text-xs text-muted-foreground">{uploadMessage}</p>
       ) : null}
 
-      {fetching && <ImageGridSkeleton />}
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>
+          {accumulatedEdges.length > 0
+            ? `${accumulatedEdges.length} image(s) loaded`
+            : "Loading gallery..."}
+        </span>
+        {hasNextPage ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            disabled={fetching || isLoadingMore}
+            onClick={loadMore}
+          >
+            Load more
+          </Button>
+        ) : null}
+      </div>
 
-      {medias && (
-        <>
-          <div className="border border-dot border-zinc-300 p-5">
-            <div {...getRootProps()} className="dropzone-container">
-              <ImagesGrid
-                medias={medias.edges}
-                AddMediaButtonComponent={
-                  <AddMediaButtonComponent open={open} disabled={isUploading} />
-                }
-                uploadingFiles={uploadingImages}
-                onClickHandler={onClickItemsHandler}
-                defaultImageId={defaultImageId}
-                selectedImageIds={selectedImageIds}
-              />
+      <div
+        ref={scrollRef}
+        className="max-h-[min(62vh,560px)] overflow-y-auto rounded-md border border-zinc-300 p-4"
+      >
+        {isInitialLoading ? <ImageGridSkeleton /> : null}
 
-              {medias.pageInfo.hasNextPage ? (
-                <div className="flex justify-center content-center">
-                  <Button
-                    onClick={() => {
-                      setLastCursor(medias.pageInfo.endCursor ?? undefined);
-                    }}
-                  >
-                    Load more.
+        {!isInitialLoading ? (
+          <div {...getRootProps()} className="dropzone-container relative">
+            <ImagesGrid
+              medias={accumulatedEdges}
+              AddMediaButtonComponent={
+                <AddMediaButtonComponent open={open} disabled={isUploading} />
+              }
+              uploadingFiles={uploadingImages}
+              onClickHandler={onClickItemsHandler}
+              defaultImageId={defaultImageId}
+              selectedImageIds={selectedImageIds}
+            />
+
+            {hasNextPage ? (
+              <div
+                ref={loadMoreSentinelRef}
+                className="flex justify-center py-4"
+              >
+                {isLoadingMore || fetching ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Spinner />
+                    Loading more...
+                  </div>
+                ) : (
+                  <Button type="button" variant="outline" size="sm" onClick={loadMore}>
+                    Load more images
                   </Button>
-                </div>
-              ) : null}
+                )}
+              </div>
+            ) : null}
 
-              <input {...getInputProps()} />
-              {isDragActive ? (
-                <div className="w-full h-full min-h-[320px] flex items-center justify-center z-50">
-                  Drop the Image here to upload the image.
-                </div>
-              ) : null}
-            </div>
+            <input {...getInputProps()} />
+            {isDragActive ? (
+              <div className="absolute inset-0 z-50 flex min-h-[240px] items-center justify-center rounded-md bg-background/80">
+                Drop images here to upload.
+              </div>
+            ) : null}
           </div>
-        </>
-      )}
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -198,9 +307,10 @@ const AddMediaButtonComponent = ({
 }) => {
   return (
     <button
+      type="button"
       onClick={open}
       disabled={disabled}
-      className=" h-[120px] w-[120px] border-2 border-dashed border-zinc-400 text-zinc-400 flex flex-col justify-center items-center disabled:opacity-50"
+      className="flex h-[120px] w-[120px] flex-col items-center justify-center border-2 border-dashed border-zinc-400 text-zinc-400 disabled:opacity-50"
     >
       <Icons.add size={32} />
     </button>
