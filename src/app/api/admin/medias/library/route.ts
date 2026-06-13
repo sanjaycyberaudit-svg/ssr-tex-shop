@@ -1,15 +1,14 @@
+import {
+  ADMIN_MEDIA_PAGE_SIZE,
+  fetchMediaLibraryPage,
+  invalidateAdminMediaCache,
+  loadMediaUsageForDelete,
+  type MediaSection,
+} from "@/lib/admin/media-library";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import db from "@/lib/supabase/db";
-import {
-  apiSettings,
-  collections,
-  medias,
-  orderLines,
-  productMedias,
-  products,
-  testimonials,
-} from "@/lib/supabase/schema";
-import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import { apiSettings, medias, orderLines, products } from "@/lib/supabase/schema";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -19,28 +18,6 @@ const DELETE_SCHEMA = z.object({
   mediaIds: z.array(z.string().trim().min(1)).min(1),
 });
 
-type Section = "banner" | "product";
-
-type MediaUsage = {
-  bannerSlideCount: number;
-  productCount: number;
-  collectionCount: number;
-  testimonialCount: number;
-  productIds: string[];
-  section: Section;
-};
-
-function parseBannerMediaIds(settingValue: unknown): Set<string> {
-  const value = (settingValue ?? {}) as Record<string, unknown>;
-  const slides = Array.isArray(value.slides) ? value.slides : [];
-  const ids = slides
-    .map((slide) =>
-      String((slide as Record<string, unknown>).imageMediaId ?? "").trim(),
-    )
-    .filter(Boolean);
-  return new Set(ids);
-}
-
 async function ensureAdmin() {
   const user = await getSessionUser();
   const admin = await isAdminUser(user);
@@ -48,140 +25,35 @@ async function ensureAdmin() {
   return user;
 }
 
-async function loadUsageForMediaIds(mediaIds: string[]) {
-  const [
-    bannerSetting,
-    productRows,
-    productMediaRows,
-    collectionRows,
-    testimonialRows,
-  ] = await Promise.all([
-    db.query.apiSettings.findFirst({
-      where: eq(apiSettings.key, "home_banner_slides"),
-    }),
-    db
-      .select({ productId: products.id, mediaId: products.featuredImageId })
-      .from(products)
-      .where(inArray(products.featuredImageId, mediaIds)),
-    db
-      .select({
-        productId: productMedias.productId,
-        mediaId: productMedias.mediaId,
-      })
-      .from(productMedias)
-      .where(inArray(productMedias.mediaId, mediaIds)),
-    db
-      .select({ mediaId: collections.featuredImageId })
-      .from(collections)
-      .where(inArray(collections.featuredImageId, mediaIds)),
-    db
-      .select({ mediaId: testimonials.featuredImageId })
-      .from(testimonials)
-      .where(
-        and(
-          isNotNull(testimonials.featuredImageId),
-          inArray(testimonials.featuredImageId, mediaIds),
-        ),
-      ),
-  ]);
-
-  const bannerMediaIds = parseBannerMediaIds(bannerSetting?.value);
-  const bannerSlideCountMap = new Map<string, number>();
-  const slides = Array.isArray(
-    (bannerSetting?.value as Record<string, unknown>)?.slides,
-  )
-    ? ((bannerSetting?.value as Record<string, unknown>).slides as unknown[]) ??
-      []
-    : [];
-  for (const slide of slides) {
-    const id = String(
-      (slide as Record<string, unknown>).imageMediaId ?? "",
-    ).trim();
-    if (!id) continue;
-    bannerSlideCountMap.set(id, (bannerSlideCountMap.get(id) ?? 0) + 1);
-  }
-
-  const productIdsByMedia = new Map<string, Set<string>>();
-  for (const row of productRows) {
-    const set = productIdsByMedia.get(row.mediaId) ?? new Set<string>();
-    set.add(row.productId);
-    productIdsByMedia.set(row.mediaId, set);
-  }
-  for (const row of productMediaRows) {
-    const set = productIdsByMedia.get(row.mediaId) ?? new Set<string>();
-    set.add(row.productId);
-    productIdsByMedia.set(row.mediaId, set);
-  }
-
-  const collectionCountMap = new Map<string, number>();
-  for (const row of collectionRows) {
-    collectionCountMap.set(
-      row.mediaId,
-      (collectionCountMap.get(row.mediaId) ?? 0) + 1,
-    );
-  }
-
-  const testimonialCountMap = new Map<string, number>();
-  for (const row of testimonialRows) {
-    if (!row.mediaId) continue;
-    testimonialCountMap.set(
-      row.mediaId,
-      (testimonialCountMap.get(row.mediaId) ?? 0) + 1,
-    );
-  }
-
-  const usageByMedia = new Map<string, MediaUsage>();
-  for (const mediaId of mediaIds) {
-    const productIds = [
-      ...(productIdsByMedia.get(mediaId) ?? new Set<string>()),
-    ];
-    usageByMedia.set(mediaId, {
-      bannerSlideCount: bannerSlideCountMap.get(mediaId) ?? 0,
-      productCount: productIds.length,
-      collectionCount: collectionCountMap.get(mediaId) ?? 0,
-      testimonialCount: testimonialCountMap.get(mediaId) ?? 0,
-      productIds,
-      section: bannerMediaIds.has(mediaId) ? "banner" : "product",
-    });
-  }
-
-  return { usageByMedia, bannerSetting };
-}
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   const user = await ensureAdmin();
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const mediaRows = await db
-    .select({
-      id: medias.id,
-      key: medias.key,
-      alt: medias.alt,
-      createdAt: medias.createdAt,
-    })
-    .from(medias)
-    .orderBy(medias.createdAt);
+  const searchParams = request.nextUrl.searchParams;
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
+  const limit = Math.min(
+    ADMIN_MEDIA_PAGE_SIZE,
+    Math.max(12, Number(searchParams.get("limit") ?? ADMIN_MEDIA_PAGE_SIZE) || ADMIN_MEDIA_PAGE_SIZE),
+  );
+  const section: MediaSection =
+    searchParams.get("section") === "banner" ? "banner" : "product";
 
-  const mediaIds = mediaRows.map((row) => row.id);
-  const { usageByMedia } = await loadUsageForMediaIds(mediaIds);
-
-  return NextResponse.json({
-    medias: mediaRows.reverse().map((row) => {
-      const usage = usageByMedia.get(row.id);
-      return {
-        ...row,
-        section: usage?.section ?? "product",
-        usage: {
-          bannerSlideCount: usage?.bannerSlideCount ?? 0,
-          productCount: usage?.productCount ?? 0,
-          collectionCount: usage?.collectionCount ?? 0,
-          testimonialCount: usage?.testimonialCount ?? 0,
-        },
-      };
-    }),
-  });
+  try {
+    const payload = await fetchMediaLibraryPage({ page, limit, section });
+    return NextResponse.json(payload, {
+      headers: {
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+      },
+    });
+  } catch (error) {
+    console.error("[admin/medias/library] GET failed:", error);
+    return NextResponse.json(
+      { message: "Could not load media library." },
+      { status: 500 },
+    );
+  }
 }
 
 export async function DELETE(request: NextRequest) {
@@ -204,7 +76,8 @@ export async function DELETE(request: NextRequest) {
 
   const mediaIds = [...new Set(parsed.data.mediaIds)];
   const section = parsed.data.section;
-  const { usageByMedia, bannerSetting } = await loadUsageForMediaIds(mediaIds);
+  const { usageByMedia, bannerSetting } =
+    await loadMediaUsageForDelete(mediaIds);
 
   const productIdsForOrderCheck = new Set<string>();
   for (const mediaId of mediaIds) {
@@ -268,7 +141,6 @@ export async function DELETE(request: NextRequest) {
       continue;
     }
 
-    // Product section rules
     if (usage.bannerSlideCount > 0) {
       blocked.push({
         mediaId,
@@ -328,6 +200,7 @@ export async function DELETE(request: NextRequest) {
       .where(eq(apiSettings.key, "home_banner_slides"));
   }
 
+  invalidateAdminMediaCache();
   revalidatePath("/admin/medias");
   revalidatePath("/", "layout");
 

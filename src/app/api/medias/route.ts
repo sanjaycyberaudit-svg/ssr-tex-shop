@@ -1,3 +1,4 @@
+import { invalidateAdminMediaCache } from "@/lib/admin/media-library";
 import { processUploadedImage } from "@/lib/image/processUpload";
 import { uploadMediaToSupabase } from "@/lib/storage/uploadMedia";
 import db from "@/lib/supabase/db";
@@ -46,11 +47,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (errors.length > 0) {
+    invalidateAdminMediaCache();
     return NextResponse.json(
       { uploaded: uploadedPaths, errors },
       { status: 207 },
     );
   }
 
+  invalidateAdminMediaCache();
   return NextResponse.json(uploadedPaths, { status: 201 });
 }

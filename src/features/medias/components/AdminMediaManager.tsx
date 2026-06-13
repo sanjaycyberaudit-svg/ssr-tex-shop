@@ -8,7 +8,7 @@ import {
   AdminLoadingState,
   LoadingButtonLabel,
 } from "@/components/admin/AdminLoadingState";
-import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
+import { fetchWithRetry, fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import { cn, keytoUrl } from "@/lib/utils";
 
 type MediaSection = "banner" | "product";
@@ -227,14 +227,21 @@ async function uploadMediaBatch(files: File[]) {
   };
 }
 
+const MEDIA_LIBRARY_PAGE_SIZE = 48;
+
 export function AdminMediaManager() {
   const { toast } = useToast();
   const [medias, setMedias] = useState<MediaLibraryItem[]>([]);
   const [activeSection, setActiveSection] = useState<MediaSection>("product");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [counts, setCounts] = useState({ banner: 0, product: 0 });
   const [uploadProgress, setUploadProgress] =
     useState<MediaUploadProgress | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -243,43 +250,79 @@ export function AdminMediaManager() {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const sectionItems = useMemo(
-    () => medias.filter((m) => m.section === activeSection),
-    [medias, activeSection],
-  );
+  const sectionItems = medias;
   const sectionItemIds = useMemo(
     () => new Set(sectionItems.map((item) => item.id)),
     [sectionItems],
   );
-  const bannerCount = useMemo(
-    () => medias.filter((m) => m.section === "banner").length,
-    [medias],
-  );
-  const productCount = medias.length - bannerCount;
+  const bannerCount = counts.banner;
+  const productCount = counts.product;
 
-  const loadLibrary = async () => {
-    setIsLoading(true);
+  const loadLibrary = async (options?: {
+    reset?: boolean;
+    page?: number;
+    section?: MediaSection;
+  }) => {
+    const section = options?.section ?? activeSection;
+    const targetPage = options?.page ?? 1;
+    const reset = options?.reset ?? targetPage === 1;
+
+    if (reset) {
+      setIsLoading(true);
+      setLoadError(null);
+    } else {
+      setIsLoadingMore(true);
+    }
+
     try {
-      const res = await fetchWithTimeout("/api/admin/medias/library", {
-        cache: "no-store",
+      const params = new URLSearchParams({
+        page: String(targetPage),
+        limit: String(MEDIA_LIBRARY_PAGE_SIZE),
+        section,
       });
+      const res = await fetchWithRetry(
+        `/api/admin/medias/library?${params.toString()}`,
+        { cache: "no-store" },
+      );
       if (!res.ok) throw new Error("Could not load media library.");
-      const payload = (await res.json()) as { medias: MediaLibraryItem[] };
-      setMedias(payload.medias ?? []);
+
+      const payload = (await res.json()) as {
+        medias: MediaLibraryItem[];
+        pageInfo: { page: number; hasNextPage: boolean };
+        counts: { banner: number; product: number };
+      };
+
+      setCounts(payload.counts ?? { banner: 0, product: 0 });
+      setPage(payload.pageInfo?.page ?? targetPage);
+      setHasNextPage(Boolean(payload.pageInfo?.hasNextPage));
+      setMedias((prev) =>
+        reset ? (payload.medias ?? []) : [...prev, ...(payload.medias ?? [])],
+      );
+      setLoadError(null);
     } catch (error) {
-      toast({
-        title: "Failed to load medias",
-        description: error instanceof Error ? error.message : "Please retry.",
-        variant: "destructive",
-      });
+      const message =
+        error instanceof Error ? error.message : "Please retry.";
+      setLoadError(message);
+      if (reset) {
+        setMedias([]);
+        toast({
+          title: "Failed to load medias",
+          description: message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    void loadLibrary();
-  }, []);
+    setSelectedIds([]);
+    setPage(1);
+    void loadLibrary({ reset: true, page: 1, section: activeSection });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   useEffect(() => {
     setSelectedIds((prev) => prev.filter((id) => sectionItemIds.has(id)));
@@ -433,7 +476,7 @@ export function AdminMediaManager() {
         percent: 98,
         message: "Refreshing media library...",
       });
-      await loadLibrary();
+      await loadLibrary({ reset: true, section: activeSection });
 
       if (uploadedCount === 0) {
         throw new Error(errors[0] || "No images were uploaded.");
@@ -490,7 +533,7 @@ export function AdminMediaManager() {
       const deletedCount = result.deletedMediaIds.length;
       const deletedProducts = result.deletedProductIds.length;
 
-      await loadLibrary();
+      await loadLibrary({ reset: true, section: activeSection });
       setSelectedIds([]);
 
       toast({
@@ -589,7 +632,7 @@ export function AdminMediaManager() {
             onClick={() => setSelectedIds(sectionItems.map((item) => item.id))}
             disabled={sectionItems.length === 0}
           >
-            Select All
+            Select All Loaded
           </Button>
           <Button
             type="button"
@@ -632,13 +675,33 @@ export function AdminMediaManager() {
 
       {isLoading ? (
         <AdminLoadingState message="Loading media library..." />
+      ) : loadError && sectionItems.length === 0 ? (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-6 text-center">
+          <p className="text-sm font-medium text-destructive">{loadError}</p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4"
+            onClick={() =>
+              void loadLibrary({ reset: true, section: activeSection })
+            }
+          >
+            Retry
+          </Button>
+        </div>
       ) : (
-        <div
-          ref={gridRef}
-          className="relative grid grid-cols-3 gap-3 rounded-md border p-3 md:grid-cols-6 xl:grid-cols-8"
-          onMouseDown={onGridMouseDown}
-        >
-          {sectionItems.map((item) => {
+        <>
+          <div
+            ref={gridRef}
+            className="relative grid grid-cols-3 gap-3 rounded-md border p-3 md:grid-cols-6 xl:grid-cols-8"
+            onMouseDown={onGridMouseDown}
+          >
+            {sectionItems.length === 0 ? (
+              <p className="col-span-full py-8 text-center text-sm text-muted-foreground">
+                No images in this section yet.
+              </p>
+            ) : null}
+            {sectionItems.map((item) => {
             const selected = selectedIds.includes(item.id);
             return (
               <button
@@ -694,7 +757,33 @@ export function AdminMediaManager() {
               style={dragOverlayStyle}
             />
           ) : null}
-        </div>
+          </div>
+
+          {hasNextPage ? (
+            <div className="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isLoadingMore}
+                onClick={() =>
+                  void loadLibrary({
+                    reset: false,
+                    page: page + 1,
+                    section: activeSection,
+                  })
+                }
+              >
+                <LoadingButtonLabel
+                  isLoading={isLoadingMore}
+                  loadingText="Loading..."
+                  idleText={`Load more (${sectionItems.length} of ${
+                    activeSection === "banner" ? bannerCount : productCount
+                  })`}
+                />
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
     </div>
   );
