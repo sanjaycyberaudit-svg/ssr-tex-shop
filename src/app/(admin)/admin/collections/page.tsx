@@ -5,8 +5,7 @@ import { getClient } from "@/lib/urql";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CollectionsColumns } from "@/features/collections";
-import { DataTable } from "@/features/cms";
+import { CollectionsDataTable } from "@/features/collections";
 
 /** Always load live collections from Supabase GraphQL (not build-time cache). */
 export const dynamic = "force-dynamic";
@@ -47,10 +46,7 @@ async function collectionsPage({ searchParams }: AdminCollectionsPageProps) {
         </Link>
       </section>
 
-      <DataTable
-        columns={CollectionsColumns}
-        data={data.collectionsCollection?.edges || []}
-      />
+      <CollectionsDataTable data={data.collectionsCollection?.edges || []} />
     </AdminShell>
   );
 }

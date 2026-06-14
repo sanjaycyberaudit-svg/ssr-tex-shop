@@ -17,6 +17,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+import { AdminTableSearch } from "@/components/admin/AdminTableSearch";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useToast } from "@/components/ui/use-toast";
+import { createAdminTableGlobalFilter } from "@/lib/admin/table-search";
 import { useRouter } from "next/navigation";
 
 interface DataTableProps<TData, TValue> {
@@ -54,6 +56,7 @@ function DataTable<TData, TValue>({
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [drag, setDrag] = React.useState<{
     startX: number;
@@ -75,7 +78,25 @@ function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
       columnFilters,
+      globalFilter,
     },
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: createAdminTableGlobalFilter((row) => {
+      const product = row.node as {
+        name?: string | null;
+        slug?: string | null;
+        badge?: string | null;
+        collections?: { label?: string | null } | null;
+      };
+      return [
+        product.name,
+        product.slug,
+        product.badge,
+        product.collections?.label,
+      ]
+        .filter(Boolean)
+        .join(" ");
+    }),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -204,7 +225,10 @@ function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {/* <DataTableToolbar table={table} /> */}
+      <AdminTableSearch
+        table={table}
+        placeholder="Search products by name, slug, or collection..."
+      />
       {bulkDeleteEndpoint ? (
         <div className="flex items-center gap-2">
           <Button
