@@ -8,7 +8,7 @@ import {
   useDraftProductIds,
   useStorefrontProductSearch,
 } from "@/hooks/useStorefrontProducts";
-import { normalizeStorefrontSearchTerm } from "@/lib/storefront/collection-search";
+import { normalizeStorefrontSearchTerm } from "@/lib/storefront/search-utils";
 import { useMemo } from "react";
 import { SearchMatchingCollections } from "./SearchMatchingCollections";
 import SearchProductsGridSkeleton from "./SearchProductsGridSkeleton";

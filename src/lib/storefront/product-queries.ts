@@ -7,12 +7,12 @@ import type {
 import { getClient } from "@/lib/urql";
 import { CACHE_TAGS } from "@/lib/cache/constants";
 import { withStorefrontCache } from "@/lib/cache/storefront-cache";
+import { findMatchingCollections } from "./collection-search";
 import {
-  findMatchingCollections,
   NO_COLLECTION_MATCH_ID,
   normalizeStorefrontSearchTerm,
   type StorefrontCollectionMatch,
-} from "./collection-search";
+} from "./search-utils";
 import {
   FeaturedProductsQueryDocument,
   SearchQueryDocument,

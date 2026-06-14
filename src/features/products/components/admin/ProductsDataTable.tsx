@@ -82,12 +82,16 @@ function DataTable<TData, TValue>({
     },
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: createAdminTableGlobalFilter((row) => {
-      const product = row.node as {
-        name?: string | null;
-        slug?: string | null;
-        badge?: string | null;
-        collections?: { label?: string | null } | null;
-      };
+      const product = (
+        row as {
+          node: {
+            name?: string | null;
+            slug?: string | null;
+            badge?: string | null;
+            collections?: { label?: string | null } | null;
+          };
+        }
+      ).node;
       return [
         product.name,
         product.slug,

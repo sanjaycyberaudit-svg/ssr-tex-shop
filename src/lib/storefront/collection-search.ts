@@ -1,31 +1,19 @@
+import "server-only";
+
 import db from "@/lib/supabase/db";
 import { collections, medias } from "@/lib/supabase/schema";
 import { eq, ilike, or } from "drizzle-orm";
+import {
+  toStorefrontSearchPattern,
+  type StorefrontCollectionMatch,
+} from "./search-utils";
 
-export type StorefrontCollectionMatch = {
-  id: string;
-  label: string;
-  slug: string;
-  featuredImage: {
-    key: string;
-    alt: string | null;
-  };
-};
-
-/** Placeholder ID so GraphQL `in` filters stay valid when no collections match. */
-export const NO_COLLECTION_MATCH_ID = "__no_collection_match__";
-
-export function normalizeStorefrontSearchTerm(
-  search: string | null | undefined,
-): string | null {
-  if (!search) return null;
-  const term = search.replace(/^%|%$/g, "").trim();
-  return term.length > 0 ? term : null;
-}
-
-export function toStorefrontSearchPattern(term: string): string {
-  return `%${term}%`;
-}
+export type { StorefrontCollectionMatch } from "./search-utils";
+export {
+  NO_COLLECTION_MATCH_ID,
+  normalizeStorefrontSearchTerm,
+  toStorefrontSearchPattern,
+} from "./search-utils";
 
 export async function findMatchingCollections(
   searchTerm: string,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CollectionCardSurface } from "@/features/collections/components/CollectionCardSurface";
-import type { StorefrontCollectionMatch } from "@/lib/storefront/collection-search";
+import type { StorefrontCollectionMatch } from "@/lib/storefront/search-utils";
 import { keytoUrl } from "@/lib/utils";
 
 type SearchMatchingCollectionsProps = {

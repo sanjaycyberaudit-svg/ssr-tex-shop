@@ -7,6 +7,8 @@ import {
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 type ErrorPageProps = {
   searchParams?: {
     from?: string;

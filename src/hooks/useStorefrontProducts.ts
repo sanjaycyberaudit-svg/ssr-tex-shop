@@ -1,7 +1,7 @@
 "use client";
 
 import type { SearchQueryVariables } from "@/gql/graphql";
-import type { StorefrontCollectionMatch } from "@/lib/storefront/collection-search";
+import type { StorefrontCollectionMatch } from "@/lib/storefront/search-utils";
 import { useEffect, useState } from "react";
 import {
   featuredVariablesToQueryString,

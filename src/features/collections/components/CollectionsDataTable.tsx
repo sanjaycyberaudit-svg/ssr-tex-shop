@@ -1,15 +1,13 @@
 "use client";
 
 import { DataTable } from "@/features/cms";
-import CollectionsColumns from "./CollectionsColumns";
+import { DocumentType } from "@/gql";
+import CollectionsColumns, {
+  CollectionColumnsFragment,
+} from "./CollectionsColumns";
 
 type CollectionRow = {
-  node: {
-    label: string;
-    title: string;
-    slug: string;
-    description?: string | null;
-  };
+  node: DocumentType<typeof CollectionColumnsFragment>;
 };
 
 type CollectionsDataTableProps = {
