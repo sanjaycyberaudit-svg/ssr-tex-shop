@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { buildOAuthCallbackUrl } from "@/lib/auth/callback";
 import { getRedirectFromSearchParams } from "@/lib/auth/redirect";
-import { getURL } from "@/lib/utils";
 
 import { Icons } from "@/components/layouts/icons";
 import { Button } from "@/components/ui/button";
@@ -19,16 +19,26 @@ function OAuthLoginButtons() {
   const signWithGoogle = async () => {
     setIsLoading(true);
 
-    const next = encodeURIComponent(getRedirectFromSearchParams(searchParams));
-    const { error } = await supabase.auth.signInWithOAuth({
+    const next = getRedirectFromSearchParams(searchParams);
+    const redirectTo = buildOAuthCallbackUrl(window.location.origin, next);
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${getURL()}auth/callback?next=${next}`,
+        redirectTo,
+        skipBrowserRedirect: false,
       },
     });
 
     if (error) {
-      router.push("/sign-in");
+      router.push("/sign-in?error=Google+sign-in+failed");
+      setIsLoading(false);
+      return;
+    }
+
+    if (data?.url) {
+      window.location.assign(data.url);
+      return;
     }
 
     setIsLoading(false);
