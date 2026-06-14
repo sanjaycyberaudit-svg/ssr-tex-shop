@@ -1,17 +1,51 @@
+import { isAdminUser } from "@/lib/auth/admin";
+import { getPostAuthRedirectUrl } from "@/lib/auth/callback";
 import {
-  buildOAuthCallbackUrl,
-  getPostAuthRedirectUrl,
-} from "@/lib/auth/callback";
-import { getRedirectFromSearchParams } from "@/lib/auth/redirect";
-import { createClient } from "@/lib/supabase/server";
+  ADMIN_POST_LOGIN_PATH,
+  getRedirectFromSearchParams,
+} from "@/lib/auth/redirect";
+import { createRouteHandlerSupabaseClient } from "@/lib/supabase/route-handler";
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 
+async function resolvePostLoginPath(
+  supabase: ReturnType<typeof createRouteHandlerSupabaseClient>,
+  requestedNext: string,
+) {
+  if (requestedNext !== "/") {
+    return requestedNext;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user && (await isAdminUser(user))) {
+    return ADMIN_POST_LOGIN_PATH;
+  }
+
+  return requestedNext;
+}
+
+function redirectWithSessionCookies(
+  request: NextRequest,
+  response: NextResponse,
+  nextPath: string,
+) {
+  const redirect = NextResponse.redirect(
+    getPostAuthRedirectUrl(request, nextPath),
+  );
+
+  for (const cookie of response.cookies.getAll()) {
+    redirect.cookies.set(cookie);
+  }
+
+  return redirect;
+}
+
 export async function GET(request: NextRequest) {
-  const cookieStore = cookies();
   const { searchParams } = request.nextUrl;
-  const next = getRedirectFromSearchParams(searchParams);
+  const requestedNext = getRedirectFromSearchParams(searchParams);
   const code = searchParams.get("code");
   const oauthError =
     searchParams.get("error_description") ?? searchParams.get("error");
@@ -22,27 +56,8 @@ export async function GET(request: NextRequest) {
       "error",
       oauthError.replace(/\+/g, " ").replace(/%20/g, " "),
     );
-    if (next !== "/") {
-      signIn.searchParams.set("from", next);
-    }
-    return NextResponse.redirect(signIn);
-  }
-
-  if (code) {
-    const supabase = createClient({ cookieStore });
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error) {
-      return NextResponse.redirect(getPostAuthRedirectUrl(request, next));
-    }
-
-    const signIn = new URL("/sign-in", request.url);
-    signIn.searchParams.set(
-      "error",
-      error.message || "Google sign-in could not be completed.",
-    );
-    if (next !== "/") {
-      signIn.searchParams.set("from", next);
+    if (requestedNext !== "/") {
+      signIn.searchParams.set("from", requestedNext);
     }
     return NextResponse.redirect(signIn);
   }
@@ -50,17 +65,62 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 
-  if (token_hash && type) {
-    const supabase = createClient({ cookieStore });
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash,
-    });
+  if (code || (token_hash && type)) {
+    const sessionResponse = NextResponse.redirect(
+      getPostAuthRedirectUrl(request, requestedNext),
+    );
+    const supabase = createRouteHandlerSupabaseClient(
+      request,
+      sessionResponse,
+    );
 
-    if (!error) {
-      return NextResponse.redirect(getPostAuthRedirectUrl(request, next));
+    if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        const signIn = new URL("/sign-in", request.url);
+        signIn.searchParams.set(
+          "error",
+          error.message || "Google sign-in could not be completed.",
+        );
+        if (requestedNext !== "/") {
+          signIn.searchParams.set("from", requestedNext);
+        }
+        return NextResponse.redirect(signIn);
+      }
+    } else if (token_hash && type) {
+      const { error } = await supabase.auth.verifyOtp({
+        type,
+        token_hash,
+      });
+      if (error) {
+        return NextResponse.redirect(new URL("/error", request.url));
+      }
     }
+
+    const nextPath = await resolvePostLoginPath(supabase, requestedNext);
+    return redirectWithSessionCookies(request, sessionResponse, nextPath);
   }
 
-  return NextResponse.redirect(new URL("/error", request.url));
+  const sessionResponse = NextResponse.redirect(
+    getPostAuthRedirectUrl(request, requestedNext),
+  );
+  const supabase = createRouteHandlerSupabaseClient(request, sessionResponse);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const nextPath = await resolvePostLoginPath(supabase, requestedNext);
+    return redirectWithSessionCookies(request, sessionResponse, nextPath);
+  }
+
+  const signIn = new URL("/sign-in", request.url);
+  signIn.searchParams.set(
+    "error",
+    "Sign-in could not be completed. Please try again.",
+  );
+  if (requestedNext !== "/") {
+    signIn.searchParams.set("from", requestedNext);
+  }
+  return NextResponse.redirect(signIn);
 }
