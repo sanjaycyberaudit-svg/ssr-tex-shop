@@ -29,7 +29,10 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useToast } from "@/components/ui/use-toast";
-import { createAdminTableGlobalFilter } from "@/lib/admin/table-search";
+import {
+  buildAdminProductSearchText,
+  createAdminTableGlobalFilter,
+} from "@/lib/admin/table-search";
 import { useRouter } from "next/navigation";
 
 interface DataTableProps<TData, TValue> {
@@ -70,6 +73,11 @@ function DataTable<TData, TValue>({
   const tableWrapRef = React.useRef<HTMLDivElement | null>(null);
   const rowRefs = React.useRef<Record<string, HTMLTableRowElement | null>>({});
 
+  const globalFilterFn = React.useMemo(
+    () => createAdminTableGlobalFilter(buildAdminProductSearchText),
+    [],
+  );
+
   const table = useReactTable({
     data,
     columns,
@@ -80,27 +88,9 @@ function DataTable<TData, TValue>({
       columnFilters,
       globalFilter,
     },
+    autoResetPageIndex: true,
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: createAdminTableGlobalFilter((row) => {
-      const product = (
-        row as {
-          node: {
-            name?: string | null;
-            slug?: string | null;
-            badge?: string | null;
-            collections?: { label?: string | null } | null;
-          };
-        }
-      ).node;
-      return [
-        product.name,
-        product.slug,
-        product.badge,
-        product.collections?.label,
-      ]
-        .filter(Boolean)
-        .join(" ");
-    }),
+    globalFilterFn,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -115,8 +105,8 @@ function DataTable<TData, TValue>({
     },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
@@ -231,7 +221,7 @@ function DataTable<TData, TValue>({
     <div className="space-y-4">
       <AdminTableSearch
         table={table}
-        placeholder="Search products by name, slug, or collection..."
+        placeholder="Search products by name, slug, collection, badge, or price..."
       />
       {bulkDeleteEndpoint ? (
         <div className="flex items-center gap-2">
@@ -336,7 +326,9 @@ function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {globalFilter.trim()
+                    ? `No results for "${globalFilter.trim()}".`
+                    : "No results."}
                 </TableCell>
               </TableRow>
             )}

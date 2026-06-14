@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable } from "@/features/cms";
+import { buildAdminCollectionSearchText } from "@/lib/admin/table-search";
 import { DocumentType } from "@/gql";
 import CollectionsColumns, {
   CollectionColumnsFragment,
@@ -19,12 +20,8 @@ export function CollectionsDataTable({ data }: CollectionsDataTableProps) {
     <DataTable
       columns={CollectionsColumns}
       data={data}
-      searchPlaceholder="Search collections by label, title, or slug..."
-      getSearchText={(row) =>
-        [row.node.label, row.node.title, row.node.slug, row.node.description]
-          .filter(Boolean)
-          .join(" ")
-      }
+      searchPlaceholder="Search collections by label, title, slug, or description..."
+      getSearchText={buildAdminCollectionSearchText}
     />
   );
 }

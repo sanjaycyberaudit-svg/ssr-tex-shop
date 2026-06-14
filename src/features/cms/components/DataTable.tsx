@@ -50,6 +50,12 @@ export default function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
 
+  const globalFilterFn = React.useMemo(
+    () =>
+      getSearchText ? createAdminTableGlobalFilter(getSearchText) : undefined,
+    [getSearchText],
+  );
+
   const table = useReactTable({
     data,
     columns,
@@ -60,22 +66,24 @@ export default function DataTable<TData, TValue>({
       columnFilters,
       globalFilter,
     },
+    autoResetPageIndex: true,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
-    ...(getSearchText
-      ? { globalFilterFn: createAdminTableGlobalFilter(getSearchText) }
-      : {}),
+    ...(globalFilterFn ? { globalFilterFn } : {}),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
+
+  const filteredCount = table.getFilteredRowModel().rows.length;
+  const isFiltering = globalFilter.trim().length > 0;
 
   return (
     <div className="space-y-4">
@@ -125,14 +133,18 @@ export default function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {isFiltering
+                    ? `No results for "${globalFilter.trim()}".`
+                    : "No results."}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      {isFiltering && filteredCount === 0 ? null : (
+        <DataTablePagination table={table} />
+      )}
     </div>
   );
 }
