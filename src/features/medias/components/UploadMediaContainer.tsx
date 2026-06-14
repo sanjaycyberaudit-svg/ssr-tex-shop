@@ -250,7 +250,7 @@ function UploadMediaContainer({
 
       <div
         ref={scrollRef}
-        className="max-h-[min(62vh,560px)] overflow-y-auto rounded-md border border-zinc-300 p-4"
+        className="admin-scroll max-h-[min(62vh,560px)] overflow-y-auto overscroll-contain rounded-md border border-zinc-300 p-4"
       >
         {isInitialLoading ? <ImageGridSkeleton /> : null}
 
@@ -278,7 +278,12 @@ function UploadMediaContainer({
                     Loading more...
                   </div>
                 ) : (
-                  <Button type="button" variant="outline" size="sm" onClick={loadMore}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={loadMore}
+                  >
                     Load more images
                   </Button>
                 )}
