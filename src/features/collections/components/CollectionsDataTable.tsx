@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTable } from "@/features/cms";
+import { ADMIN_COLLECTIONS_SEARCH } from "@/lib/admin/admin-search-config";
 import { buildAdminCollectionSearchText } from "@/lib/admin/table-search";
 import { DocumentType } from "@/gql";
 import CollectionsColumns, {
@@ -20,7 +21,7 @@ export function CollectionsDataTable({ data }: CollectionsDataTableProps) {
     <DataTable
       columns={CollectionsColumns}
       data={data}
-      searchPlaceholder='Search collections — try: kanchi, "wedding saree", silk-sarees...'
+      search={ADMIN_COLLECTIONS_SEARCH}
       getSearchText={(row) =>
         buildAdminCollectionSearchText(
           row as Parameters<typeof buildAdminCollectionSearchText>[0],

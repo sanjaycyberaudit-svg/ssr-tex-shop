@@ -4,21 +4,27 @@ import * as React from "react";
 import { Table } from "@tanstack/react-table";
 import { Search, X } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+export type AdminTableSearchConfig = {
+  /** e.g. "products" or "collections" */
+  entityLabel: string;
+  placeholder: string;
+  /** Shown when search returns zero rows */
+  emptyResultHint?: string;
+};
+
 type AdminTableSearchProps<TData> = {
   table: Table<TData>;
-  placeholder?: string;
-  showTotalCount?: boolean;
-  totalCountLabel?: string;
-};
+} & AdminTableSearchConfig;
 
 export function AdminTableSearch<TData>({
   table,
-  placeholder = "Search...",
-  showTotalCount = false,
-  totalCountLabel = "items",
+  entityLabel,
+  placeholder,
+  emptyResultHint,
 }: AdminTableSearchProps<TData>) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const appliedQuery =
@@ -28,6 +34,7 @@ export function AdminTableSearch<TData>({
   const totalCount = table.getPreFilteredRowModel().rows.length;
   const isFiltering = appliedQuery.trim().length > 0;
   const hasDraftChanges = draftQuery.trim() !== appliedQuery.trim();
+  const isPending = hasDraftChanges && draftQuery.trim().length > 0;
 
   React.useEffect(() => {
     setDraftQuery(appliedQuery);
@@ -75,10 +82,28 @@ export function AdminTableSearch<TData>({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [appliedQuery, clearSearch, draftQuery]);
 
+  const statusBadge = isPending ? (
+    <Badge variant="outline" className="border-amber-300 text-amber-800">
+      Ready to search
+    </Badge>
+  ) : isFiltering ? (
+    <Badge className="bg-primary text-primary-foreground">Search active</Badge>
+  ) : (
+    <Badge variant="secondary">Showing all {entityLabel}</Badge>
+  );
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="relative w-full max-w-md">
+    <section
+      className="rounded-lg border bg-muted/20 p-4"
+      aria-label={`Search ${entityLabel}`}
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold capitalize">Search {entityLabel}</h3>
+        {statusBadge}
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative w-full max-w-xl">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
@@ -94,7 +119,7 @@ export function AdminTableSearch<TData>({
               }
             }}
             placeholder={placeholder}
-            className="h-9 pl-8"
+            className={`h-10 pl-8 ${isPending ? "border-amber-400 ring-1 ring-amber-200" : ""}`}
             aria-label={placeholder}
             spellCheck={false}
             autoComplete="off"
@@ -103,53 +128,52 @@ export function AdminTableSearch<TData>({
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            size="sm"
-            className="h-9"
+            className="h-10 min-w-[110px]"
             onClick={() => applySearch()}
           >
-            <Search className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+            <Search className="mr-2 h-4 w-4" aria-hidden />
             Search
           </Button>
-          {appliedQuery || draftQuery ? (
+          {(appliedQuery || draftQuery) && (
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="h-9 px-2"
+              variant="outline"
+              className="h-10"
               onClick={clearSearch}
             >
               Clear
-              <X className="ml-1.5 h-3.5 w-3.5" aria-hidden />
+              <X className="ml-2 h-4 w-4" aria-hidden />
             </Button>
-          ) : null}
+          )}
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+
+      <div className="mt-3 space-y-1 text-sm" aria-live="polite">
         {isFiltering ? (
-          <p className="font-medium text-foreground" aria-live="polite">
-            Showing {filteredCount} of {totalCount} for &quot;{appliedQuery}&quot;
-          </p>
-        ) : showTotalCount ? (
-          <p className="text-muted-foreground" aria-live="polite">
-            {totalCount} {totalCountLabel}
+          <p className="font-medium">
+            Results: {filteredCount} of {totalCount} {entityLabel} match &quot;
+            {appliedQuery}&quot;
           </p>
         ) : (
-          <p className="text-xs text-muted-foreground">
-            Tip: press Enter or Search. Use quotes for exact phrases, e.g.
-            &quot;silk saree&quot;
+          <p className="text-muted-foreground">
+            {totalCount} {entityLabel} loaded. Type a keyword and click Search or
+            press Enter.
           </p>
         )}
-        {hasDraftChanges ? (
-          <p className="text-xs text-amber-700">
-            Press Search or Enter to apply &quot;{draftQuery.trim()}&quot;
+
+        {isPending ? (
+          <p className="text-amber-700">
+            Click Search or press Enter to find &quot;{draftQuery.trim()}&quot;
           </p>
         ) : null}
+
         {isFiltering && filteredCount === 0 ? (
-          <p className="text-xs text-destructive">
-            No matches — try ST000001, product name, or draft
+          <p className="text-destructive">
+            No {entityLabel} found for &quot;{appliedQuery}&quot;
+            {emptyResultHint ? ` — ${emptyResultHint}` : ""}
           </p>
         ) : null}
       </div>
-    </div>
+    </section>
   );
 }

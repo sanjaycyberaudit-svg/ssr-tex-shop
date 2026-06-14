@@ -19,6 +19,7 @@ import {
 } from "@tanstack/react-table";
 
 import { AdminTableSearch } from "@/components/admin/AdminTableSearch";
+import { ADMIN_PRODUCTS_SEARCH } from "@/lib/admin/admin-search-config";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -233,12 +234,7 @@ function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <AdminTableSearch
-        table={table}
-        showTotalCount
-        totalCountLabel="products"
-        placeholder='Search products — try: ST_01, ST000001, silk, draft...'
-      />
+      <AdminTableSearch table={table} {...ADMIN_PRODUCTS_SEARCH} />
       {bulkDeleteEndpoint ? (
         <div className="flex items-center gap-2">
           <Button

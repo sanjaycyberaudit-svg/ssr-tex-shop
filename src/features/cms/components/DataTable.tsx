@@ -16,7 +16,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { AdminTableSearch } from "@/components/admin/AdminTableSearch";
+import { AdminTableSearch, AdminTableSearchConfig } from "@/components/admin/AdminTableSearch";
 import {
   Table,
   TableBody,
@@ -31,14 +31,14 @@ import { createAdminTableGlobalFilter } from "@/lib/admin/table-search";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  searchPlaceholder?: string;
+  search?: AdminTableSearchConfig;
   getSearchText?: (row: TData) => string;
 }
 
 export default function DataTable<TData, TValue>({
   columns,
   data,
-  searchPlaceholder,
+  search,
   getSearchText,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
@@ -87,8 +87,8 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {searchPlaceholder && getSearchText ? (
-        <AdminTableSearch table={table} placeholder={searchPlaceholder} />
+      {search && getSearchText ? (
+        <AdminTableSearch table={table} {...search} />
       ) : null}
       <div className="rounded-md border">
         <Table>
