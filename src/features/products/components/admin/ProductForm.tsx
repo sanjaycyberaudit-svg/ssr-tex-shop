@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -31,6 +32,7 @@ import {
   AdminLoadingState,
   LoadingButtonLabel,
 } from "@/components/admin/AdminLoadingState";
+import { AdminSaveProgressOverlay } from "@/components/admin/AdminSaveProgressOverlay";
 import { BadgeSelectField } from "@/features/cms";
 import { ImageDialog } from "@/features/medias";
 import UploadMediaContainer from "@/features/medias/components/UploadMediaContainer";
@@ -48,6 +50,10 @@ import {
   UPLOAD_LIMIT_MB,
 } from "@/lib/admin/client-image-upload";
 import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
+import {
+  normalizeProductFormPayload,
+  productStorefrontVisibilitySummary,
+} from "@/lib/admin/normalize-product-form-payload";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@urql/next";
 import { createInsertSchema } from "drizzle-zod";
@@ -158,6 +164,14 @@ export const ProductFormQuery = gql(/* GraphQL */ `
   }
 `);
 
+const SINGLE_SAVE_STEPS = [
+  { key: "product", message: "Saving product details..." },
+  { key: "sizes", message: "Saving size options..." },
+  { key: "storefront", message: "Updating website catalog..." },
+] as const;
+
+type SingleSaveStep = (typeof SINGLE_SAVE_STEPS)[number]["key"];
+
 function ProductFrom({ product }: ProductsFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -179,6 +193,10 @@ function ProductFrom({ product }: ProductsFormProps) {
     current: number;
     total: number;
   } | null>(null);
+  const [singleSaveStep, setSingleSaveStep] = useState<SingleSaveStep | null>(
+    null,
+  );
+  const [savedSummary, setSavedSummary] = useState<string | null>(null);
   const [stockControl, setStockControl] = useState({
     enabled: false,
     lowStockThreshold: 5,
@@ -197,11 +215,23 @@ function ProductFrom({ product }: ProductsFormProps) {
     resolver: zodResolver(createInsertSchema(products)),
     defaultValues: {
       ...product,
+      featured: product?.featured ?? false,
       stock: typeof product?.stock === "number" ? product.stock : 1,
     },
   });
 
-  const { register, control, handleSubmit } = form;
+  const { register, control, handleSubmit, watch } = form;
+  const isDraft = watch("isDraft");
+  const isFeatured = watch("featured");
+  const isSavingSingle = singleSaveStep !== null;
+  const isFormBusy =
+    isPending || isSavingSingle || bulkPhase === "preparing" || bulkPhase === "uploading" || bulkPhase === "creating";
+  const singleSaveStepIndex = singleSaveStep
+    ? SINGLE_SAVE_STEPS.findIndex((step) => step.key === singleSaveStep) + 1
+    : 0;
+  const singleSaveMessage =
+    SINGLE_SAVE_STEPS.find((step) => step.key === singleSaveStep)?.message ??
+    "Saving...";
 
   useEffect(() => {
     let active = true;
@@ -368,55 +398,81 @@ function ProductFrom({ product }: ProductsFormProps) {
   };
 
   const onSingleSubmit = async (data: InsertProducts) => {
-    startTransition(async () => {
-      try {
-        const normalizedStockRaw = Number(data.stock);
-        const normalizedStock = Number.isFinite(normalizedStockRaw)
-          ? Math.max(0, Math.round(normalizedStockRaw))
-          : stockControl.enabled
-            ? 1
-            : 0;
-        const payload: InsertProducts = {
-          ...data,
-          stock: normalizedStock,
-        };
-        const result = product
-          ? await updateProductAction(product.id, payload)
-          : await createProductAction(payload);
-        const productId = product?.id ?? result?.[0]?.id;
-        if (!productId) {
-          throw new Error("Product id missing after save.");
-        }
-        const sizeSave = await fetchWithTimeout(
-          "/api/admin/products/size-config",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              productId,
-              config: normalizedSizeConfig,
-            }),
-          },
-        );
-        if (!sizeSave.ok) {
-          throw new Error("Could not save size configuration.");
-        }
+    setSavedSummary(null);
+    setSingleSaveStep("product");
 
-        router.push("/admin/products");
-        router.refresh();
+    try {
+      const payload = normalizeProductFormPayload(data, {
+        stockFallback: stockControl.enabled ? 1 : 0,
+      });
 
-        toast({
-          title: `Product is ${product ? "updated" : "created"}.`,
-          description: `${payload.name}`,
-        });
-      } catch (err) {
-        toast({
-          title: "Unable to save product",
-          description: "Please retry.",
-          variant: "destructive",
-        });
+      const result = product
+        ? await updateProductAction(product.id, payload)
+        : await createProductAction(payload);
+
+      setSingleSaveStep("sizes");
+
+      const productId = product?.id ?? result?.[0]?.id;
+      if (!productId) {
+        throw new Error("Product id missing after save.");
       }
-    });
+
+      const sizeSave = await fetchWithTimeout(
+        "/api/admin/products/size-config",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productId,
+            config: normalizedSizeConfig,
+          }),
+        },
+      );
+
+      if (!sizeSave.ok) {
+        const sizeError = (await sizeSave.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(
+          sizeError?.message || "Could not save size configuration.",
+        );
+      }
+
+      setSingleSaveStep("storefront");
+
+      const savedProduct = result?.[0];
+      if (savedProduct) {
+        form.reset({
+          ...savedProduct,
+          featured: savedProduct.featured ?? false,
+          stock:
+            typeof savedProduct.stock === "number" ? savedProduct.stock : 1,
+        });
+        setSavedSummary(productStorefrontVisibilitySummary(savedProduct));
+      }
+
+      router.refresh();
+
+      toast({
+        title: product ? "Product updated" : "Product created",
+        description: savedProduct
+          ? productStorefrontVisibilitySummary(savedProduct)
+          : payload.name,
+      });
+
+      if (!product) {
+        router.push("/admin/products");
+      }
+    } catch (err) {
+      toast({
+        title: "Unable to save product",
+        description:
+          err instanceof Error ? err.message : "Please retry in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setSingleSaveStep(null);
+    }
   };
 
   const onBulkSubmit = async () => {
@@ -516,11 +572,14 @@ function ProductFrom({ product }: ProductsFormProps) {
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isFormBusy) return;
     if (inBulkMode) {
       void onBulkSubmit();
       return;
     }
-    void handleSubmit(onSingleSubmit)();
+    startTransition(() => {
+      void handleSubmit(onSingleSubmit)();
+    });
   };
 
   const updateSizeOption = (
@@ -555,6 +614,13 @@ function ProductFrom({ product }: ProductsFormProps) {
 
   return (
     <Form {...form}>
+      <AdminSaveProgressOverlay
+        open={isSavingSingle}
+        title={product ? "Updating product" : "Creating product"}
+        message={singleSaveMessage}
+        step={singleSaveStepIndex}
+        totalSteps={SINGLE_SAVE_STEPS.length}
+      />
       {bulkOverlay ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/35 backdrop-blur-[1px]">
           <div className="w-[320px] rounded-xl border border-[#E8A317]/40 bg-white p-5 shadow-2xl">
@@ -575,8 +641,9 @@ function ProductFrom({ product }: ProductsFormProps) {
       ) : null}
       <form
         id="project-form"
-        className="gap-x-5 flex gap-y-5 flex-col px-3"
+        className={`gap-x-5 flex gap-y-5 flex-col px-3 ${isFormBusy ? "pointer-events-none opacity-80" : ""}`}
         onSubmit={onSubmit}
+        aria-busy={isFormBusy}
       >
         <div className="flex flex-col gap-y-5 max-w-[500px]">
           {!product ? (
@@ -697,26 +764,48 @@ function ProductFrom({ product }: ProductsFormProps) {
             <FormMessage />
           </FormItem>
 
-          {/* <FormField
-            control={form.control}
+          <FormField
+            control={control}
             name="featured"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
-                <FormControl>
-                  <FormLabel>Featured*</FormLabel>
-                  <Checkbox
-                    defaultChecked={false}
-                    checked={field.value || false}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-
-                <FormDescription>
-                  You can manage your mobile notifications in the{" "}
-                </FormDescription>
+              <FormItem className="rounded-md border bg-muted/30 p-4">
+                <div className="flex items-start gap-3">
+                  <FormControl>
+                    <Checkbox
+                      checked={Boolean(field.value)}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                  </FormControl>
+                  <div className="space-y-1">
+                    <FormLabel className="text-sm font-semibold">
+                      Featured product
+                    </FormLabel>
+                    <FormDescription>
+                      Show this product on the homepage Featured carousel and
+                      the Featured Products page. Uncheck Draft above — draft
+                      products stay hidden even when featured.
+                    </FormDescription>
+                    {isFeatured && isDraft ? (
+                      <p className="text-xs font-medium text-amber-700">
+                        This product is still a draft, so it will not appear on
+                        the website until Draft is unchecked.
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <FormMessage />
               </FormItem>
             )}
-          /> */}
+          />
+
+          {savedSummary ? (
+            <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+              {savedSummary}
+            </div>
+          ) : null}
+
           <Suspense>
             {data && data.collectionsCollection && (
               <FormField
@@ -726,8 +815,8 @@ function ProductFrom({ product }: ProductsFormProps) {
                   <FormItem>
                     <FormLabel>{"Collections"}</FormLabel>
                     <Select
+                      value={field.value || undefined}
                       onValueChange={field.onChange}
-                      defaultValue={field.value || undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -1125,33 +1214,37 @@ function ProductFrom({ product }: ProductsFormProps) {
           ) : null}
         </div>
 
-        <div className="py-8 flex gap-x-5 items-center">
-          <Button
-            disabled={
-              isPending ||
-              bulkPhase === "preparing" ||
-              (inBulkMode && !canSubmitBulk)
-            }
-            variant={"outline"}
-            form="project-form"
-          >
-            <LoadingButtonLabel
-              isLoading={isPending}
-              loadingText={
-                inBulkMode
-                  ? "Creating bulk..."
-                  : product
-                    ? "Updating..."
-                    : "Creating..."
-              }
-              idleText={
-                product ? "Update" : inBulkMode ? "Create Bulk" : "Create"
-              }
-            />
-          </Button>
-          <Link href="/admin/products" className={buttonVariants()}>
-            Cancel
-          </Link>
+        <div className="sticky bottom-0 z-10 -mx-3 border-t bg-background/95 px-3 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <Button
+              type="submit"
+              disabled={isFormBusy || (inBulkMode && !canSubmitBulk)}
+              variant={"outline"}
+              form="project-form"
+            >
+              <LoadingButtonLabel
+                isLoading={isFormBusy && !inBulkMode}
+                loadingText={
+                  singleSaveMessage ||
+                  (product ? "Updating..." : "Creating...")
+                }
+                idleText={
+                  product ? "Update" : inBulkMode ? "Create Bulk" : "Create"
+                }
+              />
+            </Button>
+            {isFormBusy && !inBulkMode ? (
+              <AdminLoadingState message={singleSaveMessage} />
+            ) : null}
+            <Link
+              href="/admin/products"
+              className={`${buttonVariants()} ${isFormBusy ? "pointer-events-none opacity-50" : ""}`}
+              aria-disabled={isFormBusy}
+              tabIndex={isFormBusy ? -1 : 0}
+            >
+              Cancel
+            </Link>
+          </div>
         </div>
       </form>
     </Form>

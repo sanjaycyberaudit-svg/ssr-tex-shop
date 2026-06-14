@@ -26,7 +26,7 @@ type BadgeSelectFieldProps = {
 };
 
 function BadgeSelectField({ name, label }: BadgeSelectFieldProps) {
-  const { setValue, control } = useFormContext();
+  const { control } = useFormContext();
 
   return (
     <FormField
@@ -36,8 +36,10 @@ function BadgeSelectField({ name, label }: BadgeSelectFieldProps) {
         <FormItem>
           <FormLabel>Badge</FormLabel>
           <Select
-            onValueChange={field.onChange}
-            defaultValue={field.value || undefined}
+            value={field.value ?? "__none__"}
+            onValueChange={(value) =>
+              field.onChange(value === "__none__" ? null : value)
+            }
           >
             <FormControl>
               <SelectTrigger>
@@ -48,6 +50,7 @@ function BadgeSelectField({ name, label }: BadgeSelectFieldProps) {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Badge</SelectLabel>
+                <SelectItem value="__none__">None</SelectItem>
                 <SelectItem value="new_product">New Product</SelectItem>
                 <SelectItem value="best_sale">Best Sale</SelectItem>
                 <SelectItem value="featured">featured</SelectItem>
@@ -56,7 +59,8 @@ function BadgeSelectField({ name, label }: BadgeSelectFieldProps) {
           </Select>
 
           <FormDescription>
-            Select a Badge if you want the Product card attached a badge.
+            Optional label on the product card in Shop and Collections. This is
+            separate from the Featured product toggle above.
           </FormDescription>
           <FormMessage />
         </FormItem>

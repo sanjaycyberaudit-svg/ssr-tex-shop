@@ -8,6 +8,15 @@ import { createInsertSchema } from "drizzle-zod";
 import { slugify } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 
+function revalidateProductCatalogPaths() {
+  revalidatePath("/admin/products");
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/featured");
+  revalidatePath("/shop");
+  revalidatePath("/collections");
+}
+
 type SearchProductsActionProps = {
   query: string;
   limit?: number;
@@ -18,7 +27,7 @@ type SearchProductsActionProps = {
 export const createProductAction = async (product: InsertProducts) => {
   createInsertSchema(products).parse(product);
   const data = await db.insert(products).values(product).returning();
-  revalidatePath("/admin/products");
+  revalidateProductCatalogPaths();
   await invalidateStorefrontCache();
   return data;
 };
@@ -34,7 +43,7 @@ export const updateProductAction = async (
     .where(eq(products.id, productId))
     .returning();
 
-  revalidatePath("/admin/products");
+  revalidateProductCatalogPaths();
   await invalidateStorefrontCache();
   return insertedProduct;
 };
@@ -146,7 +155,7 @@ export async function createDraftProductsFromMedia(
       });
     }
 
-    revalidatePath("/admin/products");
+    revalidateProductCatalogPaths();
     await invalidateStorefrontCache();
     return createdProducts;
   });
