@@ -10,13 +10,15 @@ import {
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
-import { AdminTableSearch, AdminTableSearchConfig } from "@/components/admin/AdminTableSearch";
+import {
+  AdminTableSearch,
+  AdminTableSearchConfig,
+} from "@/components/admin/AdminTableSearch";
 import {
   Table,
   TableBody,
@@ -26,20 +28,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { createAdminTableGlobalFilter } from "@/lib/admin/table-search";
+import { filterAdminCollectionTableRows } from "@/lib/admin/table-search";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   search?: AdminTableSearchConfig;
-  getSearchText?: (row: TData) => string;
 }
 
 export default function DataTable<TData, TValue>({
   columns,
   data,
   search,
-  getSearchText,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -48,23 +48,39 @@ export default function DataTable<TData, TValue>({
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [appliedSearch, setAppliedSearch] = React.useState("");
+  const [draftSearch, setDraftSearch] = React.useState("");
 
-  const globalFilterFn = React.useMemo(
-    () =>
-      getSearchText ? createAdminTableGlobalFilter(getSearchText) : undefined,
-    [getSearchText],
+  const filteredData = React.useMemo(() => {
+    if (!search) return data;
+    return filterAdminCollectionTableRows(
+      data as Parameters<typeof filterAdminCollectionTableRows>[0],
+      appliedSearch,
+    ) as TData[];
+  }, [appliedSearch, data, search]);
+
+  const applySearch = React.useCallback(
+    (value?: string) => {
+      const next = (value ?? draftSearch).trim();
+      setAppliedSearch(next);
+      setDraftSearch(next);
+    },
+    [draftSearch],
   );
 
+  const clearSearch = React.useCallback(() => {
+    setAppliedSearch("");
+    setDraftSearch("");
+  }, []);
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
       columnVisibility,
       rowSelection,
       columnFilters,
-      globalFilter,
     },
     autoResetPageIndex: true,
     enableRowSelection: true,
@@ -72,23 +88,34 @@ export default function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onGlobalFilterChange: setGlobalFilter,
-    ...(globalFilterFn ? { globalFilterFn } : {}),
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const filteredCount = table.getFilteredRowModel().rows.length;
-  const isFiltering = globalFilter.trim().length > 0;
+  const filteredCount = filteredData.length;
+  const totalCount = data.length;
+  const isFiltering = appliedSearch.trim().length > 0;
+
+  React.useEffect(() => {
+    table.setPageIndex(0);
+  }, [appliedSearch, table]);
 
   return (
     <div className="space-y-4">
-      {search && getSearchText ? (
-        <AdminTableSearch table={table} {...search} />
+      {search ? (
+        <AdminTableSearch
+          {...search}
+          appliedQuery={appliedSearch}
+          draftQuery={draftSearch}
+          onDraftQueryChange={setDraftSearch}
+          onApplySearch={applySearch}
+          onClearSearch={clearSearch}
+          filteredCount={filteredCount}
+          totalCount={totalCount}
+        />
       ) : null}
       <div className="rounded-md border">
         <Table>
@@ -134,7 +161,7 @@ export default function DataTable<TData, TValue>({
                   className="h-24 text-center"
                 >
                   {isFiltering
-                    ? `No results for "${globalFilter.trim()}".`
+                    ? `No results for "${appliedSearch.trim()}".`
                     : "No results."}
                 </TableCell>
               </TableRow>

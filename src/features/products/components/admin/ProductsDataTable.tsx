@@ -11,7 +11,6 @@ import {
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -31,8 +30,7 @@ import {
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  buildAdminProductSearchText,
-  createAdminProductTableGlobalFilter,
+  filterAdminProductTableRows,
   selectAllFilteredRows,
 } from "@/lib/admin/table-search";
 import { useRouter } from "next/navigation";
@@ -61,7 +59,8 @@ function DataTable<TData, TValue>({
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [appliedSearch, setAppliedSearch] = React.useState("");
+  const [draftSearch, setDraftSearch] = React.useState("");
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [drag, setDrag] = React.useState<{
     startX: number;
@@ -75,29 +74,41 @@ function DataTable<TData, TValue>({
   const tableWrapRef = React.useRef<HTMLDivElement | null>(null);
   const rowRefs = React.useRef<Record<string, HTMLTableRowElement | null>>({});
 
-  const globalFilterFn = React.useMemo(
-    () => createAdminProductTableGlobalFilter<TData>(),
-    [],
+  const filteredData = React.useMemo(
+    () =>
+      filterAdminProductTableRows(
+        data as Parameters<typeof filterAdminProductTableRows>[0],
+        appliedSearch,
+      ) as TData[],
+    [appliedSearch, data],
   );
 
-  const handleGlobalFilterChange = React.useCallback((value: string) => {
-    setGlobalFilter(value);
+  const applySearch = React.useCallback(
+    (value?: string) => {
+      const next = (value ?? draftSearch).trim();
+      setAppliedSearch(next);
+      setDraftSearch(next);
+      setRowSelection({});
+    },
+    [draftSearch],
+  );
+
+  const clearSearch = React.useCallback(() => {
+    setAppliedSearch("");
+    setDraftSearch("");
     setRowSelection({});
   }, []);
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
       columnVisibility,
       rowSelection,
       columnFilters,
-      globalFilter,
     },
     autoResetPageIndex: true,
-    onGlobalFilterChange: handleGlobalFilterChange,
-    globalFilterFn,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -111,7 +122,6 @@ function DataTable<TData, TValue>({
       return nodeId || id || String(index);
     },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
@@ -125,8 +135,13 @@ function DataTable<TData, TValue>({
         .map(([id]) => id),
     [rowSelection],
   );
-  const filteredCount = table.getFilteredRowModel().rows.length;
-  const isFiltering = globalFilter.trim().length > 0;
+  const filteredCount = filteredData.length;
+  const totalCount = data.length;
+  const isFiltering = appliedSearch.trim().length > 0;
+
+  React.useEffect(() => {
+    table.setPageIndex(0);
+  }, [appliedSearch, table]);
 
   React.useEffect(() => {
     if (!drag || !enableDragSelect) return;
@@ -228,7 +243,16 @@ function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <AdminTableSearch table={table} {...ADMIN_PRODUCTS_SEARCH} />
+      <AdminTableSearch
+        {...ADMIN_PRODUCTS_SEARCH}
+        appliedQuery={appliedSearch}
+        draftQuery={draftSearch}
+        onDraftQueryChange={setDraftSearch}
+        onApplySearch={applySearch}
+        onClearSearch={clearSearch}
+        filteredCount={filteredCount}
+        totalCount={totalCount}
+      />
       {bulkDeleteEndpoint ? (
         <div className="flex items-center gap-2">
           <Button
@@ -332,8 +356,8 @@ function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  {globalFilter.trim()
-                    ? `No results for "${globalFilter.trim()}".`
+                  {appliedSearch.trim()
+                    ? `No results for "${appliedSearch.trim()}".`
                     : "No results."}
                 </TableCell>
               </TableRow>

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Table } from "@tanstack/react-table";
 import { Search, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -9,59 +8,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export type AdminTableSearchConfig = {
-  /** e.g. "products" or "collections" */
   entityLabel: string;
   placeholder: string;
-  /** Shown when search returns zero rows */
   emptyResultHint?: string;
 };
 
-type AdminTableSearchProps<TData> = {
-  table: Table<TData>;
+type AdminTableSearchProps = {
+  appliedQuery: string;
+  draftQuery: string;
+  onDraftQueryChange: (value: string) => void;
+  onApplySearch: (value?: string) => void;
+  onClearSearch: () => void;
+  filteredCount: number;
+  totalCount: number;
 } & AdminTableSearchConfig;
 
-export function AdminTableSearch<TData>({
-  table,
+export function AdminTableSearch({
   entityLabel,
   placeholder,
   emptyResultHint,
-}: AdminTableSearchProps<TData>) {
+  appliedQuery,
+  draftQuery,
+  onDraftQueryChange,
+  onApplySearch,
+  onClearSearch,
+  filteredCount,
+  totalCount,
+}: AdminTableSearchProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const appliedQuery =
-    (table.getState().globalFilter as string | undefined) ?? "";
-  const [draftQuery, setDraftQuery] = React.useState(appliedQuery);
-  const filteredCount = table.getFilteredRowModel().rows.length;
-  const totalCount = table.getPreFilteredRowModel().rows.length;
   const isFiltering = appliedQuery.trim().length > 0;
   const hasDraftChanges = draftQuery.trim() !== appliedQuery.trim();
   const isPending = hasDraftChanges && draftQuery.trim().length > 0;
 
   React.useEffect(() => {
-    setDraftQuery(appliedQuery);
-  }, [appliedQuery]);
-
-  const applySearch = React.useCallback(
-    (value: string = draftQuery) => {
-      const next = value.trim();
-      table.setGlobalFilter(next);
-      table.setPageIndex(0);
-      setDraftQuery(next);
-    },
-    [draftQuery, table],
-  );
-
-  const clearSearch = React.useCallback(() => {
-    setDraftQuery("");
-    table.setGlobalFilter("");
-    table.setPageIndex(0);
-    inputRef.current?.focus();
-  }, [table]);
-
-  React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && (appliedQuery || draftQuery)) {
         event.preventDefault();
-        clearSearch();
+        onClearSearch();
         inputRef.current?.blur();
       }
 
@@ -80,7 +63,7 @@ export function AdminTableSearch<TData>({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [appliedQuery, clearSearch, draftQuery]);
+  }, [appliedQuery, draftQuery, onClearSearch]);
 
   const statusBadge = isPending ? (
     <Badge variant="outline" className="border-amber-300 text-amber-800">
@@ -98,7 +81,9 @@ export function AdminTableSearch<TData>({
       aria-label={`Search ${entityLabel}`}
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold capitalize">Search {entityLabel}</h3>
+        <h3 className="text-sm font-semibold capitalize">
+          Search {entityLabel}
+        </h3>
         {statusBadge}
       </div>
 
@@ -111,11 +96,11 @@ export function AdminTableSearch<TData>({
           <Input
             ref={inputRef}
             value={draftQuery}
-            onChange={(event) => setDraftQuery(event.target.value)}
+            onChange={(event) => onDraftQueryChange(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                applySearch(event.currentTarget.value);
+                onApplySearch(event.currentTarget.value);
               }
             }}
             placeholder={placeholder}
@@ -129,7 +114,7 @@ export function AdminTableSearch<TData>({
           <Button
             type="button"
             className="h-10 min-w-[110px]"
-            onClick={() => applySearch()}
+            onClick={() => onApplySearch()}
           >
             <Search className="mr-2 h-4 w-4" aria-hidden />
             Search
@@ -139,7 +124,7 @@ export function AdminTableSearch<TData>({
               type="button"
               variant="outline"
               className="h-10"
-              onClick={clearSearch}
+              onClick={onClearSearch}
             >
               Clear
               <X className="ml-2 h-4 w-4" aria-hidden />
@@ -156,8 +141,8 @@ export function AdminTableSearch<TData>({
           </p>
         ) : (
           <p className="text-muted-foreground">
-            {totalCount} {entityLabel} loaded. Type a keyword and click Search or
-            press Enter.
+            {totalCount} {entityLabel} loaded. Type a keyword and click Search
+            or press Enter.
           </p>
         )}
 

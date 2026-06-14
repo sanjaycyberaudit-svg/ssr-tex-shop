@@ -134,6 +134,21 @@ describe("admin table search", () => {
     expect(matchesAdminProductTableSearch(firstProduct, "ST000240")).toBe(
       false,
     );
+    expect(matchesAdminProductTableSearch(otherProduct, "ST000239")).toBe(
+      false,
+    );
+    expect(
+      matchesAdminProductTableSearch(
+        {
+          node: {
+            name: "UPPADA SAREE ST000239",
+            productCode: "ST000239",
+            slug: "product-st000239",
+          },
+        },
+        "ST000239",
+      ),
+    ).toBe(true);
   });
 
   it("matches product codes and draft status", () => {

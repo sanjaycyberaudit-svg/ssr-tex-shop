@@ -92,126 +92,56 @@ function expandSlugSearchValues(slug: unknown): string[] {
   return [raw, normalized, compact].filter(Boolean);
 }
 
-/** Index ST000001 as ST_01, ST01, 01, etc. so shorthand code searches still match. */
-export function expandProductCodeSearchValues(productCode: unknown): string[] {
-  if (productCode == null || productCode === "") return [];
-
-  const raw = String(productCode).trim();
-  const upper = raw.toUpperCase();
-  const values = new Set<string>([
-    raw,
-    upper,
-    raw.toLowerCase(),
-    normalizeAdminSearchText(raw),
-    compactAdminSearchText(raw),
-    ...expandSlugSearchValues(raw),
-  ]);
-
-  const match = upper.match(/^ST[_-]?0*(\d+)$/);
-  if (match) {
-    const num = Number.parseInt(match[1], 10);
-    if (Number.isFinite(num) && num >= 0) {
-      const padded6 = `ST${String(num).padStart(6, "0")}`;
-      const short2 = String(num).padStart(2, "0");
-      [
-        padded6,
-        padded6.toLowerCase(),
-        `ST_${short2}`,
-        `st_${short2}`,
-        `ST-${short2}`,
-        `ST${num}`,
-        `st${num}`,
-        String(num),
-        short2,
-      ].forEach((value) => {
-        values.add(value);
-        values.add(normalizeAdminSearchText(value));
-        values.add(compactAdminSearchText(value));
-      });
-    }
-  }
-
-  return [...values].filter(Boolean);
-}
-
 /** When the whole query looks like a product code (ST…). */
 export function isProductCodeSearchQuery(filterValue: unknown): boolean {
   const raw = String(filterValue ?? "").trim();
   return /^ST[_-]?0*\d+$/i.test(raw);
 }
 
-/** Safe aliases for code queries — never bare digits like "1" or "01". */
-function buildProductCodeQueryAliases(filterValue: string): string[] {
-  const raw = filterValue.trim();
+/** Normalize ST_01, ST00001, ST000001, etc. to ST000001. */
+export function parseCanonicalProductCode(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+
   const upper = raw.toUpperCase();
   const match = upper.match(/^ST[_-]?0*(\d+)$/);
-  if (!match) {
-    return [raw, normalizeAdminSearchText(raw), compactAdminSearchText(raw)];
-  }
+  if (!match) return null;
 
   const num = Number.parseInt(match[1], 10);
-  if (!Number.isFinite(num) || num < 0) {
-    return [raw];
-  }
+  if (!Number.isFinite(num) || num < 0) return null;
 
-  const padded6 = `ST${String(num).padStart(6, "0")}`;
-  const short2 = String(num).padStart(2, "0");
-
-  return [
-    upper,
-    upper.toLowerCase(),
-    padded6,
-    padded6.toLowerCase(),
-    `ST_${short2}`,
-    `st_${short2}`,
-    `ST${num}`,
-    `st${num}`,
-    compactAdminSearchText(upper),
-    compactAdminSearchText(padded6),
-    normalizeAdminSearchText(upper),
-    normalizeAdminSearchText(padded6),
-  ];
+  return `ST${String(num).padStart(6, "0")}`;
 }
 
-/** Haystack built only from product-code fields (not price/stock). */
-export function buildAdminProductCodeSearchText(row: {
-  node: AdminProductSearchNode;
-}): string {
-  const product = row.node;
-  const nameCode = product.name?.match(/\bST[_-]?0*\d+\b/i)?.[0] ?? null;
+function collectProductCodeCandidates(
+  product: AdminProductSearchNode,
+): string[] {
+  const candidates: string[] = [];
 
-  return buildAdminSearchHaystack([
-    ...expandProductCodeSearchValues(product.productCode),
-    ...expandProductCodeSearchValues(nameCode),
-    ...expandSlugSearchValues(product.slug),
-  ]);
+  if (product.productCode) candidates.push(product.productCode);
+
+  const nameCode = product.name?.match(/\bST[_-]?0*\d+\b/i)?.[0];
+  if (nameCode) candidates.push(nameCode);
+
+  const slugCode = product.slug?.match(/st[_-]?0*\d+/i)?.[0];
+  if (slugCode) candidates.push(slugCode);
+
+  return candidates;
 }
 
 export function matchesAdminProductCodeSearch(
-  codeHaystack: string,
+  row: { node: AdminProductSearchNode },
   filterValue: unknown,
 ): boolean {
-  const raw = String(filterValue ?? "").trim();
-  if (!raw) return true;
+  const queryCanonical = parseCanonicalProductCode(filterValue);
+  if (!queryCanonical) return false;
 
-  const normalizedHaystack = normalizeAdminSearchText(codeHaystack);
-  const compactHaystack = compactAdminSearchText(normalizedHaystack);
+  for (const candidate of collectProductCodeCandidates(row.node)) {
+    const rowCanonical = parseCanonicalProductCode(candidate);
+    if (rowCanonical === queryCanonical) return true;
+  }
 
-  return buildProductCodeQueryAliases(raw).some((alias) => {
-    const normalizedAlias = normalizeAdminSearchText(alias);
-    const compactAlias = compactAdminSearchText(alias);
-
-    if (
-      normalizedAlias.length >= 3 &&
-      normalizedHaystack.includes(normalizedAlias)
-    ) {
-      return true;
-    }
-    if (compactAlias.length >= 4 && compactHaystack.includes(compactAlias)) {
-      return true;
-    }
-    return false;
-  });
+  return false;
 }
 
 export function matchesAdminProductTableSearch(
@@ -222,10 +152,7 @@ export function matchesAdminProductTableSearch(
   if (!query) return true;
 
   if (isProductCodeSearchQuery(query)) {
-    return matchesAdminProductCodeSearch(
-      buildAdminProductCodeSearchText(row),
-      query,
-    );
+    return matchesAdminProductCodeSearch(row, query);
   }
 
   return matchesAdminTableSearch(buildAdminProductSearchText(row), query);
@@ -367,6 +294,24 @@ export function buildAdminCollectionSearchText(row: {
     ...expandSlugSearchValues(collection.slug),
     collection.description,
   ]);
+}
+
+export function filterAdminProductTableRows<
+  T extends { node: AdminProductSearchNode },
+>(rows: T[], filterValue: unknown): T[] {
+  const query = String(filterValue ?? "").trim();
+  if (!query) return rows;
+  return rows.filter((row) => matchesAdminProductTableSearch(row, query));
+}
+
+export function filterAdminCollectionTableRows<
+  T extends { node: AdminCollectionSearchNode },
+>(rows: T[], filterValue: unknown): T[] {
+  const query = String(filterValue ?? "").trim();
+  if (!query) return rows;
+  return rows.filter((row) =>
+    matchesAdminTableSearch(buildAdminCollectionSearchText(row), query),
+  );
 }
 
 export function selectAllFilteredRows<TData>(
