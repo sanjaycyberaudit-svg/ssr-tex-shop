@@ -1,10 +1,9 @@
 import db from "@/lib/supabase/db";
 import { collections, medias, products } from "@/lib/supabase/schema";
-import { desc, eq, sql } from "drizzle-orm";
-import { unstable_cache } from "next/cache";
+import { desc, eq } from "drizzle-orm";
+import { cache } from "react";
 
 export const ADMIN_PRODUCTS_LIST_TAG = "admin-products-list";
-export const ADMIN_PRODUCTS_CACHE_SECONDS = 60;
 
 export type AdminProductTableNode = {
   id: string;
@@ -33,34 +32,27 @@ export type AdminProductTableRow = {
   node: AdminProductTableNode;
 };
 
-/** Uncached DB read — lean columns only (no HTML description blobs). */
-export async function loadAdminProductsListFromDb(): Promise<
-  AdminProductTableRow[]
-> {
-  const rows = await db
-    .select({
-      id: products.id,
-      name: products.name,
-      slug: products.slug,
-      rating: products.rating,
-      badge: products.badge,
-      price: products.price,
-      stock: products.stock,
-      featured: products.featured,
-      productCode: products.productCode,
-      isDraft: products.isDraft,
-      collectionId: collections.id,
-      collectionLabel: collections.label,
-      collectionSlug: collections.slug,
-      mediaId: medias.id,
-      mediaKey: medias.key,
-      mediaAlt: medias.alt,
-    })
-    .from(products)
-    .leftJoin(collections, eq(products.collectionId, collections.id))
-    .leftJoin(medias, eq(products.featuredImageId, medias.id))
-    .orderBy(desc(products.createdAt));
-
+/** Map joined DB rows into admin table shape. */
+function mapAdminProductRows(
+  rows: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    rating: string;
+    badge: string | null;
+    price: string;
+    stock: number | null;
+    featured: boolean | null;
+    productCode: string | null;
+    isDraft: boolean;
+    collectionId: string | null;
+    collectionLabel: string | null;
+    collectionSlug: string | null;
+    mediaId: string | null;
+    mediaKey: string | null;
+    mediaAlt: string | null;
+  }>,
+): AdminProductTableRow[] {
   return rows.map((row) => ({
     node: {
       id: row.id,
@@ -93,23 +85,36 @@ export async function loadAdminProductsListFromDb(): Promise<
   }));
 }
 
-const getAdminProductsListCachedInternal = unstable_cache(
-  async () => loadAdminProductsListFromDb(),
-  ["admin-products-list-v1"],
-  {
-    revalidate: ADMIN_PRODUCTS_CACHE_SECONDS,
-    tags: [ADMIN_PRODUCTS_LIST_TAG],
-  },
-);
-
-/** Cached full admin catalog — invalidated on every product write. */
-export async function getAdminProductsList(): Promise<AdminProductTableRow[]> {
-  return getAdminProductsListCachedInternal();
-}
-
-export async function getAdminProductsCount(): Promise<number> {
+/** Lean admin catalog query — no HTML description blobs. */
+export async function loadAdminProductsListFromDb(): Promise<
+  AdminProductTableRow[]
+> {
   const rows = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(products);
-  return Number(rows[0]?.count ?? 0);
+    .select({
+      id: products.id,
+      name: products.name,
+      slug: products.slug,
+      rating: products.rating,
+      badge: products.badge,
+      price: products.price,
+      stock: products.stock,
+      featured: products.featured,
+      productCode: products.productCode,
+      isDraft: products.isDraft,
+      collectionId: collections.id,
+      collectionLabel: collections.label,
+      collectionSlug: collections.slug,
+      mediaId: medias.id,
+      mediaKey: medias.key,
+      mediaAlt: medias.alt,
+    })
+    .from(products)
+    .leftJoin(collections, eq(products.collectionId, collections.id))
+    .leftJoin(medias, eq(products.featuredImageId, medias.id))
+    .orderBy(desc(products.createdAt));
+
+  return mapAdminProductRows(rows);
 }
+
+/** Per-request dedupe only — avoids unstable_cache hangs on serverless DB. */
+export const getAdminProductsList = cache(loadAdminProductsListFromDb);

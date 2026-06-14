@@ -14,6 +14,7 @@ const REDIS_PREFIXES = [
 /** Bust admin products table cache after catalog writes. */
 export function invalidateAdminProductsCache() {
   revalidateTag(ADMIN_PRODUCTS_LIST_TAG);
+  // Admin products load live from DB; tag kept for future ISR if reintroduced.
 }
 
 /** Bust storefront read caches after admin/catalog writes. */
