@@ -90,6 +90,22 @@ describe("admin table search", () => {
     expect(matchesAdminTableSearch(haystack, "4.8")).toBe(true);
   });
 
+  it("matches shorthand product codes like ST_01 against ST000001", () => {
+    const haystack = buildAdminProductSearchText({
+      node: {
+        name: "Product 2 ST000001",
+        productCode: "ST000001",
+        isDraft: true,
+        slug: "product-2",
+      },
+    });
+
+    expect(matchesAdminTableSearch(haystack, "ST_01")).toBe(true);
+    expect(matchesAdminTableSearch(haystack, "ST01")).toBe(true);
+    expect(matchesAdminTableSearch(haystack, "ST000001")).toBe(true);
+    expect(matchesAdminTableSearch(haystack, "st_01")).toBe(true);
+  });
+
   it("matches product codes and draft status", () => {
     const haystack = buildAdminProductSearchText({
       node: {

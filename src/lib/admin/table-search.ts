@@ -92,6 +92,61 @@ function expandSlugSearchValues(slug: unknown): string[] {
   return [raw, normalized, compact].filter(Boolean);
 }
 
+/** Index ST000001 as ST_01, ST01, 01, etc. so shorthand code searches still match. */
+export function expandProductCodeSearchValues(productCode: unknown): string[] {
+  if (productCode == null || productCode === "") return [];
+
+  const raw = String(productCode).trim();
+  const upper = raw.toUpperCase();
+  const values = new Set<string>([
+    raw,
+    upper,
+    raw.toLowerCase(),
+    normalizeAdminSearchText(raw),
+    compactAdminSearchText(raw),
+    ...expandSlugSearchValues(raw),
+  ]);
+
+  const match = upper.match(/^ST[_-]?0*(\d+)$/);
+  if (match) {
+    const num = Number.parseInt(match[1], 10);
+    if (Number.isFinite(num) && num >= 0) {
+      const padded6 = `ST${String(num).padStart(6, "0")}`;
+      const short2 = String(num).padStart(2, "0");
+      [
+        padded6,
+        padded6.toLowerCase(),
+        `ST_${short2}`,
+        `st_${short2}`,
+        `ST-${short2}`,
+        `ST${num}`,
+        `st${num}`,
+        String(num),
+        short2,
+      ].forEach((value) => {
+        values.add(value);
+        values.add(normalizeAdminSearchText(value));
+        values.add(compactAdminSearchText(value));
+      });
+    }
+  }
+
+  return [...values].filter(Boolean);
+}
+
+/** When the whole query looks like a product code, match aliases directly. */
+function parseProductCodeQueryAliases(
+  filterValue: unknown,
+): string[] | null {
+  const raw = String(filterValue ?? "").trim();
+  if (!raw) return null;
+
+  const match = raw.match(/^ST[_-]?0*(\d+)$/i);
+  if (!match) return null;
+
+  return expandProductCodeSearchValues(raw);
+}
+
 export function buildAdminSearchHaystack(values: Array<unknown>): string {
   return normalizeAdminSearchText(
     values
@@ -130,6 +185,27 @@ export function matchesAdminTableSearch(
   filterValue: unknown,
 ): boolean {
   const normalizedHaystack = normalizeAdminSearchText(haystack);
+  const compactHaystack = compactAdminSearchText(normalizedHaystack);
+  const productCodeAliases = parseProductCodeQueryAliases(filterValue);
+
+  if (productCodeAliases) {
+    return productCodeAliases.some((alias) => {
+      const normalizedAlias = normalizeAdminSearchText(alias);
+      const compactAlias = compactAdminSearchText(alias);
+      if (normalizedAlias && normalizedHaystack.includes(normalizedAlias)) {
+        return true;
+      }
+      if (
+        compactAlias &&
+        compactAlias.length >= 2 &&
+        compactHaystack.includes(compactAlias)
+      ) {
+        return true;
+      }
+      return false;
+    });
+  }
+
   const { phrases, tokens } = parseAdminSearchQuery(filterValue);
 
   if (phrases.length === 0 && tokens.length === 0) return true;
@@ -184,9 +260,11 @@ export function buildAdminProductSearchText(row: {
 
   return buildAdminSearchHaystack([
     product.id,
-    product.productCode,
-    ...expandSlugSearchValues(product.productCode),
+    ...expandProductCodeSearchValues(product.productCode),
     product.name,
+    ...expandProductCodeSearchValues(
+      product.name.match(/\bST[_-]?0*\d+\b/i)?.[0] ?? null,
+    ),
     product.description,
     ...expandSlugSearchValues(product.slug),
     ...expandBadgeSearchValues(product.badge),
