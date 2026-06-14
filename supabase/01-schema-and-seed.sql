@@ -212,10 +212,16 @@ CREATE POLICY "orders_select_own" ON orders FOR SELECT USING (auth.uid() = user_
 CREATE POLICY "order_lines_select_own" ON order_lines FOR SELECT
   USING (EXISTS (SELECT 1 FROM orders o WHERE o.id = "orderId" AND o.user_id = auth.uid()));
 
-CREATE POLICY "address_select_own" ON address FOR SELECT USING (auth.uid() = "userProfileId");
-CREATE POLICY "address_insert_own" ON address FOR INSERT WITH CHECK (auth.uid() = "userProfileId");
-CREATE POLICY "address_update_own" ON address FOR UPDATE USING (auth.uid() = "userProfileId");
-CREATE POLICY "address_delete_own" ON address FOR DELETE USING (auth.uid() = "userProfileId");
+CREATE POLICY "address_select_own" ON address FOR SELECT TO authenticated USING (auth.uid() = "userProfileId");
+CREATE POLICY "address_insert_own" ON address FOR INSERT TO authenticated WITH CHECK (auth.uid() = "userProfileId");
+CREATE POLICY "address_update_own" ON address FOR UPDATE TO authenticated USING (auth.uid() = "userProfileId") WITH CHECK (auth.uid() = "userProfileId");
+CREATE POLICY "address_delete_own" ON address FOR DELETE TO authenticated USING (auth.uid() = "userProfileId");
+
+CREATE INDEX IF NOT EXISTS address_user_profile_id_idx ON address ("userProfileId");
+CREATE INDEX IF NOT EXISTS address_user_default_idx ON address ("userProfileId", is_default DESC, created_at DESC);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON address TO authenticated;
+GRANT SELECT ON address TO anon;
 
 -- -----------------------------------------------------------------------------
 -- 5. SEED DATA – Sakthi Textiles (saree categories + sample products)

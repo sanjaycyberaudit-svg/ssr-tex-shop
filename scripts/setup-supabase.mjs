@@ -36,6 +36,15 @@ const policySql = [
   `CREATE POLICY "carts_all_own" ON carts FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
   `DROP POLICY IF EXISTS "wishlist_all_own" ON wishlist`,
   `CREATE POLICY "wishlist_all_own" ON wishlist FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
+  `DROP POLICY IF EXISTS "address_select_own" ON address`,
+  `CREATE POLICY "address_select_own" ON address FOR SELECT TO authenticated USING (auth.uid() = "userProfileId")`,
+  `DROP POLICY IF EXISTS "address_insert_own" ON address`,
+  `CREATE POLICY "address_insert_own" ON address FOR INSERT TO authenticated WITH CHECK (auth.uid() = "userProfileId")`,
+  `DROP POLICY IF EXISTS "address_update_own" ON address`,
+  `CREATE POLICY "address_update_own" ON address FOR UPDATE TO authenticated USING (auth.uid() = "userProfileId") WITH CHECK (auth.uid() = "userProfileId")`,
+  `DROP POLICY IF EXISTS "address_delete_own" ON address`,
+  `CREATE POLICY "address_delete_own" ON address FOR DELETE TO authenticated USING (auth.uid() = "userProfileId")`,
+  `GRANT SELECT, INSERT, UPDATE, DELETE ON address TO authenticated`,
 ];
 
 try {

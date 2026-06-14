@@ -21,4 +21,10 @@ CREATE POLICY "address_update_own" ON address
 
 DROP POLICY IF EXISTS "address_delete_own" ON address;
 CREATE POLICY "address_delete_own" ON address
-  FOR DELETE USING (auth.uid() = "userProfileId");
+  FOR DELETE TO authenticated USING (auth.uid() = "userProfileId");
+
+CREATE INDEX IF NOT EXISTS address_user_profile_id_idx ON address ("userProfileId");
+CREATE INDEX IF NOT EXISTS address_user_default_idx ON address ("userProfileId", is_default DESC, created_at DESC);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON address TO authenticated;
+GRANT SELECT ON address TO anon;
