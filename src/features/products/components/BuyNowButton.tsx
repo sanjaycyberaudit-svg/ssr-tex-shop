@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { AddAddressDialog } from "@/features/addresses";
-import type { AddressFormValues } from "@/features/addresses";
-import { createShippingAddress } from "@/_actions/address";
+import { CheckoutAddressDialog } from "@/features/addresses";
+import type { SavedShippingAddress } from "@/features/addresses";
 import { clearCheckoutAddressDraft } from "@/features/addresses/lib/checkoutAddressDraft";
 import { startCheckout } from "@/features/checkout/startCheckout";
 import { useAuth } from "@/providers/AuthProvider";
@@ -39,15 +38,15 @@ function BuyNowButton({ productId, quantity = 1, stock }: BuyNowButtonProps) {
     [user?.email, user?.user_metadata?.full_name],
   );
 
-  const handleAddressSubmit = async (values: AddressFormValues) => {
+  const handleCheckoutComplete = async (shipping: SavedShippingAddress) => {
     setIsProcessing(true);
     try {
-      const saved = await createShippingAddress(values, user?.id ?? null);
       await startCheckout({
         order: { [productId]: { quantity } },
         guest: !user,
-        shipping: saved,
+        shipping,
       });
+      clearCheckoutAddressDraft();
     } catch (err) {
       toast({
         title: "Could not complete purchase",
@@ -74,13 +73,15 @@ function BuyNowButton({ productId, quantity = 1, stock }: BuyNowButtonProps) {
             : "Buy Now"}
       </Button>
 
-      <AddAddressDialog
+      <CheckoutAddressDialog
         open={open}
         onOpenChange={setOpen}
-        onSubmit={handleAddressSubmit}
-        persistDraft
+        onComplete={handleCheckoutComplete}
+        guest={!user}
+        userId={user?.id}
+        accountDefaults={accountDefaults}
         submitLabel="Continue to payment"
-        defaultValues={accountDefaults}
+        checkoutQuantity={quantity}
       />
     </>
   );

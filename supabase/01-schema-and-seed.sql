@@ -95,6 +95,11 @@ CREATE TABLE address (
   line2 TEXT,
   postal_code TEXT,
   state TEXT,
+  full_name TEXT,
+  email TEXT,
+  mobile TEXT,
+  is_default BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   "userProfileId" UUID REFERENCES profiles(id) ON DELETE CASCADE
 );
 
@@ -186,6 +191,7 @@ ALTER TABLE carts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wishlist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_lines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE address ENABLE ROW LEVEL SECURITY;
 
 -- Public read (shop pages)
 CREATE POLICY "public_read_medias" ON medias FOR SELECT USING (true);
@@ -205,6 +211,11 @@ CREATE POLICY "wishlist_all_own" ON wishlist FOR ALL USING (auth.uid() = user_id
 CREATE POLICY "orders_select_own" ON orders FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "order_lines_select_own" ON order_lines FOR SELECT
   USING (EXISTS (SELECT 1 FROM orders o WHERE o.id = "orderId" AND o.user_id = auth.uid()));
+
+CREATE POLICY "address_select_own" ON address FOR SELECT USING (auth.uid() = "userProfileId");
+CREATE POLICY "address_insert_own" ON address FOR INSERT WITH CHECK (auth.uid() = "userProfileId");
+CREATE POLICY "address_update_own" ON address FOR UPDATE USING (auth.uid() = "userProfileId");
+CREATE POLICY "address_delete_own" ON address FOR DELETE USING (auth.uid() = "userProfileId");
 
 -- -----------------------------------------------------------------------------
 -- 5. SEED DATA – Sakthi Textiles (saree categories + sample products)

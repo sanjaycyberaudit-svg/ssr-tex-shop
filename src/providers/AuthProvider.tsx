@@ -63,6 +63,26 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
   const { toast } = useToast();
   const lastWelcomedUserId = useRef<string | null>(null);
 
+  const loadWishlistForUser = (userId: string) => {
+    const supabase = createClient();
+    supabase
+      .from("wishlist")
+      .select()
+      .eq("user_id", userId)
+      .then((data) => {
+        const wishlistItems: Parameters<typeof setWishlist>[0] = {};
+
+        data?.data?.forEach((item) => {
+          wishlistItems[item.product_id] = {
+            createdAt: new Date(item.created_at),
+            updatedAt: new Date(item.created_at),
+          };
+        });
+
+        setWishlist(wishlistItems);
+      });
+  };
+
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
 
@@ -75,6 +95,9 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
           case "INITIAL_SESSION":
             supabase.auth.getUser().then(({ data }) => {
               setUser(data.user);
+              if (data.user?.id) {
+                loadWishlistForUser(data.user.id);
+              }
             });
             break;
           case "PASSWORD_RECOVERY":
@@ -114,22 +137,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
             });
 
             if (session?.user?.id) {
-              supabase
-                .from("wishlist")
-                .select()
-                .eq("user_id", session.user.id)
-                .then((data) => {
-                  const wishlistItems: Parameters<typeof setWishlist>[0] = {};
-
-                  data?.data?.forEach((item) => {
-                    wishlistItems[item.product_id] = {
-                      createdAt: new Date(item.created_at),
-                      updatedAt: new Date(item.created_at),
-                    };
-                  });
-
-                  setWishlist(wishlistItems);
-                });
+              loadWishlistForUser(session.user.id);
             }
 
             if (

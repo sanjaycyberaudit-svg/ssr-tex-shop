@@ -28,7 +28,7 @@
     "db:migrate-payment-integrations": "node scripts/apply-payment-integrations.mjs",
     "db:migrate-seller-whatsapp-notify": "node scripts/apply-seller-whatsapp-notify.mjs",
     "db:migrate-products-draft-code": "node scripts/apply-products-draft-code.mjs",
-    "db:migrate-velo-api-keys": "node scripts/apply-velo-api-keys.mjs",
+    "db:migrate-user-addresses": "node scripts/apply-user-addresses.mjs",
     "db:seed-testimonials": "tsx --env-file=.env.local ./scripts/seed-sakthi-testimonials.ts",
     "make-admin": "node scripts/make-admin.mjs",
     "db:drop": "drizzle-kit drop --config=drizzle.config.ts",

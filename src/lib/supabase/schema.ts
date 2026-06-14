@@ -402,6 +402,13 @@ export const address = pgTable("address", {
   line2: text("line2"),
   postal_code: text("postal_code"),
   state: text("state"),
+  full_name: text("full_name"),
+  email: text("email"),
+  mobile: text("mobile"),
+  is_default: boolean("is_default").notNull().default(false),
+  created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .notNull()
+    .defaultNow(),
   userProfileId: uuid("userProfileId").references(() => profiles.id, {
     onDelete: "cascade",
   }),

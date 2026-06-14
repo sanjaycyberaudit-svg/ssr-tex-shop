@@ -1,35 +1,28 @@
-import CartSection from "@/features/carts/components/CartSection";
-import CartSectionSkeleton from "@/features/carts/components/CartSectionSkeleton";
-import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import Link from "next/link";
+import { AddressSettingsPanel } from "@/features/addresses";
+import { listUserAddresses } from "@/_actions/address";
+import { getSessionUser } from "@/lib/auth/admin";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
 
-async function CartPage() {
-  const cookieStore = cookies();
-  const supabase = createClient({ cookieStore });
+export const dynamic = "force-dynamic";
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError || !user) {
+async function AddressSettingsPage() {
+  const user = await getSessionUser();
+  if (!user) {
     redirect("/sign-in");
   }
 
-  return (
-    <div className="min-h-screen w-full">
-      <section className="flex justify-between items-center py-8">
-        <h1 className="text-3xl">Your Cart</h1>
-        <Link href="/shop">Continue shopping</Link>
-      </section>
+  const addresses = await listUserAddresses();
+  const accountDefaults = {
+    email: user.email ?? "",
+    fullName: (user.user_metadata?.full_name as string | undefined) ?? "",
+  };
 
-      <Suspense fallback={<CartSectionSkeleton />}>
-        <CartSection />
-      </Suspense>
-    </div>
+  return (
+    <AddressSettingsPanel
+      addresses={addresses}
+      accountDefaults={accountDefaults}
+    />
   );
 }
 
-export default CartPage;
+export default AddressSettingsPage;

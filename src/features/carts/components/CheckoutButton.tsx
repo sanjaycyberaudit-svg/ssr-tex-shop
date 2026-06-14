@@ -5,17 +5,16 @@ import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import type { CartItems } from "@/features/carts";
-import { AddAddressDialog } from "@/features/addresses";
-import type { AddressFormValues } from "@/features/addresses";
-import { createShippingAddress } from "@/_actions/address";
+import { CheckoutAddressDialog } from "@/features/addresses";
+import type { SavedShippingAddress } from "@/features/addresses";
 import { clearCheckoutAddressDraft } from "@/features/addresses/lib/checkoutAddressDraft";
 import { startCheckout } from "@/features/checkout/startCheckout";
 import BulkOrderGuardDialog from "@/features/carts/components/BulkOrderGuardDialog";
 import { isBulkOrderQuantity } from "@/features/carts/constants/bulkOrder";
 import { useAuth } from "@/providers/AuthProvider";
 import { useBulkOrderGuardConfig } from "@/providers/BulkOrderGuardProvider";
+import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 
 type CheckoutButtonProps = React.ComponentProps<typeof Button> & {
   order: CartItems;
@@ -66,17 +65,13 @@ function CheckoutButton({
     [user?.email, user?.user_metadata?.full_name],
   );
 
-  const handleAddressSubmit = async (values: AddressFormValues) => {
+  const handleCheckoutComplete = async (shipping: SavedShippingAddress) => {
     setIsLoading(true);
     try {
-      const saved = await createShippingAddress(
-        values,
-        guest ? null : user?.id ?? null,
-      );
       await startCheckout({
         order,
         guest,
-        shipping: saved,
+        shipping,
         promoCode: promoCode ?? null,
       });
       clearCheckoutAddressDraft();
@@ -164,13 +159,14 @@ function CheckoutButton({
         )}
       </Button>
 
-      <AddAddressDialog
+      <CheckoutAddressDialog
         open={open}
         onOpenChange={setOpen}
-        onSubmit={handleAddressSubmit}
-        persistDraft
+        onComplete={handleCheckoutComplete}
+        guest={guest}
+        userId={user?.id}
+        accountDefaults={accountDefaults}
         submitLabel="Continue to payment"
-        defaultValues={accountDefaults}
         checkoutQuantity={checkoutQuantity}
       />
 
