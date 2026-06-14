@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
+  FilterFn,
   RowSelectionState,
   SortingState,
   VisibilityState,
@@ -75,17 +76,19 @@ function DataTable<TData, TValue>({
   const rowRefs = React.useRef<Record<string, HTMLTableRowElement | null>>({});
 
   const globalFilterFn = React.useMemo(
-    () => createAdminTableGlobalFilter(buildAdminProductSearchText),
+    () =>
+      createAdminTableGlobalFilter((row) =>
+        buildAdminProductSearchText(
+          row as Parameters<typeof buildAdminProductSearchText>[0],
+        ),
+      ) as FilterFn<TData>,
     [],
   );
 
-  const handleGlobalFilterChange = React.useCallback(
-    (value: string) => {
-      setGlobalFilter(value);
-      setRowSelection({});
-    },
-    [],
-  );
+  const handleGlobalFilterChange = React.useCallback((value: string) => {
+    setGlobalFilter(value);
+    setRowSelection({});
+  }, []);
 
   const table = useReactTable({
     data,
@@ -241,9 +244,7 @@ function DataTable<TData, TValue>({
             onClick={() => selectAllFilteredRows(table, setRowSelection)}
             disabled={filteredCount === 0}
           >
-            {isFiltering
-              ? `Select filtered (${filteredCount})`
-              : "Select all"}
+            {isFiltering ? `Select filtered (${filteredCount})` : "Select all"}
           </Button>
           <Button
             variant="outline"
