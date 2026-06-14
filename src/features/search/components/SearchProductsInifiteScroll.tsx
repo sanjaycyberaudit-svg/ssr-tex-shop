@@ -34,6 +34,7 @@ function SearchProductsInifiteScroll({
           variables={variable}
           collectionId={collectionId}
           isLastPage={i === pageVariables.length - 1}
+          showMatchingCollections={i === 0}
           onLoadMore={loadMoreHandler}
         />
       ))}

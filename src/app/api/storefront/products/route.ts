@@ -20,17 +20,22 @@ export async function GET(request: NextRequest) {
       request.nextUrl.searchParams,
     );
 
-    const productsCollection =
-      mode === "featured"
-        ? await fetchFeaturedProductsCached(
-            variables as { first: number; after?: string | null },
-          )
-        : await fetchProductSearchCached(variables as SearchQueryVariables);
+    if (mode === "featured") {
+      const productsCollection = await fetchFeaturedProductsCached(
+        variables as { first: number; after?: string | null },
+      );
 
-    return NextResponse.json(
-      { productsCollection },
-      { headers: CACHE_HEADERS },
+      return NextResponse.json(
+        { productsCollection, matchingCollections: [] },
+        { headers: CACHE_HEADERS },
+      );
+    }
+
+    const searchResult = await fetchProductSearchCached(
+      variables as SearchQueryVariables,
     );
+
+    return NextResponse.json(searchResult, { headers: CACHE_HEADERS });
   } catch (error) {
     console.error("[storefront/products] GET failed:", error);
     return NextResponse.json(

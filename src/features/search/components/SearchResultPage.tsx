@@ -8,7 +8,9 @@ import {
   useDraftProductIds,
   useStorefrontProductSearch,
 } from "@/hooks/useStorefrontProducts";
+import { normalizeStorefrontSearchTerm } from "@/lib/storefront/collection-search";
 import { useMemo } from "react";
+import { SearchMatchingCollections } from "./SearchMatchingCollections";
 import SearchProductsGridSkeleton from "./SearchProductsGridSkeleton";
 
 type ProductNode = DocumentType<typeof ProductCardFragment>;
@@ -18,17 +20,19 @@ const SearchResultPage = ({
   onLoadMore,
   isLastPage,
   collectionId,
+  showMatchingCollections = false,
 }: {
   variables: SearchQueryVariables;
   onLoadMore: (cursor: string) => void;
   isLastPage: boolean;
   collectionId?: string;
+  showMatchingCollections?: boolean;
 }) => {
-  const { productsCollection, fetching, error } = useStorefrontProductSearch(
-    variables,
-    collectionId,
-  );
+  const { productsCollection, matchingCollections, fetching, error } =
+    useStorefrontProductSearch(variables, collectionId);
   const { draftIds, draftLoaded } = useDraftProductIds();
+
+  const searchTerm = normalizeStorefrontSearchTerm(variables.search);
 
   const visibleEdges = useMemo(
     () =>
@@ -37,31 +41,48 @@ const SearchResultPage = ({
     [draftIds, productsCollection?.edges],
   );
 
+  const hasCollectionMatches =
+    showMatchingCollections && matchingCollections.length > 0;
+  const hasProductMatches = visibleEdges.length > 0;
+  const hasAnyMatches = hasCollectionMatches || hasProductMatches;
+
   return (
     <div>
       {error && <p>Oh no... {error}</p>}
 
       {(fetching || !draftLoaded) && <SearchProductsGridSkeleton />}
 
-      {productsCollection && draftLoaded && (
+      {productsCollection && draftLoaded && !fetching && (
         <>
-          {visibleEdges.length === 0 && (
+          {hasCollectionMatches ? (
+            <SearchMatchingCollections
+              collections={matchingCollections}
+              searchTerm={searchTerm}
+            />
+          ) : null}
+
+          {!hasAnyMatches && searchTerm ? (
             <p>
-              {`There is no Products with name `}
-              <span className="font-bold">
-                {(variables.search || []).slice(1, -2)}
-              </span>
-              {"."}
+              No products or collections match{" "}
+              <span className="font-bold">{searchTerm}</span>.
             </p>
-          )}
-          <section className="grid grid-cols-2 lg:grid-cols-4 w-full gap-y-8 gap-x-3 py-5">
-            {visibleEdges.map(({ node }) => (
-              <ProductCard key={node.id} product={node as ProductNode} />
-            ))}
-          </section>
+          ) : null}
+
+          {hasProductMatches ? (
+            <section className="grid grid-cols-2 w-full gap-x-3 gap-y-8 py-5 lg:grid-cols-4">
+              {visibleEdges.map(({ node }) => (
+                <ProductCard key={node.id} product={node as ProductNode} />
+              ))}
+            </section>
+          ) : hasCollectionMatches ? (
+            <p className="py-2 text-sm text-muted-foreground">
+              No individual products matched this search, but the collections
+              above may have what you need.
+            </p>
+          ) : null}
 
           {isLastPage && productsCollection.pageInfo.hasNextPage && (
-            <div className="w-full flex justify-center items-center mt-3">
+            <div className="mt-3 flex w-full items-center justify-center">
               <Button
                 onClick={() =>
                   onLoadMore(productsCollection.pageInfo.endCursor ?? "")

@@ -6,6 +6,7 @@ export const SearchQueryDocument = gql(/* GraphQL */ `
     $lower: BigFloat
     $upper: BigFloat
     $collections: [String!]
+    $matchedCollectionIds: [String!]
     $first: Int!
     $after: Cursor
     $orderBy: [productsOrderBy!]
@@ -13,7 +14,14 @@ export const SearchQueryDocument = gql(/* GraphQL */ `
     productsCollection(
       filter: {
         and: [
-          { name: { ilike: $search } }
+          {
+            or: [
+              { name: { ilike: $search } }
+              { slug: { ilike: $search } }
+              { description: { ilike: $search } }
+              { collection_id: { in: $matchedCollectionIds } }
+            ]
+          }
           { price: { gt: $lower, lt: $upper } }
           { collection_id: { in: $collections } }
         ]

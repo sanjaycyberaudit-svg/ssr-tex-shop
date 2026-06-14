@@ -1,3 +1,4 @@
+export { SearchMatchingCollections } from "./SearchMatchingCollections";
 export { default as SearchProductsGridSkeleton } from "./SearchProductsGridSkeleton";
 export { default as SearchProductsInifiteScroll } from "./SearchProductsInifiteScroll";
 export { FeaturedProductsScroll } from "./FeaturedProductsScroll";

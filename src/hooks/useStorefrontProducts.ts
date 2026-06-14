@@ -1,6 +1,7 @@
 "use client";
 
 import type { SearchQueryVariables } from "@/gql/graphql";
+import type { StorefrontCollectionMatch } from "@/lib/storefront/collection-search";
 import { useEffect, useState } from "react";
 import {
   featuredVariablesToQueryString,
@@ -14,6 +15,7 @@ type ProductsCollection = {
 
 type State = {
   productsCollection: ProductsCollection;
+  matchingCollections: StorefrontCollectionMatch[];
   fetching: boolean;
   error: string | null;
 };
@@ -24,6 +26,7 @@ export function useStorefrontProductSearch(
 ) {
   const [state, setState] = useState<State>({
     productsCollection: null,
+    matchingCollections: [],
     fetching: true,
     error: null,
   });
@@ -38,12 +41,16 @@ export function useStorefrontProductSearch(
     void fetch(`/api/storefront/products?${queryKey}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to load products");
-        return res.json() as Promise<{ productsCollection: ProductsCollection }>;
+        return res.json() as Promise<{
+          productsCollection: ProductsCollection;
+          matchingCollections?: StorefrontCollectionMatch[];
+        }>;
       })
       .then((payload) => {
         if (!active) return;
         setState({
           productsCollection: payload.productsCollection,
+          matchingCollections: payload.matchingCollections ?? [],
           fetching: false,
           error: null,
         });
@@ -52,6 +59,7 @@ export function useStorefrontProductSearch(
         if (!active) return;
         setState({
           productsCollection: null,
+          matchingCollections: [],
           fetching: false,
           error:
             error instanceof Error ? error.message : "Failed to load products",
@@ -72,6 +80,7 @@ export function useStorefrontFeaturedProducts(variables: {
 }) {
   const [state, setState] = useState<State>({
     productsCollection: null,
+    matchingCollections: [],
     fetching: true,
     error: null,
   });
@@ -86,12 +95,16 @@ export function useStorefrontFeaturedProducts(variables: {
     void fetch(`/api/storefront/products?${queryKey}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to load products");
-        return res.json() as Promise<{ productsCollection: ProductsCollection }>;
+        return res.json() as Promise<{
+          productsCollection: ProductsCollection;
+          matchingCollections?: StorefrontCollectionMatch[];
+        }>;
       })
       .then((payload) => {
         if (!active) return;
         setState({
           productsCollection: payload.productsCollection,
+          matchingCollections: payload.matchingCollections ?? [],
           fetching: false,
           error: null,
         });
@@ -100,6 +113,7 @@ export function useStorefrontFeaturedProducts(variables: {
         if (!active) return;
         setState({
           productsCollection: null,
+          matchingCollections: [],
           fetching: false,
           error:
             error instanceof Error ? error.message : "Failed to load products",
