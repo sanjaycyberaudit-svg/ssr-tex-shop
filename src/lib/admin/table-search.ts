@@ -156,17 +156,25 @@ export type AdminProductSearchNode = {
   name?: string | null;
   description?: string | null;
   slug?: string | null;
+  productCode?: string | null;
   badge?: string | null;
   price?: string | number | null;
   stock?: number | null;
   rating?: string | number | null;
   featured?: boolean | null;
+  isDraft?: boolean | null;
   collections?: {
     label?: string | null;
     slug?: string | null;
     title?: string | null;
   } | null;
 };
+
+function expandDraftSearchValues(isDraft: unknown): string[] {
+  if (isDraft === true) return ["draft", "unpublished"];
+  if (isDraft === false) return ["published", "live"];
+  return [];
+}
 
 export function buildAdminProductSearchText(row: {
   node: AdminProductSearchNode;
@@ -176,6 +184,8 @@ export function buildAdminProductSearchText(row: {
 
   return buildAdminSearchHaystack([
     product.id,
+    product.productCode,
+    ...expandSlugSearchValues(product.productCode),
     product.name,
     product.description,
     ...expandSlugSearchValues(product.slug),
@@ -184,6 +194,7 @@ export function buildAdminProductSearchText(row: {
     product.stock,
     product.rating,
     ...expandFeaturedSearchValues(product.featured),
+    ...expandDraftSearchValues(product.isDraft),
     collection?.label,
     ...expandSlugSearchValues(collection?.slug),
     collection?.title,

@@ -5,7 +5,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DeleteDialog from "@/components/ui/deleteDialog";
-import { gql, DocumentType } from "@/gql";
+import { gql } from "@/gql";
+import type { AdminProductTableRow } from "@/lib/admin/getAdminProductsList";
 import { formatPrice } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
@@ -38,9 +39,7 @@ export const ProductColumnFragment = gql(/* GraphQL */ `
   }
 `);
 
-type ProductRow = {
-  node: DocumentType<typeof ProductColumnFragment>;
-};
+type ProductRow = AdminProductTableRow;
 
 function ProductRowActions({ productId }: { productId: string }) {
   const router = useRouter();
@@ -203,12 +202,32 @@ const ProductsColumns: ColumnDef<ProductRow>[] = [
       const product = row.original.node;
 
       return (
-        <Link
-          href={`/admin/products/${product.id}`}
-          className="text-center font-medium capitalize px-3 hover:underline"
-        >
-          {product.name}
-        </Link>
+        <div className="flex flex-col gap-1 px-3">
+          <Link
+            href={`/admin/products/${product.id}`}
+            className="font-medium capitalize hover:underline"
+          >
+            {product.name}
+          </Link>
+          {product.isDraft ? (
+            <span className="w-fit rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800">
+              Draft
+            </span>
+          ) : null}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "productCode",
+    header: () => <div className="text-left">Product Code</div>,
+    cell: ({ row }) => {
+      const product = row.original.node;
+
+      return (
+        <div className="font-mono text-sm">
+          {product.productCode ?? "—"}
+        </div>
       );
     },
   },

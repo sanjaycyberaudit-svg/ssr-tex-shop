@@ -6,6 +6,7 @@ import {
   resolveVeloApiKey,
   touchVeloApiKeyUsage,
 } from "@/lib/integrations/velo";
+import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { NextRequest, NextResponse } from "next/server";
 
 const VELO_CORS_ORIGINS = new Set([
@@ -74,6 +75,9 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await handleVeloProductsRequest(body);
+  if (result.ok) {
+    await invalidateStorefrontCache();
+  }
   const status = result.ok ? 200 : 400;
 
   return NextResponse.json(result, {

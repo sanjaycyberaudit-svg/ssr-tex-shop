@@ -235,7 +235,8 @@ function DataTable<TData, TValue>({
     <div className="space-y-4">
       <AdminTableSearch
         table={table}
-        placeholder='Search products — try: silk kanchi, "silk saree", 1299, featured...'
+        showTotalCount
+        placeholder='Search products — try: ST_01, silk kanchi, "silk saree", draft, featured...'
       />
       {bulkDeleteEndpoint ? (
         <div className="flex items-center gap-2">

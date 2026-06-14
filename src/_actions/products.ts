@@ -2,9 +2,11 @@
 
 import db from "@/lib/supabase/db";
 import { InsertProducts, productMedias, products } from "@/lib/supabase/schema";
+import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { eq, inArray, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { slugify } from "@/lib/utils";
+import { revalidatePath } from "next/cache";
 
 type SearchProductsActionProps = {
   query: string;
@@ -16,6 +18,8 @@ type SearchProductsActionProps = {
 export const createProductAction = async (product: InsertProducts) => {
   createInsertSchema(products).parse(product);
   const data = await db.insert(products).values(product).returning();
+  revalidatePath("/admin/products");
+  await invalidateStorefrontCache();
   return data;
 };
 
@@ -30,6 +34,8 @@ export const updateProductAction = async (
     .where(eq(products.id, productId))
     .returning();
 
+  revalidatePath("/admin/products");
+  await invalidateStorefrontCache();
   return insertedProduct;
 };
 
@@ -140,6 +146,8 @@ export async function createDraftProductsFromMedia(
       });
     }
 
+    revalidatePath("/admin/products");
+    await invalidateStorefrontCache();
     return createdProducts;
   });
 }

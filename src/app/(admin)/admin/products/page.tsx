@@ -2,19 +2,17 @@ import AdminShell from "@/components/admin/AdminShell";
 import { buttonVariants } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/features/cms";
 import { StockControlForm } from "@/features/admin/settings/StockControlForm";
-import { ProductsColumns, ProductsDataTable } from "@/features/products";
-import { gql } from "@/gql";
+import { AdminProductsTableSection } from "@/features/products/components/admin/AdminProductsTableSection";
 import {
   resolveBulkOrderGuardConfig,
   resolveStockControlConfig,
 } from "@/lib/integrations/settings";
 import db from "@/lib/supabase/db";
 import { carts, products } from "@/lib/supabase/schema";
-import { getClient } from "@/lib/urql";
+import { getAdminProductsCount } from "@/lib/admin/getAdminProductsList";
 import { cn } from "@/lib/utils";
 import { gte, lt, sql } from "drizzle-orm";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 type AdminProjectsPageProps = {
@@ -24,21 +22,8 @@ type AdminProjectsPageProps = {
 };
 
 async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
-  const AdminProductsPageQuery = gql(/* GraphQL */ `
-    query AdminProductsPageQuery {
-      productsCollection(orderBy: [{ created_at: DescNullsLast }]) {
-        edges {
-          node {
-            id
-            ...ProductColumnFragment
-          }
-        }
-      }
-    }
-  `);
-
-  const [{ data }, bulkOrderGuard, stockControl] = await Promise.all([
-    getClient().query(AdminProductsPageQuery, {}),
+  const [totalProducts, bulkOrderGuard, stockControl] = await Promise.all([
+    getAdminProductsCount(),
     resolveBulkOrderGuardConfig(),
     resolveStockControlConfig(),
   ]);
@@ -59,7 +44,6 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
         .where(lt(products.stock, stockControl.lowStockThreshold))
     : [{ count: 0 }];
 
-  if (!data) return notFound();
   const threshold = bulkOrderGuard.threshold;
   const bulkHitCount = bulkOrderGuard.enabled
     ? Number(bulkHitCountRows[0]?.count ?? 0)
@@ -71,7 +55,7 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
   return (
     <AdminShell
       heading="Products"
-      description={"Edit products from the dashboard. "}
+      description={`Manage all ${totalProducts} products in your catalog.`}
     >
       <section className="flex justify-end items-center pb-5 w-full">
         <Link href="/admin/products/new" className={cn(buttonVariants())}>
@@ -115,13 +99,7 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
       </section>
 
       <Suspense fallback={<DataTableSkeleton />}>
-        <ProductsDataTable
-          columns={ProductsColumns}
-          data={data.productsCollection?.edges || []}
-          bulkDeleteEndpoint="/api/admin/products/manage"
-          bulkDeleteLabel="Delete selected products"
-          enableDragSelect
-        />
+        <AdminProductsTableSection />
       </Suspense>
     </AdminShell>
   );

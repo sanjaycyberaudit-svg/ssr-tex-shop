@@ -10,11 +10,13 @@ import { Input } from "@/components/ui/input";
 type AdminTableSearchProps<TData> = {
   table: Table<TData>;
   placeholder?: string;
+  showTotalCount?: boolean;
 };
 
 export function AdminTableSearch<TData>({
   table,
   placeholder = "Search...",
+  showTotalCount = false,
 }: AdminTableSearchProps<TData>) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const query = (table.getState().globalFilter as string | undefined) ?? "";
@@ -74,6 +76,10 @@ export function AdminTableSearch<TData>({
         {isFiltering ? (
           <p className="text-sm text-muted-foreground" aria-live="polite">
             {filteredCount} of {totalCount} shown
+          </p>
+        ) : showTotalCount ? (
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {totalCount} products
           </p>
         ) : (
           <p className="text-xs text-muted-foreground">

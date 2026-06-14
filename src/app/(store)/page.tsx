@@ -12,6 +12,7 @@ import { TestimonialCardFragment } from "@/features/testimonials";
 import { gql } from "@/gql";
 import { heroSlides } from "@/config/heroSlides";
 import { getHomeBannerSlides } from "@/lib/integrations/settings";
+import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
 import { getClient } from "@/lib/urql";
 import { siteConfig } from "@/config/site";
 
@@ -60,9 +61,10 @@ const LandingRouteQuery = gql(/* GraphQL */ `
 `);
 
 export default async function Home() {
-  const [homeBannerSlides, landingResponse] = await Promise.all([
+  const [homeBannerSlides, landingResponse, draftProductIds] = await Promise.all([
     getHomeBannerSlides(),
     getClient().query(LandingRouteQuery, {}),
+    getDraftProductIdsCached(),
   ]);
   const { data, error } = landingResponse;
 
@@ -70,7 +72,10 @@ export default async function Home() {
     console.error("LandingRouteQuery failed:", error.message);
   }
 
+  const draftIds = new Set(draftProductIds);
   const products = data?.products;
+  const featuredProducts =
+    products?.edges?.filter((edge) => !draftIds.has(edge.node.id)) ?? [];
   const collectionScrollCards = data?.collectionScrollCards;
   const homeTestimonials = data?.homeTestimonials;
   const slides = homeBannerSlides?.length ? homeBannerSlides : heroSlides;
@@ -100,8 +105,8 @@ export default async function Home() {
           <HomeTestimonialsCarousel testimonials={homeTestimonials.edges} />
         ) : null}
 
-        {products?.edges?.length ? (
-          <HomeFeaturedCarousel products={products.edges} />
+        {featuredProducts.length ? (
+          <HomeFeaturedCarousel products={featuredProducts} />
         ) : null}
 
         <TrustFeatures />
