@@ -20,7 +20,7 @@ export function CollectionsDataTable({ data }: CollectionsDataTableProps) {
     <DataTable
       columns={CollectionsColumns}
       data={data}
-      searchPlaceholder="Search collections by label, title, slug, or description..."
+      searchPlaceholder='Search collections — try: kanchi, "wedding saree", silk-sarees...'
       getSearchText={buildAdminCollectionSearchText}
     />
   );

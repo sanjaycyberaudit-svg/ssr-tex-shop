@@ -32,6 +32,7 @@ import { useToast } from "@/components/ui/use-toast";
 import {
   buildAdminProductSearchText,
   createAdminTableGlobalFilter,
+  selectAllFilteredRows,
 } from "@/lib/admin/table-search";
 import { useRouter } from "next/navigation";
 
@@ -78,6 +79,14 @@ function DataTable<TData, TValue>({
     [],
   );
 
+  const handleGlobalFilterChange = React.useCallback(
+    (value: string) => {
+      setGlobalFilter(value);
+      setRowSelection({});
+    },
+    [],
+  );
+
   const table = useReactTable({
     data,
     columns,
@@ -89,7 +98,7 @@ function DataTable<TData, TValue>({
       globalFilter,
     },
     autoResetPageIndex: true,
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: handleGlobalFilterChange,
     globalFilterFn,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -118,6 +127,8 @@ function DataTable<TData, TValue>({
         .map(([id]) => id),
     [rowSelection],
   );
+  const filteredCount = table.getFilteredRowModel().rows.length;
+  const isFiltering = globalFilter.trim().length > 0;
 
   React.useEffect(() => {
     if (!drag || !enableDragSelect) return;
@@ -221,16 +232,18 @@ function DataTable<TData, TValue>({
     <div className="space-y-4">
       <AdminTableSearch
         table={table}
-        placeholder="Search products by name, slug, collection, badge, or price..."
+        placeholder='Search products — try: silk kanchi, "silk saree", 1299, featured...'
       />
       {bulkDeleteEndpoint ? (
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => table.toggleAllRowsSelected(true)}
-            disabled={table.getRowModel().rows.length === 0}
+            onClick={() => selectAllFilteredRows(table, setRowSelection)}
+            disabled={filteredCount === 0}
           >
-            Select All
+            {isFiltering
+              ? `Select filtered (${filteredCount})`
+              : "Select all"}
           </Button>
           <Button
             variant="outline"
@@ -341,7 +354,9 @@ function DataTable<TData, TValue>({
           />
         ) : null}
       </div>
-      <DataTablePagination table={table} />
+      {isFiltering && filteredCount === 0 ? null : (
+        <DataTablePagination table={table} />
+      )}
     </div>
   );
 }
