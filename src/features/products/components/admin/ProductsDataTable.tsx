@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
-  FilterFn,
   RowSelectionState,
   SortingState,
   VisibilityState,
@@ -33,7 +32,7 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useToast } from "@/components/ui/use-toast";
 import {
   buildAdminProductSearchText,
-  createAdminTableGlobalFilter,
+  createAdminProductTableGlobalFilter,
   selectAllFilteredRows,
 } from "@/lib/admin/table-search";
 import { useRouter } from "next/navigation";
@@ -77,12 +76,7 @@ function DataTable<TData, TValue>({
   const rowRefs = React.useRef<Record<string, HTMLTableRowElement | null>>({});
 
   const globalFilterFn = React.useMemo(
-    () =>
-      createAdminTableGlobalFilter((row) =>
-        buildAdminProductSearchText(
-          row as Parameters<typeof buildAdminProductSearchText>[0],
-        ),
-      ) as FilterFn<TData>,
+    () => createAdminProductTableGlobalFilter<TData>(),
     [],
   );
 

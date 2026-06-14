@@ -1,6 +1,7 @@
 import {
   buildAdminCollectionSearchText,
   buildAdminProductSearchText,
+  matchesAdminProductTableSearch,
   matchesAdminTableSearch,
   normalizeAdminSearchText,
   parseAdminSearchQuery,
@@ -91,35 +92,64 @@ describe("admin table search", () => {
   });
 
   it("matches shorthand product codes like ST_01 against ST000001", () => {
-    const haystack = buildAdminProductSearchText({
+    const row = {
       node: {
         name: "Product 2 ST000001",
         productCode: "ST000001",
         isDraft: true,
-        slug: "product-2",
+        slug: "product-st000001",
       },
-    });
+    };
 
-    expect(matchesAdminTableSearch(haystack, "ST_01")).toBe(true);
-    expect(matchesAdminTableSearch(haystack, "ST01")).toBe(true);
-    expect(matchesAdminTableSearch(haystack, "ST000001")).toBe(true);
-    expect(matchesAdminTableSearch(haystack, "st_01")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "ST_01")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "ST01")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "ST000001")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "ST00001")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "st_01")).toBe(true);
+  });
+
+  it("does not match every product when searching a specific product code", () => {
+    const firstProduct = {
+      node: {
+        name: "UPPADA SAREE ST000001",
+        productCode: "ST000001",
+        slug: "product-st000001",
+        price: "869",
+        stock: 15,
+      },
+    };
+    const otherProduct = {
+      node: {
+        name: "UPPADA SAREE ST000240",
+        productCode: "ST000240",
+        slug: "product-st000240",
+        price: "869",
+        stock: 15,
+      },
+    };
+
+    expect(matchesAdminProductTableSearch(firstProduct, "ST00001")).toBe(true);
+    expect(matchesAdminProductTableSearch(otherProduct, "ST00001")).toBe(false);
+    expect(matchesAdminProductTableSearch(otherProduct, "ST000240")).toBe(true);
+    expect(matchesAdminProductTableSearch(firstProduct, "ST000240")).toBe(
+      false,
+    );
   });
 
   it("matches product codes and draft status", () => {
-    const haystack = buildAdminProductSearchText({
+    const row = {
       node: {
         name: "Product 2",
         productCode: "ST_01",
         isDraft: true,
         slug: "product-2",
       },
-    });
+    };
 
-    expect(matchesAdminTableSearch(haystack, "ST_01")).toBe(true);
-    expect(matchesAdminTableSearch(haystack, "st01")).toBe(true);
-    expect(matchesAdminTableSearch(haystack, "draft")).toBe(true);
-    expect(matchesAdminTableSearch(haystack, "product 2")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "ST_01")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "st01")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "draft")).toBe(true);
+    expect(matchesAdminProductTableSearch(row, "product 2")).toBe(true);
   });
 
   it("searches collection label title slug and description", () => {
