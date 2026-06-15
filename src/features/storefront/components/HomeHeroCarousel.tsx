@@ -11,7 +11,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { heroSlides, type HeroSlide } from "@/config/heroSlides";
-import { useEmblaAutoplayPlugin } from "@/features/storefront/hooks/useEmblaAutoplayPlugin";
+import { useCarouselAutoAdvance } from "@/features/storefront/hooks/useCarouselAutoAdvance";
 import { cn } from "@/lib/utils";
 
 const HERO_AUTOPLAY_MS = 5500;
@@ -29,10 +29,14 @@ export function HomeHeroCarousel({ slides }: Props) {
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
   const canAutoplay = activeSlides.length > 1;
-  const autoplayPlugin = useEmblaAutoplayPlugin({
-    delayMs: HERO_AUTOPLAY_MS,
-    stopOnMouseEnter: true,
-  });
+
+  const { isActive: autoplayActive, hoverHandlers } = useCarouselAutoAdvance(
+    api,
+    {
+      delayMs: HERO_AUTOPLAY_MS,
+      enabled: canAutoplay,
+    },
+  );
 
   const onSelect = useCallback(() => {
     if (!api) return;
@@ -47,33 +51,39 @@ export function HomeHeroCarousel({ slides }: Props) {
     api.on("reInit", onSelect);
     return () => {
       api.off("select", onSelect);
+      api.off("reInit", onSelect);
     };
   }, [api, onSelect]);
 
   useEffect(() => {
-    if (!canAutoplay) return;
+    if (!autoplayActive || !canAutoplay) return;
     const step = 100 / (HERO_AUTOPLAY_MS / 100);
     const interval = setInterval(() => {
       setProgress((p) => (p >= 100 ? 100 : p + step));
     }, 100);
     return () => clearInterval(interval);
-  }, [active, canAutoplay]);
+  }, [active, autoplayActive, canAutoplay]);
 
   return (
     <section
       className="relative w-full min-w-0 overflow-hidden bg-neutral-900"
-      aria-label="Featured collections"
+      aria-label="Homepage banner"
+      {...hoverHandlers}
     >
       <Carousel
         setApi={setApi}
         opts={{ loop: canAutoplay, align: "center" }}
-        plugins={canAutoplay ? [autoplayPlugin] : undefined}
         className="w-full"
       >
-        <CarouselContent className="-ml-0">
+        <CarouselContent className="ml-0">
           {activeSlides.map((slide) => (
             <CarouselItem key={slide.id} className="basis-full pl-0">
               <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] md:aspect-[21/9] md:max-h-[min(72vh,520px)]">
+                <Link
+                  href={slide.href}
+                  className="absolute inset-0 z-[1]"
+                  aria-label={`${slide.title} — ${slide.cta}`}
+                />
                 <Image
                   src={slide.image}
                   alt={slide.imageAlt}
@@ -87,7 +97,7 @@ export function HomeHeroCarousel({ slides }: Props) {
                   aria-hidden
                 />
 
-                <div className="absolute inset-0 flex flex-col items-center justify-center px-6 pb-14 pt-16 text-center sm:px-10 sm:pb-16">
+                <div className="pointer-events-none absolute inset-0 z-[2] flex flex-col items-center justify-center px-6 pb-14 pt-16 text-center sm:px-10 sm:pb-16">
                   <h2 className="font-[family-name:var(--font-hero-serif)] text-3xl font-medium tracking-wide text-white sm:text-4xl md:text-5xl">
                     {slide.title}
                   </h2>
@@ -102,12 +112,9 @@ export function HomeHeroCarousel({ slides }: Props) {
                   <p className="max-w-md text-sm leading-relaxed text-white/90 sm:max-w-xl sm:text-base md:text-lg">
                     {slide.subtitle}
                   </p>
-                  <Link
-                    href={slide.href}
-                    className="mt-6 inline-flex min-h-[44px] items-center justify-center bg-[#00542E] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#004225] sm:mt-8 sm:px-10 sm:text-sm"
-                  >
-                    {slide.cta}
-                  </Link>
+                  <span className="pointer-events-auto relative z-[3] mt-6 inline-flex min-h-[44px] items-center justify-center bg-[#00542E] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#004225] sm:mt-8 sm:px-10 sm:text-sm">
+                    <Link href={slide.href}>{slide.cta}</Link>
+                  </span>
                 </div>
               </div>
             </CarouselItem>

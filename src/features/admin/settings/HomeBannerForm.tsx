@@ -6,8 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ImageDialog } from "@/features/medias";
 import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
+import { buildProductShopHref } from "@/lib/admin/home-banner-links";
 import {
   AdminLoadingState,
   LoadingButtonLabel,
@@ -32,6 +40,15 @@ type SlideForm = {
   imageAlt: string;
   imageMediaId: string;
   image: string;
+  productId: string;
+};
+
+type BannerProductOption = {
+  id: string;
+  name: string;
+  slug: string;
+  productCode: string | null;
+  href: string;
 };
 
 type FormState = {
@@ -48,6 +65,7 @@ const createDefaultSlide = (index: number): SlideForm => ({
   imageAlt: "",
   imageMediaId: "",
   image: "",
+  productId: "",
 });
 
 const DEFAULT_FORM: FormState = {
@@ -74,6 +92,7 @@ function normalizeSlideForSave(slide: SlideForm, index: number) {
     imageAlt,
     imageMediaId: slide.imageMediaId.trim(),
     image: slide.image.trim(),
+    productId: slide.productId.trim(),
   };
 }
 
@@ -82,6 +101,37 @@ export function HomeBannerForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const [productOptions, setProductOptions] = useState<BannerProductOption[]>(
+    [],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProducts = async () => {
+      try {
+        const res = await fetchWithTimeout(
+          "/api/admin/products/banner-options",
+          { cache: "no-store" },
+        );
+        if (!res.ok) return;
+        const payload = (await res.json()) as {
+          products?: BannerProductOption[];
+        };
+        if (!cancelled) {
+          setProductOptions(payload.products ?? []);
+        }
+      } catch {
+        // Product list is optional for editing existing slides.
+      }
+    };
+
+    void loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,6 +161,7 @@ export function HomeBannerForm() {
               imageAlt: String(item.imageAlt ?? ""),
               imageMediaId: String(item.imageMediaId ?? ""),
               image: String(item.image ?? ""),
+              productId: String(item.productId ?? ""),
             } satisfies SlideForm;
           })
           .filter((slide) => slide.id.trim().length > 0);
@@ -153,6 +204,24 @@ export function HomeBannerForm() {
       slides: prev.slides.map((slide, i) =>
         i === index ? { ...slide, [key]: value } : slide,
       ),
+    }));
+  };
+
+  const selectBannerProduct = (index: number, productId: string) => {
+    const product = productOptions.find((item) => item.id === productId);
+    setForm((prev) => ({
+      ...prev,
+      slides: prev.slides.map((slide, i) => {
+        if (i !== index) return slide;
+        if (!productId || !product) {
+          return { ...slide, productId: "" };
+        }
+        return {
+          ...slide,
+          productId: product.id,
+          href: product.href || buildProductShopHref(product.slug),
+        };
+      }),
     }));
   };
 
@@ -346,6 +415,37 @@ export function HomeBannerForm() {
             </div>
 
             <div className="grid gap-2">
+              <Label htmlFor={`slide-product-${index}`}>Shop product</Label>
+              <Select
+                value={slide.productId || "__none__"}
+                onValueChange={(value) =>
+                  selectBannerProduct(
+                    index,
+                    value === "__none__" ? "" : value,
+                  )
+                }
+              >
+                <SelectTrigger id={`slide-product-${index}`}>
+                  <SelectValue placeholder="Select a published product" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Custom link (no product)</SelectItem>
+                  {productOptions.map((product) => (
+                    <SelectItem key={product.id} value={product.id}>
+                      {product.productCode
+                        ? `${product.productCode} — ${product.name}`
+                        : product.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Recommended: pick the saree this banner sells. The Shop button
+                and banner tap open that product page directly.
+              </p>
+            </div>
+
+            <div className="grid gap-2">
               <Label htmlFor={`slide-cta-${index}`}>Button Text</Label>
               <Input
                 id={`slide-cta-${index}`}
@@ -356,13 +456,26 @@ export function HomeBannerForm() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor={`slide-href-${index}`}>Button Link</Label>
+              <Label htmlFor={`slide-href-${index}`}>
+                {slide.productId ? "Product page link" : "Button Link"}
+              </Label>
               <Input
                 id={`slide-href-${index}`}
                 value={slide.href}
                 onChange={(e) => updateSlide(index, "href", e.target.value)}
-                placeholder="/collections/kanjivaram-wedding-sarees"
+                placeholder="/shop/product-slug"
+                readOnly={Boolean(slide.productId)}
               />
+              {slide.productId ? (
+                <p className="text-xs text-emerald-700">
+                  Linked to product — customers go straight to buy this item.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Use a collection path or `/shop/your-product-slug` for a
+                  custom destination.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">

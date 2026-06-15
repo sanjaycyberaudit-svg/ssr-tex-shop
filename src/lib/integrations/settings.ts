@@ -15,6 +15,10 @@ import type {
 import { siteConfig } from "@/config/site";
 import db from "@/lib/supabase/db";
 import { apiSettings, medias } from "@/lib/supabase/schema";
+import {
+  resolveHomeBannerSlideHref,
+} from "@/lib/admin/home-banner-links";
+import { loadProductSlugsForBannerSlides } from "@/lib/admin/home-banner-product-slugs.server";
 import { eq, inArray } from "drizzle-orm";
 import { keytoUrl } from "@/lib/utils";
 
@@ -365,7 +369,9 @@ const getIntegrationSettingCached = cache(async (key: IntegrationKey) =>
   getIntegrationSetting(key),
 );
 
-type ApiSettingRow = NonNullable<Awaited<ReturnType<typeof getIntegrationSetting>>>;
+type ApiSettingRow = NonNullable<
+  Awaited<ReturnType<typeof getIntegrationSetting>>
+>;
 
 const STOREFRONT_RUNTIME_KEYS: IntegrationKey[] = [
   INTEGRATION_KEYS.storefrontSocial,
@@ -422,7 +428,9 @@ function parseBulkOrderFromRow(
     return { enabled: true, threshold: DEFAULT_BULK_ORDER_THRESHOLD };
   }
   const value = setting.value as Record<string, unknown>;
-  const parsedThreshold = Number(value.threshold ?? DEFAULT_BULK_ORDER_THRESHOLD);
+  const parsedThreshold = Number(
+    value.threshold ?? DEFAULT_BULK_ORDER_THRESHOLD,
+  );
   const threshold = Number.isFinite(parsedThreshold)
     ? Math.min(99, Math.max(2, Math.round(parsedThreshold)))
     : DEFAULT_BULK_ORDER_THRESHOLD;
@@ -494,7 +502,11 @@ function parseOfferCodesFromRow(
     const percentage = Number.isFinite(percentageRaw)
       ? Math.min(90, Math.max(1, Math.round(percentageRaw)))
       : 1;
-    dedup.set(code, { code, percentage, enabled: Boolean(item.enabled ?? true) });
+    dedup.set(code, {
+      code,
+      percentage,
+      enabled: Boolean(item.enabled ?? true),
+    });
   }
   return {
     enabled: setting.isEnabled,
@@ -661,12 +673,22 @@ export async function getHomeBannerSlides(): Promise<HomeBannerSlide[] | null> {
       mediaRows.forEach((row) => mediaLookup.set(row.id, keytoUrl(row.key)));
     }
 
+    const productSlugById = await loadProductSlugsForBannerSlides(
+      rawSlides as Array<{ productId?: string | null; href?: string | null }>,
+    );
+
     const slides = rawSlides
       .map((slide, index) => {
         const item = slide as Record<string, unknown>;
         const title = String(item.title ?? "").trim();
         const subtitle = String(item.subtitle ?? "").trim();
-        const href = String(item.href ?? "").trim();
+        const href = resolveHomeBannerSlideHref(
+          {
+            href: String(item.href ?? "").trim(),
+            productId: String(item.productId ?? "").trim(),
+          },
+          productSlugById,
+        );
         const cta = String(item.cta ?? "").trim();
         const imageMediaId = String(item.imageMediaId ?? "").trim();
         const image =

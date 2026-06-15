@@ -6,6 +6,8 @@ import {
 } from "@/lib/integrations/settings";
 import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { revalidatePath } from "next/cache";
+import { resolveHomeBannerSlideHref } from "@/lib/admin/home-banner-links";
+import { loadProductSlugsForBannerSlides } from "@/lib/admin/home-banner-product-slugs.server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -44,6 +46,7 @@ const homeBannerSlideSchema = z
     imageMediaId: z.string().trim().optional(),
     image: z.string().trim().optional(),
     imageAlt: z.string().trim().min(1),
+    productId: z.string().trim().optional(),
   })
   .superRefine((value, ctx) => {
     if (!value.imageMediaId?.trim() && !value.image?.trim()) {
@@ -217,11 +220,20 @@ export async function POST(request: NextRequest) {
         imageAlt: String(item.imageAlt ?? "").trim() || title,
         imageMediaId: String(item.imageMediaId ?? "").trim(),
         image: String(item.image ?? "").trim(),
+        productId: String(item.productId ?? "").trim(),
       };
     });
 
+    const productSlugById = await loadProductSlugsForBannerSlides(
+      fallbackSlides,
+    );
+    const slidesWithResolvedLinks = fallbackSlides.map((slide) => ({
+      ...slide,
+      href: resolveHomeBannerSlideHref(slide, productSlugById),
+    }));
+
     const homeParsed = homeBannerPayloadSchema.safeParse({
-      slides: fallbackSlides,
+      slides: slidesWithResolvedLinks,
     });
     if (!homeParsed.success) {
       const homeParseError = homeParsed as z.SafeParseError<

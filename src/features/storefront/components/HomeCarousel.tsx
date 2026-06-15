@@ -10,7 +10,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
-import { useEmblaAutoplayPlugin } from "@/features/storefront/hooks/useEmblaAutoplayPlugin";
+import { useCarouselAutoAdvance } from "@/features/storefront/hooks/useCarouselAutoAdvance";
 import { CarouselSlideProgress } from "./CarouselSlideProgress";
 
 type Props = {
@@ -40,8 +40,14 @@ export function HomeCarousel({
   const [active, setActive] = useState(0);
   const [slideCount, setSlideCount] = useState(0);
   const [progress, setProgress] = useState(0);
-  const autoplayPlugin = useEmblaAutoplayPlugin({ delayMs });
-  const shouldAutoplay = loop;
+
+  const { isActive: autoplayActive, hoverHandlers } = useCarouselAutoAdvance(
+    api,
+    {
+      delayMs,
+      enabled: loop,
+    },
+  );
 
   const onSelect = useCallback(() => {
     if (!api) return;
@@ -62,21 +68,23 @@ export function HomeCarousel({
   }, [api, onSelect]);
 
   useEffect(() => {
-    if (slideCount <= 1) return;
+    if (!autoplayActive || slideCount <= 1) return;
     const step = 100 / (delayMs / 100);
     const interval = setInterval(() => {
       setProgress((p) => (p >= 100 ? 100 : p + step));
     }, 100);
     return () => clearInterval(interval);
-  }, [active, delayMs, slideCount]);
+  }, [active, autoplayActive, delayMs, slideCount]);
 
   return (
-    <div className={cn("group/carousel w-full min-w-0", className)}>
+    <div
+      className={cn("group/carousel w-full min-w-0", className)}
+      {...hoverHandlers}
+    >
       <div className="relative w-full overflow-hidden rounded-2xl">
         <Carousel
           setApi={setApi}
           opts={{ align: "start", loop, containScroll: "trimSnaps" }}
-          plugins={shouldAutoplay ? [autoplayPlugin] : undefined}
           className="w-full max-w-full"
         >
           <CarouselContent className="-ml-3 sm:-ml-4">
