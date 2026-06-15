@@ -1,6 +1,5 @@
 "use client";
 
-import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,7 +11,10 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { heroSlides, type HeroSlide } from "@/config/heroSlides";
+import { useEmblaAutoplayPlugin } from "@/features/storefront/hooks/useEmblaAutoplayPlugin";
 import { cn } from "@/lib/utils";
+
+const HERO_AUTOPLAY_MS = 5500;
 
 const heroArrowClass =
   "absolute top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-sm border-0 bg-white/95 text-neutral-900 shadow-md transition hover:bg-white sm:h-12 sm:w-12";
@@ -26,6 +28,11 @@ export function HomeHeroCarousel({ slides }: Props) {
   const [api, setApi] = useState<CarouselApi>();
   const [active, setActive] = useState(0);
   const [progress, setProgress] = useState(0);
+  const canAutoplay = activeSlides.length > 1;
+  const autoplayPlugin = useEmblaAutoplayPlugin({
+    delayMs: HERO_AUTOPLAY_MS,
+    stopOnMouseEnter: true,
+  });
 
   const onSelect = useCallback(() => {
     if (!api) return;
@@ -44,11 +51,13 @@ export function HomeHeroCarousel({ slides }: Props) {
   }, [api, onSelect]);
 
   useEffect(() => {
+    if (!canAutoplay) return;
+    const step = 100 / (HERO_AUTOPLAY_MS / 100);
     const interval = setInterval(() => {
-      setProgress((p) => (p >= 100 ? 0 : p + 2));
+      setProgress((p) => (p >= 100 ? 100 : p + step));
     }, 100);
     return () => clearInterval(interval);
-  }, [active]);
+  }, [active, canAutoplay]);
 
   return (
     <section
@@ -57,14 +66,8 @@ export function HomeHeroCarousel({ slides }: Props) {
     >
       <Carousel
         setApi={setApi}
-        opts={{ loop: true, align: "center" }}
-        plugins={[
-          Autoplay({
-            delay: 5500,
-            stopOnInteraction: true,
-            stopOnMouseEnter: true,
-          }),
-        ]}
+        opts={{ loop: canAutoplay, align: "center" }}
+        plugins={canAutoplay ? [autoplayPlugin] : undefined}
         className="w-full"
       >
         <CarouselContent className="-ml-0">
