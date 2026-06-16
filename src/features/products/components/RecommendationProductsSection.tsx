@@ -1,5 +1,5 @@
 import Header from "@/components/layouts/Header";
-import { ProductCard } from "@/features/products";
+import ProductCard from "./ProductCard";
 import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
 import { getRecommendationProductsCached } from "@/lib/storefront/recommendations";
 

@@ -3,7 +3,7 @@ import { gql } from "@/gql";
 import { useQuery } from "@urql/next";
 import React from "react";
 import Header from "@/components/layouts/Header";
-import { ProductCard } from "@/features/products";
+import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./RecommendationProductsSkeleton";
 
 export type RecommendationProductsProps =

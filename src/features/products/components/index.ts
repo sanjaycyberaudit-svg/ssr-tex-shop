@@ -9,7 +9,6 @@ export {
   ProductDiscountBadge,
 } from "./ProductPriceDisplay";
 export { default as RecommendationProducts } from "./RecommendationProducts";
-export { default as RecommendationProductsSection } from "./RecommendationProductsSection";
 export { default as RecommendationProductsSkeleton } from "./RecommendationProductsSkeleton";
 export { default as SearchProductsGridSkeleton } from "../../search/components/SearchProductsGridSkeleton";
 export { default as ProductsDataTable } from "./admin/ProductsDataTable";
