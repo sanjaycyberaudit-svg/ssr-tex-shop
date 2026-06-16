@@ -231,6 +231,8 @@ export const products = pgTable(
     price: decimal("price", { precision: 8, scale: 2 })
       .notNull()
       .default("0.00"),
+    discountEnabled: boolean("discount_enabled").notNull().default(false),
+    discountPercent: integer("discount_percent"),
     totalComments: integer("totalComments").default(0).notNull(),
     createdAt: timestamp("created_at", {
       withTimezone: true,

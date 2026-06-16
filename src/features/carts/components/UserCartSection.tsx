@@ -38,6 +38,7 @@ import BulkOrderGuardDialog from "./BulkOrderGuardDialog";
 import EmptyCart from "@/features/carts/components/EmptyCart";
 import { RemoveCartsMutation, updateCartsMutation } from "../query";
 import useCartStore, { CartItems } from "../useCartStore";
+import { getSaleProductPrice } from "@/lib/products/discount";
 import { isBulkOrderQuantity } from "../constants/bulkOrder";
 
 export { FetchCartQuery };
@@ -518,7 +519,8 @@ export const calcProductCount = (data: CartEdge[]) => {
 
 const calcSubtotal = (data: CartEdge[]) => {
   return data.reduce((acc, cur) => {
-    const price = Number(cur.node.product?.price ?? 0);
-    return acc + cur.node.quantity * price;
+    const product = cur.node.product;
+    if (!product) return acc;
+    return acc + cur.node.quantity * getSaleProductPrice(product);
   }, 0);
 };

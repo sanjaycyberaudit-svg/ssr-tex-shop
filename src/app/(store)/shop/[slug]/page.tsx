@@ -20,7 +20,12 @@ import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import { getProductSizeConfig } from "@/lib/products/sizeConfig";
 import { buildBreadcrumbJsonLd, buildProductJsonLd } from "@/lib/seo/json-ld";
 import { getProductDetailCached } from "@/lib/storefront/product-detail";
-import { formatPrice, keytoUrl } from "@/lib/utils";
+import {
+  ProductDiscountBadge,
+  ProductPriceDisplay,
+} from "@/features/products/components/ProductPriceDisplay";
+import { getEffectiveProductPrice } from "@/lib/products/discount";
+import { keytoUrl } from "@/lib/utils";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -68,7 +73,6 @@ async function ProductDetailPage({ params }: Props) {
     id,
     name,
     description,
-    price,
     stock,
     commentsCollection,
     totalComments,
@@ -104,7 +108,7 @@ async function ProductDetailPage({ params }: Props) {
             name,
             slug: productSlug,
             description,
-            price,
+            price: getEffectiveProductPrice(productEdge.node),
             imageUrl: featuredImage?.key ? keytoUrl(featuredImage.key) : null,
             inStock: Number(stock ?? 0) > 0,
           }),
@@ -112,7 +116,13 @@ async function ProductDetailPage({ params }: Props) {
       />
       <div className="grid grid-cols-12 gap-x-8">
         <div className="space-y-8 relative col-span-12 md:col-span-7">
-          <ProductImageShowcase data={productEdge.node} />
+          <div className="relative">
+            <ProductDiscountBadge
+              product={productEdge.node}
+              className="absolute top-3 left-3 z-10"
+            />
+            <ProductImageShowcase data={productEdge.node} />
+          </div>
         </div>
 
         <div className="col-span-12 md:col-span-5">
@@ -121,9 +131,12 @@ async function ProductDetailPage({ params }: Props) {
               <h1 className="text-4xl font-semibold tracking-wide mb-3">
                 {name}
               </h1>
-              <p className="text-2xl font-semibold mb-3">
-                {formatPrice(price)}
-              </p>
+              <ProductPriceDisplay
+                product={productEdge.node}
+                className="mb-3"
+                saleClassName="text-2xl"
+                originalClassName="text-base"
+              />
               <LowStockNotice
                 stock={stock}
                 className="text-sm font-medium text-destructive"

@@ -1,4 +1,5 @@
 import type { InsertProducts } from "@/lib/supabase/schema";
+import { normalizeDiscountPercent } from "@/lib/products/discount";
 
 const BADGE_VALUES = new Set(["new_product", "best_sale", "featured"]);
 
@@ -30,6 +31,10 @@ export function normalizeProductFormPayload(
     stock,
     tags: Array.isArray(data.tags) ? data.tags : [],
     collectionId: data.collectionId || null,
+    discountEnabled: Boolean(data.discountEnabled),
+    discountPercent: data.discountEnabled
+      ? normalizeDiscountPercent(data.discountPercent)
+      : null,
   };
 }
 

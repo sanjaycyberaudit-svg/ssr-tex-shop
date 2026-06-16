@@ -15,7 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { formatPrice, keytoUrl } from "@/lib/utils";
+import { ProductPriceDisplay } from "@/features/products/components/ProductPriceDisplay";
+import { keytoUrl } from "@/lib/utils";
 import { UseQueryExecute } from "@urql/next";
 import Link from "next/link";
 import { Icons } from "../../../components/layouts/icons";
@@ -110,9 +111,11 @@ function CartItemCard({
       </CardHeader>
 
       <CardFooter className="flex shrink-0 flex-col items-end gap-1 p-0 md:flex-row md:items-center md:gap-3">
-        <p className="text-sm font-semibold md:text-base">
-          {formatPrice(product.price)}
-        </p>
+        <ProductPriceDisplay
+          product={product}
+          layout="inline"
+          className="text-sm md:text-base"
+        />
 
         <Button
           aria-label="Remove Item Button"

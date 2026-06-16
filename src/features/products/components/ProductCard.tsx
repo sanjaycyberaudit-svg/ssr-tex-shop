@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
 import { DocumentType, gql } from "@/gql";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { ProductThumbnail } from "@/features/products/components/ProductThumbnail";
 import { productThumbnailImageHoverClass } from "@/features/products/productThumbnail";
 
@@ -22,6 +22,10 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/layouts/icons";
 import LowStockNotice from "./LowStockNotice";
 import ProductSizePreview from "./ProductSizePreview";
+import {
+  ProductDiscountBadge,
+  ProductPriceDisplay,
+} from "./ProductPriceDisplay";
 
 type CardProps = React.ComponentProps<typeof Card>;
 
@@ -39,6 +43,8 @@ export const ProductCardFragment = gql(/* GraphQL */ `
     slug
     badge
     price
+    discountEnabled: discount_enabled
+    discountPercent: discount_percent
     stock
     featuredImage: medias {
       id
@@ -59,7 +65,7 @@ export function ProductCard({
   priorityImage = false,
   ...props
 }: ProductCardProps) {
-  const { id, name, slug, featuredImage, badge, price, stock } = product;
+  const { id, name, slug, featuredImage, badge, stock } = product;
 
   return (
     <Card
@@ -75,8 +81,15 @@ export function ProductCard({
             priority={priorityImage}
           />
         </Link>
+        <ProductDiscountBadge
+          product={product}
+          className="absolute top-2 left-2 z-[1]"
+        />
         {badge && (
-          <Badge className="absolute top-0 left-0" variant={badge as BadgeType}>
+          <Badge
+            className="absolute top-2 right-2 z-[1]"
+            variant={badge as BadgeType}
+          >
             {badge}
           </Badge>
         )}
@@ -95,7 +108,7 @@ export function ProductCard({
           </CardDescription>
         </div>
 
-        <div className="font-medium">{formatPrice(price)}</div>
+        <ProductPriceDisplay product={product} />
         <LowStockNotice stock={stock} />
         <ProductSizePreview productId={id} />
 

@@ -39,6 +39,7 @@ import {
   saveCheckoutAddressDraft,
 } from "@/features/addresses/lib/checkoutAddressDraft";
 import { isBulkOrderQuantity } from "../constants/bulkOrder";
+import { getSaleProductPrice } from "@/lib/products/discount";
 import { useToast } from "@/components/ui/use-toast";
 
 type CartSizeConfigOption = {
@@ -456,14 +457,13 @@ const calcSubtotal = ({
   prdouctsDetails: DocumentType<typeof FetchGuestCartQuery> | null;
   quantity: CartItems;
 }) => {
-  const productPrices =
-    prdouctsDetails?.productsCollection?.edges ?? [];
+  const productPrices = prdouctsDetails?.productsCollection?.edges ?? [];
 
   if (!productPrices.length) return 0;
 
   return productPrices.reduce((acc, cur) => {
     const item = quantity[cur.node.id];
     if (!item) return acc;
-    return acc + item.quantity * cur.node.price;
+    return acc + item.quantity * getSaleProductPrice(cur.node);
   }, 0);
 };

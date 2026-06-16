@@ -12,6 +12,8 @@ export type AdminProductTableNode = {
   rating: string;
   badge: string | null;
   price: string;
+  discountEnabled: boolean;
+  discountPercent: number | null;
   stock: number | null;
   featured: boolean | null;
   productCode: string | null;
@@ -54,6 +56,8 @@ function mapAdminProductRows(
     rating: string;
     badge: string | null;
     price: string;
+    discountEnabled: boolean;
+    discountPercent: number | null;
     stock: number | null;
     featured: boolean | null;
     productCode: string | null;
@@ -74,6 +78,8 @@ function mapAdminProductRows(
       rating: row.rating,
       badge: row.badge,
       price: row.price,
+      discountEnabled: row.discountEnabled,
+      discountPercent: row.discountPercent,
       stock: row.stock,
       featured: row.featured,
       productCode: row.productCode,
@@ -125,6 +131,8 @@ export async function loadAdminProductsListFromDb(
         rating: products.rating,
         badge: products.badge,
         price: products.price,
+        discountEnabled: products.discountEnabled,
+        discountPercent: products.discountPercent,
         stock: products.stock,
         featured: products.featured,
         productCode: products.productCode,

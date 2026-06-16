@@ -5,6 +5,10 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DocumentType, gql } from "@/gql";
 import { ProductCardSkeleton } from "@/features/products";
+import {
+  ProductDiscountBadge,
+  ProductPriceDisplay,
+} from "@/features/products/components/ProductPriceDisplay";
 import { AddToCartButton } from "@/features/carts";
 import { AddToWishListButton } from "@/features/wishlists";
 import { CarouselItem } from "@/components/ui/carousel";
@@ -20,6 +24,8 @@ export const HomeFeaturedProductFragment = gql(/* GraphQL */ `
     slug
     badge
     price
+    discountEnabled: discount_enabled
+    discountPercent: discount_percent
     featuredImage: medias {
       id
       key
@@ -35,7 +41,7 @@ type Props = {
 };
 
 function FeaturedSlide({ product }: { product: ProductNode }) {
-  const { id, name, slug, featuredImage, badge, price } = product;
+  const { id, name, slug, featuredImage, badge } = product;
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -50,9 +56,13 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
             loading="lazy"
           />
         </Link>
+        <ProductDiscountBadge
+          product={product}
+          className="absolute top-3 left-3 z-10"
+        />
         {badge ? (
           <Badge
-            className="absolute top-3 left-3 z-10"
+            className="absolute top-3 right-3 z-10"
             variant={badge as "default"}
           >
             {badge}
@@ -73,7 +83,7 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
             {name}
           </h3>
         </Link>
-        <p className="mt-1 text-base font-bold sm:text-lg">₹{price}</p>
+        <ProductPriceDisplay product={product} className="mt-1" />
       </div>
     </article>
   );

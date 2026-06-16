@@ -54,6 +54,13 @@ import {
   normalizeProductFormPayload,
   productStorefrontVisibilitySummary,
 } from "@/lib/admin/normalize-product-form-payload";
+import {
+  getOriginalProductPrice,
+  getSaleProductPrice,
+  isProductDiscountActive,
+} from "@/lib/products/discount";
+import { formatPrice } from "@/lib/utils";
+import { ProductPriceDisplay } from "@/features/products/components/ProductPriceDisplay";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@urql/next";
 import { createInsertSchema } from "drizzle-zod";
@@ -216,6 +223,8 @@ function ProductFrom({ product }: ProductsFormProps) {
     defaultValues: {
       ...product,
       featured: product?.featured ?? false,
+      discountEnabled: product?.discountEnabled ?? false,
+      discountPercent: product?.discountPercent ?? null,
       stock: typeof product?.stock === "number" ? product.stock : 1,
     },
   });
@@ -874,17 +883,71 @@ function ProductFrom({ product }: ProductsFormProps) {
           </FormItem>
 
           <FormItem>
-            <FormLabel className="text-sm">Price*</FormLabel>
+            <FormLabel className="text-sm">Price (MRP)*</FormLabel>
             <FormControl>
               <Input
                 defaultValue={product?.price}
                 aria-invalid={!!form.formState.errors.price}
-                placeholder="Price in ₹ (e.g. 1299)"
+                placeholder="Original price in ₹ (e.g. 1299)"
                 {...register("price")}
               />
             </FormControl>
+            <FormDescription>
+              List price before discount. Customers pay less only when discount
+              is enabled below.
+            </FormDescription>
             <FormMessage />
           </FormItem>
+
+          <FormField
+            control={control}
+            name="discountEnabled"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start gap-3 rounded-lg border p-4">
+                <FormControl>
+                  <Checkbox
+                    checked={Boolean(field.value)}
+                    onCheckedChange={(checked) => {
+                      field.onChange(Boolean(checked));
+                      if (!checked) {
+                        form.setValue("discountPercent", null);
+                      } else if (!form.getValues("discountPercent")) {
+                        form.setValue("discountPercent", 10);
+                      }
+                    }}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Enable discount</FormLabel>
+                  <FormDescription>
+                    Show sale price with strikethrough MRP and a percentage
+                    badge on the website.
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          {watch("discountEnabled") ? (
+            <FormItem>
+              <FormLabel className="text-sm">Discount %</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={1}
+                  max={99}
+                  step={1}
+                  placeholder="e.g. 50"
+                  {...register("discountPercent", { valueAsNumber: true })}
+                />
+              </FormControl>
+              <FormMessage />
+              <DiscountPreview
+                price={watch("price")}
+                discountPercent={watch("discountPercent")}
+              />
+            </FormItem>
+          ) : null}
 
           <FormItem>
             <FormLabel className="text-sm">Stock</FormLabel>
@@ -1255,3 +1318,38 @@ function ProductFrom({ product }: ProductsFormProps) {
 }
 
 export default ProductFrom;
+
+function DiscountPreview({
+  price,
+  discountPercent,
+}: {
+  price: string | number | null | undefined;
+  discountPercent: number | null | undefined;
+}) {
+  const previewProduct = {
+    price,
+    discountEnabled: true,
+    discountPercent,
+  };
+
+  if (!isProductDiscountActive(previewProduct)) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Enter a valid discount between 1% and 99%.
+      </p>
+    );
+  }
+
+  return (
+    <div className="rounded-md border bg-muted/40 p-3 text-sm">
+      <p className="text-xs font-medium text-muted-foreground mb-1">
+        Customer will see
+      </p>
+      <ProductPriceDisplay product={previewProduct} />
+      <p className="mt-2 text-xs text-muted-foreground">
+        MRP {formatPrice(getOriginalProductPrice(previewProduct))} → sale{" "}
+        {formatPrice(getSaleProductPrice(previewProduct))}
+      </p>
+    </div>
+  );
+}

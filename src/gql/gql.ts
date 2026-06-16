@@ -23,7 +23,7 @@ const documents = {
     types.AdminTestimonialsPageQueryDocument,
   "\n  query OrderPageQuery($first: Int!, $userId: UUID) {\n    ordersCollection(\n      first: $first\n      orderBy: [{ created_at: DescNullsLast }]\n      filter: { user_id: { eq: $userId } }\n    ) {\n      __typename\n      edges {\n        ...OrdersListFragment\n      }\n    }\n\n    productsCollection(first: 8) {\n      edges {\n        ...BuyAgainCardFragment\n      }\n    }\n  }\n":
     types.OrderPageQueryDocument,
-  "\n  fragment CartItemCardFragment on products {\n    id\n    slug\n    name\n    price\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n":
+  "\n  fragment CartItemCardFragment on products {\n    id\n    slug\n    name\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n":
     types.CartItemCardFragmentFragmentDoc,
   "\n  query FetchCartQuery($userId: UUID, $first: Int, $after: Cursor) {\n    cartsCollection(\n      first: $first\n      filter: { user_id: { eq: $userId } }\n      after: $after\n    ) {\n      __typename\n      edges {\n        __typename\n        node {\n          __typename\n          product_id\n          user_id\n          quantity\n          product: products {\n            ...CartItemCardFragment\n          }\n        }\n      }\n    }\n  }\n":
     types.FetchCartQueryDocument,
@@ -63,7 +63,7 @@ const documents = {
     types.OrdersListFragmentFragmentDoc,
   "\n  fragment OrderColumnsFragment on orders {\n    id\n    order_status\n    payment_status\n    order_linesCollection {\n      edges {\n        node {\n          id\n          product_id\n        }\n      }\n    }\n  }\n":
     types.OrderColumnsFragmentFragmentDoc,
-  "\n  fragment ProductCardFragment on products {\n    id\n    name\n    description\n    rating\n    slug\n    badge\n    price\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n    collections {\n      id\n      label\n      slug\n    }\n  }\n":
+  "\n  fragment ProductCardFragment on products {\n    id\n    name\n    description\n    rating\n    slug\n    badge\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n    collections {\n      id\n      label\n      slug\n    }\n  }\n":
     types.ProductCardFragmentFragmentDoc,
   "\n  fragment ProductImageShowcaseFragment on products {\n    id\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n\n    images: product_mediasCollection(orderBy: [{ priority: DescNullsLast }]) {\n      edges {\n        node {\n          media {\n            id\n            key\n            alt\n          }\n        }\n      }\n    }\n  }\n":
     types.ProductImageShowcaseFragmentFragmentDoc,
@@ -75,7 +75,7 @@ const documents = {
     types.ProductFormQueryDocument,
   "\n  fragment ProductColumnFragment on products {\n    id\n    name\n    description\n    rating\n    slug\n    badge\n    price\n    stock\n    badge\n    featured\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n    collections {\n      id\n      label\n      slug\n    }\n  }\n":
     types.ProductColumnFragmentFragmentDoc,
-  "\n  fragment HomeFeaturedProductFragment on products {\n    id\n    name\n    slug\n    badge\n    price\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n":
+  "\n  fragment HomeFeaturedProductFragment on products {\n    id\n    name\n    slug\n    badge\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n":
     types.HomeFeaturedProductFragmentFragmentDoc,
   "\n  fragment TestimonialCardFragment on testimonials {\n    id\n    kind\n    customer_name\n    location\n    quote\n    rating\n    video_url\n    featuredImage: medias {\n      key\n      alt\n    }\n  }\n":
     types.TestimonialCardFragmentFragmentDoc,
@@ -99,7 +99,7 @@ const documents = {
     types.FeaturedProductsQueryDocument,
   "\n  query CollectionRouteQuery(\n    $exactSlug: String\n    $slugified: String\n    $labelPattern: String\n  ) {\n    collectionsCollection(\n      filter: {\n        or: [\n          { slug: { eq: $exactSlug } }\n          { slug: { eq: $slugified } }\n          { slug: { ilike: $exactSlug } }\n          { label: { ilike: $labelPattern } }\n        ]\n      }\n      orderBy: [{ order: DescNullsLast }]\n      first: 1\n    ) {\n      edges {\n        node {\n          title\n          label\n          description\n          slug\n          ...CollectionBannerFragment\n        }\n      }\n    }\n  }\n":
     types.CollectionRouteQueryDocument,
-  "\n  query ProductDetailPageQuery($productSlug: String) {\n    productsCollection(filter: { slug: { eq: $productSlug } }) {\n      edges {\n        node {\n          id\n          name\n          description\n          rating\n          price\n          stock\n          tags\n          totalComments\n          ...ProductImageShowcaseFragment\n          commentsCollection(first: 5) {\n            edges {\n              node {\n                ...ProductCommentsSectionFragment\n              }\n            }\n          }\n          collections {\n            id\n            label\n            slug\n          }\n        }\n      }\n    }\n    recommendations: productsCollection(first: 4) {\n      edges {\n        node {\n          id\n          ...ProductCardFragment\n        }\n      }\n    }\n  }\n":
+  "\n  query ProductDetailPageQuery($productSlug: String) {\n    productsCollection(filter: { slug: { eq: $productSlug } }) {\n      edges {\n        node {\n          id\n          name\n          description\n          rating\n          price\n          discountEnabled: discount_enabled\n          discountPercent: discount_percent\n          stock\n          tags\n          totalComments\n          ...ProductImageShowcaseFragment\n          commentsCollection(first: 5) {\n            edges {\n              node {\n                ...ProductCommentsSectionFragment\n              }\n            }\n          }\n          collections {\n            id\n            label\n            slug\n          }\n        }\n      }\n    }\n    recommendations: productsCollection(first: 4) {\n      edges {\n        node {\n          id\n          ...ProductCardFragment\n        }\n      }\n    }\n  }\n":
     types.ProductDetailPageQueryDocument,
   "\n  query LandingRouteQuery {\n    products: productsCollection(\n      filter: { featured: { eq: true } }\n      first: 12\n      orderBy: [{ created_at: DescNullsLast }]\n    ) {\n      edges {\n        node {\n          id\n          ...HomeFeaturedProductFragment\n        }\n      }\n    }\n\n    collectionScrollCards: collectionsCollection(\n      first: 10\n      orderBy: [{ order: DescNullsLast }]\n    ) {\n      edges {\n        node {\n          id\n          ...CollectionCardFragment\n        }\n      }\n    }\n\n    homeTestimonials: testimonialsCollection(\n      filter: { is_published: { eq: true } }\n      first: 12\n      orderBy: [{ order: DescNullsLast }, { created_at: DescNullsLast }]\n    ) {\n      edges {\n        node {\n          id\n          ...TestimonialCardFragment\n        }\n      }\n    }\n  }\n":
     types.LandingRouteQueryDocument,
@@ -153,8 +153,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: "\n  fragment CartItemCardFragment on products {\n    id\n    slug\n    name\n    price\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n",
-): (typeof documents)["\n  fragment CartItemCardFragment on products {\n    id\n    slug\n    name\n    price\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n"];
+  source: "\n  fragment CartItemCardFragment on products {\n    id\n    slug\n    name\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n",
+): (typeof documents)["\n  fragment CartItemCardFragment on products {\n    id\n    slug\n    name\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -273,8 +273,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: "\n  fragment ProductCardFragment on products {\n    id\n    name\n    description\n    rating\n    slug\n    badge\n    price\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n    collections {\n      id\n      label\n      slug\n    }\n  }\n",
-): (typeof documents)["\n  fragment ProductCardFragment on products {\n    id\n    name\n    description\n    rating\n    slug\n    badge\n    price\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n    collections {\n      id\n      label\n      slug\n    }\n  }\n"];
+  source: "\n  fragment ProductCardFragment on products {\n    id\n    name\n    description\n    rating\n    slug\n    badge\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n    collections {\n      id\n      label\n      slug\n    }\n  }\n",
+): (typeof documents)["\n  fragment ProductCardFragment on products {\n    id\n    name\n    description\n    rating\n    slug\n    badge\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    stock\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n    collections {\n      id\n      label\n      slug\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -309,8 +309,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: "\n  fragment HomeFeaturedProductFragment on products {\n    id\n    name\n    slug\n    badge\n    price\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n",
-): (typeof documents)["\n  fragment HomeFeaturedProductFragment on products {\n    id\n    name\n    slug\n    badge\n    price\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n"];
+  source: "\n  fragment HomeFeaturedProductFragment on products {\n    id\n    name\n    slug\n    badge\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n",
+): (typeof documents)["\n  fragment HomeFeaturedProductFragment on products {\n    id\n    name\n    slug\n    badge\n    price\n    discountEnabled: discount_enabled\n    discountPercent: discount_percent\n    featuredImage: medias {\n      id\n      key\n      alt\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -381,8 +381,8 @@ export function gql(
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(
-  source: "\n  query ProductDetailPageQuery($productSlug: String) {\n    productsCollection(filter: { slug: { eq: $productSlug } }) {\n      edges {\n        node {\n          id\n          name\n          description\n          rating\n          price\n          stock\n          tags\n          totalComments\n          ...ProductImageShowcaseFragment\n          commentsCollection(first: 5) {\n            edges {\n              node {\n                ...ProductCommentsSectionFragment\n              }\n            }\n          }\n          collections {\n            id\n            label\n            slug\n          }\n        }\n      }\n    }\n    recommendations: productsCollection(first: 4) {\n      edges {\n        node {\n          id\n          ...ProductCardFragment\n        }\n      }\n    }\n  }\n",
-): (typeof documents)["\n  query ProductDetailPageQuery($productSlug: String) {\n    productsCollection(filter: { slug: { eq: $productSlug } }) {\n      edges {\n        node {\n          id\n          name\n          description\n          rating\n          price\n          stock\n          tags\n          totalComments\n          ...ProductImageShowcaseFragment\n          commentsCollection(first: 5) {\n            edges {\n              node {\n                ...ProductCommentsSectionFragment\n              }\n            }\n          }\n          collections {\n            id\n            label\n            slug\n          }\n        }\n      }\n    }\n    recommendations: productsCollection(first: 4) {\n      edges {\n        node {\n          id\n          ...ProductCardFragment\n        }\n      }\n    }\n  }\n"];
+  source: "\n  query ProductDetailPageQuery($productSlug: String) {\n    productsCollection(filter: { slug: { eq: $productSlug } }) {\n      edges {\n        node {\n          id\n          name\n          description\n          rating\n          price\n          discountEnabled: discount_enabled\n          discountPercent: discount_percent\n          stock\n          tags\n          totalComments\n          ...ProductImageShowcaseFragment\n          commentsCollection(first: 5) {\n            edges {\n              node {\n                ...ProductCommentsSectionFragment\n              }\n            }\n          }\n          collections {\n            id\n            label\n            slug\n          }\n        }\n      }\n    }\n    recommendations: productsCollection(first: 4) {\n      edges {\n        node {\n          id\n          ...ProductCardFragment\n        }\n      }\n    }\n  }\n",
+): (typeof documents)["\n  query ProductDetailPageQuery($productSlug: String) {\n    productsCollection(filter: { slug: { eq: $productSlug } }) {\n      edges {\n        node {\n          id\n          name\n          description\n          rating\n          price\n          discountEnabled: discount_enabled\n          discountPercent: discount_percent\n          stock\n          tags\n          totalComments\n          ...ProductImageShowcaseFragment\n          commentsCollection(first: 5) {\n            edges {\n              node {\n                ...ProductCommentsSectionFragment\n              }\n            }\n          }\n          collections {\n            id\n            label\n            slug\n          }\n        }\n      }\n    }\n    recommendations: productsCollection(first: 4) {\n      edges {\n        node {\n          id\n          ...ProductCardFragment\n        }\n      }\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

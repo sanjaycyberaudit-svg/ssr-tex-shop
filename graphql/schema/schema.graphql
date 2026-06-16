@@ -1945,6 +1945,8 @@ type products implements Node {
   tags: JSON!
   images: JSON!
   price: BigFloat!
+  discount_enabled: Boolean
+  discount_percent: Int
   totalComments: Int!
   created_at: Datetime!
   stock: Int
@@ -2101,6 +2103,8 @@ input productsFilter {
   badge: StringFilter
   rating: BigFloatFilter
   price: BigFloatFilter
+  discount_enabled: BooleanFilter
+  discount_percent: IntFilter
   totalComments: IntFilter
   created_at: DatetimeFilter
   stock: IntFilter
@@ -2133,6 +2137,8 @@ input productsInsertInput {
   tags: JSON
   images: JSON
   price: BigFloat
+  discount_enabled: Boolean
+  discount_percent: Int
   totalComments: Int
   created_at: Datetime
   stock: Int
@@ -2157,6 +2163,8 @@ input productsOrderBy {
   badge: OrderByDirection
   rating: OrderByDirection
   price: OrderByDirection
+  discount_enabled: OrderByDirection
+  discount_percent: OrderByDirection
   totalComments: OrderByDirection
   created_at: OrderByDirection
   stock: OrderByDirection
@@ -2175,6 +2183,8 @@ input productsUpdateInput {
   tags: JSON
   images: JSON
   price: BigFloat
+  discount_enabled: Boolean
+  discount_percent: Int
   totalComments: Int
   created_at: Datetime
   stock: Int

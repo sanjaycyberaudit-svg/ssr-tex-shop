@@ -1,4 +1,5 @@
 import { getProductsByIds } from "@/_actions/products";
+import { getEffectiveProductPrice } from "@/lib/products/discount";
 import type { CartItems } from "@/features/carts";
 import { createPhonePePayment } from "@/lib/payments/phonepe";
 import { createCashfreePayment } from "@/lib/payments/cashfree";
@@ -398,7 +399,7 @@ const calcSubtotal = (
   productsQuantity: (SelectProducts & { quantity: number })[],
 ) =>
   productsQuantity.reduce((acc, cur) => {
-    return acc + cur.quantity * parseFloat(cur.price);
+    return acc + cur.quantity * getEffectiveProductPrice(cur);
   }, 0);
 
 const mergeProductDetailsWithQuantities = async (
@@ -409,7 +410,11 @@ const mergeProductDetailsWithQuantities = async (
 
   const orderDetails = products.map((product) => {
     const quantity = orderProducts[product.id].quantity;
-    return { ...product, quantity };
+    return {
+      ...product,
+      price: String(getEffectiveProductPrice(product)),
+      quantity,
+    };
   });
 
   return orderDetails;

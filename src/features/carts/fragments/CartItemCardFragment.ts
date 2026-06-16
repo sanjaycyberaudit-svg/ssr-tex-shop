@@ -6,6 +6,8 @@ export const CartItemCardFragment = gql(/* GraphQL */ `
     slug
     name
     price
+    discountEnabled: discount_enabled
+    discountPercent: discount_percent
     stock
     featuredImage: medias {
       id

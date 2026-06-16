@@ -1573,6 +1573,8 @@ export type Products = Node & {
   commentsCollection?: Maybe<CommentsConnection>;
   created_at: Scalars["Datetime"];
   description?: Maybe<Scalars["String"]>;
+  discount_enabled?: Maybe<Scalars["Boolean"]>;
+  discount_percent?: Maybe<Scalars["Int"]>;
   featured?: Maybe<Scalars["Boolean"]>;
   featured_image_id: Scalars["String"];
   id: Scalars["String"];
@@ -1669,6 +1671,8 @@ export type ProductsFilter = {
   collection_id?: InputMaybe<StringFilter>;
   created_at?: InputMaybe<DatetimeFilter>;
   description?: InputMaybe<StringFilter>;
+  discount_enabled?: InputMaybe<BooleanFilter>;
+  discount_percent?: InputMaybe<IntFilter>;
   featured?: InputMaybe<BooleanFilter>;
   featured_image_id?: InputMaybe<StringFilter>;
   id?: InputMaybe<StringFilter>;
@@ -1690,6 +1694,8 @@ export type ProductsInsertInput = {
   collection_id?: InputMaybe<Scalars["String"]>;
   created_at?: InputMaybe<Scalars["Datetime"]>;
   description?: InputMaybe<Scalars["String"]>;
+  discount_enabled?: InputMaybe<Scalars["Boolean"]>;
+  discount_percent?: InputMaybe<Scalars["Int"]>;
   featured?: InputMaybe<Scalars["Boolean"]>;
   featured_image_id?: InputMaybe<Scalars["String"]>;
   id?: InputMaybe<Scalars["String"]>;
@@ -1716,6 +1722,8 @@ export type ProductsOrderBy = {
   collection_id?: InputMaybe<OrderByDirection>;
   created_at?: InputMaybe<OrderByDirection>;
   description?: InputMaybe<OrderByDirection>;
+  discount_enabled?: InputMaybe<OrderByDirection>;
+  discount_percent?: InputMaybe<OrderByDirection>;
   featured?: InputMaybe<OrderByDirection>;
   featured_image_id?: InputMaybe<OrderByDirection>;
   id?: InputMaybe<OrderByDirection>;
@@ -1732,6 +1740,8 @@ export type ProductsUpdateInput = {
   collection_id?: InputMaybe<Scalars["String"]>;
   created_at?: InputMaybe<Scalars["Datetime"]>;
   description?: InputMaybe<Scalars["String"]>;
+  discount_enabled?: InputMaybe<Scalars["Boolean"]>;
+  discount_percent?: InputMaybe<Scalars["Int"]>;
   featured?: InputMaybe<Scalars["Boolean"]>;
   featured_image_id?: InputMaybe<Scalars["String"]>;
   id?: InputMaybe<Scalars["String"]>;
@@ -2238,6 +2248,8 @@ export type CartItemCardFragmentFragment = {
   name: string;
   price: any;
   stock?: number | null;
+  discountEnabled?: boolean | null;
+  discountPercent?: number | null;
   featuredImage?: {
     __typename?: "medias";
     id: string;
@@ -2270,6 +2282,8 @@ export type FetchCartQueryQuery = {
           name: string;
           price: any;
           stock?: number | null;
+          discountEnabled?: boolean | null;
+          discountPercent?: number | null;
           featuredImage?: {
             __typename?: "medias";
             id: string;
@@ -2301,6 +2315,8 @@ export type FetchGuestCartQueryQuery = {
         name: string;
         price: any;
         stock?: number | null;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2335,6 +2351,8 @@ export type CreateCartMutationMutation = {
         name: string;
         price: any;
         stock?: number | null;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2383,6 +2401,8 @@ export type UpdateCartsMutationMutation = {
         name: string;
         price: any;
         stock?: number | null;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2620,6 +2640,8 @@ export type ProductCardFragmentFragment = {
   badge?: string | null;
   price: any;
   stock?: number | null;
+  discountEnabled?: boolean | null;
+  discountPercent?: number | null;
   featuredImage?: {
     __typename?: "medias";
     id: string;
@@ -2689,6 +2711,8 @@ export type RecomendationProductsQueryQuery = {
         badge?: string | null;
         price: any;
         stock?: number | null;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2751,6 +2775,8 @@ export type HomeFeaturedProductFragmentFragment = {
   slug: string;
   badge?: string | null;
   price: any;
+  discountEnabled?: boolean | null;
+  discountPercent?: number | null;
   featuredImage?: {
     __typename?: "medias";
     id: string;
@@ -2924,6 +2950,8 @@ export type SearchQuery = {
         badge?: string | null;
         price: any;
         stock?: number | null;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -2967,6 +2995,8 @@ export type FeaturedProductsQueryQuery = {
         badge?: string | null;
         price: any;
         stock?: number | null;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -3039,6 +3069,8 @@ export type ProductDetailPageQueryQuery = {
         stock?: number | null;
         tags: any;
         totalComments: number;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         commentsCollection?: {
           __typename?: "commentsConnection";
           edges: Array<{
@@ -3098,6 +3130,8 @@ export type ProductDetailPageQueryQuery = {
         badge?: string | null;
         price: any;
         stock?: number | null;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -3130,6 +3164,8 @@ export type LandingRouteQueryQuery = {
         slug: string;
         badge?: string | null;
         price: any;
+        discountEnabled?: boolean | null;
+        discountPercent?: number | null;
         featuredImage?: {
           __typename?: "medias";
           id: string;
@@ -3196,6 +3232,16 @@ export const CartItemCardFragmentFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -3647,6 +3693,16 @@ export const ProductCardFragmentFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -3890,6 +3946,16 @@ export const HomeFeaturedProductFragmentFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },
@@ -4944,6 +5010,16 @@ export const FetchCartQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -5107,6 +5183,16 @@ export const FetchGuestCartQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -5272,6 +5358,16 @@ export const CreateCartMutationDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -5571,6 +5667,16 @@ export const UpdateCartsMutationDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "name" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -6326,6 +6432,16 @@ export const RecomendationProductsQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -7645,6 +7761,16 @@ export const SearchDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -7842,6 +7968,16 @@ export const FeaturedProductsQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -8231,6 +8367,16 @@ export const ProductDetailPageQueryDocument = {
                             },
                             {
                               kind: "Field",
+                              alias: { kind: "Name", value: "discountEnabled" },
+                              name: { kind: "Name", value: "discount_enabled" },
+                            },
+                            {
+                              kind: "Field",
+                              alias: { kind: "Name", value: "discountPercent" },
+                              name: { kind: "Name", value: "discount_percent" },
+                            },
+                            {
+                              kind: "Field",
                               name: { kind: "Name", value: "stock" },
                             },
                             {
@@ -8511,6 +8657,16 @@ export const ProductDetailPageQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           { kind: "Field", name: { kind: "Name", value: "stock" } },
           {
             kind: "Field",
@@ -8824,6 +8980,16 @@ export const LandingRouteQueryDocument = {
           { kind: "Field", name: { kind: "Name", value: "slug" } },
           { kind: "Field", name: { kind: "Name", value: "badge" } },
           { kind: "Field", name: { kind: "Name", value: "price" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountEnabled" },
+            name: { kind: "Name", value: "discount_enabled" },
+          },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "discountPercent" },
+            name: { kind: "Name", value: "discount_percent" },
+          },
           {
             kind: "Field",
             alias: { kind: "Name", value: "featuredImage" },

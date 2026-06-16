@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import DeleteDialog from "@/components/ui/deleteDialog";
 import { gql } from "@/gql";
 import type { AdminProductTableRow } from "@/lib/admin/getAdminProductsList";
-import { formatPrice } from "@/lib/utils";
+import { ProductPriceDisplay } from "@/features/products/components/ProductPriceDisplay";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
@@ -264,7 +264,9 @@ const ProductsColumns: ColumnDef<ProductRow>[] = [
     cell: ({ row }) => {
       const product = row.original.node;
 
-      return <div className="font-medium">{formatPrice(product.price)}</div>;
+      return (
+        <ProductPriceDisplay product={product} layout="stacked" className="text-sm" />
+      );
     },
   },
   {

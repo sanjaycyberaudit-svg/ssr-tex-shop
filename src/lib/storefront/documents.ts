@@ -108,6 +108,8 @@ export const ProductDetailPageQueryDocument = gql(/* GraphQL */ `
           description
           rating
           price
+          discountEnabled: discount_enabled
+          discountPercent: discount_percent
           stock
           tags
           totalComments

@@ -28,6 +28,7 @@
     "db:migrate-payment-integrations": "node scripts/apply-payment-integrations.mjs",
     "db:migrate-seller-whatsapp-notify": "node scripts/apply-seller-whatsapp-notify.mjs",
     "db:migrate-products-draft-code": "node scripts/apply-products-draft-code.mjs",
+    "db:migrate-product-discount": "node scripts/apply-product-discount.mjs",
     "db:migrate-user-addresses": "node scripts/apply-user-addresses.mjs",
     "db:setup-addresses": "node scripts/setup-supabase-addresses.mjs",
     "db:seed-testimonials": "tsx --env-file=.env.local ./scripts/seed-sakthi-testimonials.ts",
