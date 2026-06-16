@@ -11,9 +11,9 @@ describe("product discount", () => {
     expect(
       getEffectiveProductPrice({ price: "1300", discountEnabled: false }),
     ).toBe(1300);
-    expect(isProductDiscountActive({ price: "1300", discountEnabled: false })).toBe(
-      false,
-    );
+    expect(
+      isProductDiscountActive({ price: "1300", discountEnabled: false }),
+    ).toBe(false);
   });
 
   it("applies percentage reduction when discount is on", () => {

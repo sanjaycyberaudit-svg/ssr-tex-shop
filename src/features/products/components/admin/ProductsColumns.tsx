@@ -265,7 +265,11 @@ const ProductsColumns: ColumnDef<ProductRow>[] = [
       const product = row.original.node;
 
       return (
-        <ProductPriceDisplay product={product} layout="stacked" className="text-sm" />
+        <ProductPriceDisplay
+          product={product}
+          layout="stacked"
+          className="text-sm"
+        />
       );
     },
   },

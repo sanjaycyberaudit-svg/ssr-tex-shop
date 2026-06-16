@@ -4,9 +4,7 @@ export type ProductDiscountFields = {
   discountPercent?: number | null;
 };
 
-export function normalizeDiscountPercent(
-  raw: unknown,
-): number | null {
+export function normalizeDiscountPercent(raw: unknown): number | null {
   const value = Number(raw);
   if (!Number.isFinite(value)) return null;
   const rounded = Math.round(value);
@@ -14,12 +12,16 @@ export function normalizeDiscountPercent(
   return rounded;
 }
 
-export function isProductDiscountActive(product: ProductDiscountFields): boolean {
+export function isProductDiscountActive(
+  product: ProductDiscountFields,
+): boolean {
   if (!product.discountEnabled) return false;
   return normalizeDiscountPercent(product.discountPercent) !== null;
 }
 
-export function getOriginalProductPrice(product: ProductDiscountFields): number {
+export function getOriginalProductPrice(
+  product: ProductDiscountFields,
+): number {
   const value = Number(product.price ?? 0);
   if (!Number.isFinite(value) || value < 0) return 0;
   return Math.round(value * 100) / 100;
@@ -35,7 +37,9 @@ export function getSaleProductPrice(product: ProductDiscountFields): number {
 }
 
 /** Price charged at checkout and shown as the main sale price. */
-export function getEffectiveProductPrice(product: ProductDiscountFields): number {
+export function getEffectiveProductPrice(
+  product: ProductDiscountFields,
+): number {
   return getSaleProductPrice(product);
 }
 

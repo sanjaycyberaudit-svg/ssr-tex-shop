@@ -36,7 +36,12 @@ export function ProductPriceDisplay({
 
   if (layout === "inline") {
     return (
-      <div className={cn("flex flex-wrap items-baseline gap-x-2 gap-y-0.5", className)}>
+      <div
+        className={cn(
+          "flex flex-wrap items-baseline gap-x-2 gap-y-0.5",
+          className,
+        )}
+      >
         <span className={cn("font-semibold text-destructive", saleClassName)}>
           {formatPrice(salePrice)}
         </span>
