@@ -24,19 +24,35 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
         <div
           className={cn(
             adminLayout
-              ? "mx-auto flex h-[var(--admin-header-height-mobile)] max-w-[2500px] items-center px-6 md:h-[var(--admin-header-height-desktop)] md:px-12"
+              ? "flex h-[var(--admin-header-height-mobile)] w-full md:h-[var(--admin-header-height-desktop)]"
               : "container",
           )}
         >
-          <div className="hidden w-full gap-x-8 items-center justify-between md:flex">
-            <div className="flex gap-x-3 items-center">
-              <SideMenu />
-              <Branding size="md" />
+          {adminLayout ? (
+            <div className="hidden w-full md:flex">
+              <div className="flex w-[var(--admin-sidebar-width)] shrink-0 items-center border-r px-3">
+                <Branding size="sm" />
+              </div>
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-x-5 px-6 lg:px-8">
+                <Suspense>
+                  <UserNav />
+                </Suspense>
+                <Link href="/">
+                  <span className="text-sm font-medium text-muted-foreground transition hover:text-foreground">
+                    View store
+                  </span>
+                </Link>
+              </div>
             </div>
+          ) : (
+            <div className="hidden w-full items-center justify-between gap-x-8 md:flex">
+              <div className="flex items-center gap-x-3">
+                <SideMenu />
+                <Branding size="md" />
+              </div>
 
-            {!adminLayout ? (
               <nav
-                className="hidden lg:flex items-center gap-5 text-sm font-medium"
+                className="hidden items-center gap-5 text-sm font-medium lg:flex"
                 aria-label="Primary"
               >
                 {[
@@ -54,30 +70,26 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
                   </Link>
                 ))}
               </nav>
-            ) : null}
 
-            {adminLayout ? (
-              <></>
-            ) : (
               <Suspense>
                 <SearchInput />
               </Suspense>
-            )}
 
-            <div className="flex gap-x-5 relative items-center">
-              <Suspense>
-                <UserNav />
-              </Suspense>
+              <div className="relative flex items-center gap-x-5">
+                <Suspense>
+                  <UserNav />
+                </Suspense>
 
-              <Link href={"/wish-list"}>
-                <Icons.heart className="w-4 h-4" aria-label="wishlist" />
-              </Link>
+                <Link href={"/wish-list"}>
+                  <Icons.heart className="h-4 w-4" aria-label="wishlist" />
+                </Link>
 
-              <Suspense fallback={<CartLink productCount={0} />}>
-                {!adminLayout && <CartNav />}
-              </Suspense>
+                <Suspense fallback={<CartLink productCount={0} />}>
+                  <CartNav />
+                </Suspense>
+              </div>
             </div>
-          </div>
+          )}
 
           <MobileNavbar adminLayout={adminLayout} />
         </div>

@@ -29,9 +29,13 @@ export function SidebarNav({ items }: SidebarNavProps) {
   if (!items?.length) return null;
 
   return (
-    <div className="flex w-full flex-col gap-2">
+    <nav className="flex w-full flex-col gap-0.5" aria-label="Admin">
       {items.map((item, index) => {
         const Icon = Icons[item.icon ?? "chevronLeft"];
+        const isActive =
+          pathname === item.href ||
+          (item.href !== "/admin/dashboard" &&
+            pathname.startsWith(`${item.href}/`));
 
         return item.href ? (
           <Link
@@ -42,8 +46,8 @@ export function SidebarNav({ items }: SidebarNavProps) {
           >
             <span
               className={cn(
-                "group flex w-full items-center rounded-md border border-transparent px-2 py-1 hover:bg-muted hover:text-foreground",
-                pathname === item.href
+                "group flex w-full items-center rounded-md border border-transparent px-3 py-2 text-sm hover:bg-muted hover:text-foreground",
+                isActive
                   ? "bg-muted font-medium text-foreground"
                   : "text-muted-foreground",
                 item.disabled && "pointer-events-none opacity-60",
@@ -51,15 +55,15 @@ export function SidebarNav({ items }: SidebarNavProps) {
             >
               <Icon
                 className={cn(
-                  "mr-2 h-4 w-4 transition-colors",
-                  pathname === item.href
+                  "mr-2.5 h-4 w-4 shrink-0 transition-colors",
+                  isActive
                     ? "text-foreground"
                     : iconColorByName[item.icon ?? ""] ||
                         "text-muted-foreground",
                 )}
                 aria-hidden="true"
               />
-              <span>{item.title}</span>
+              <span className="truncate">{item.title}</span>
             </span>
           </Link>
         ) : (
@@ -71,6 +75,6 @@ export function SidebarNav({ items }: SidebarNavProps) {
           </span>
         );
       })}
-    </div>
+    </nav>
   );
 }
