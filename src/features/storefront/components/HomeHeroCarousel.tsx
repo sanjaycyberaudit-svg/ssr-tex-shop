@@ -76,7 +76,9 @@ export function HomeHeroCarousel({ slides }: Props) {
         className="w-full"
       >
         <CarouselContent className="ml-0">
-          {activeSlides.map((slide) => (
+          {activeSlides.map((slide, index) => {
+            const isFirstSlide = index === 0;
+            return (
             <CarouselItem key={slide.id} className="basis-full pl-0">
               <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] md:aspect-[21/9] md:max-h-[min(72vh,520px)]">
                 <Link
@@ -88,7 +90,8 @@ export function HomeHeroCarousel({ slides }: Props) {
                   src={slide.image}
                   alt={slide.imageAlt}
                   fill
-                  priority={slide.id === activeSlides[0].id}
+                  priority={isFirstSlide}
+                  loading={isFirstSlide ? undefined : "lazy"}
                   sizes="100vw"
                   className="object-cover object-[center_20%] sm:object-center"
                 />
@@ -118,7 +121,8 @@ export function HomeHeroCarousel({ slides }: Props) {
                 </div>
               </div>
             </CarouselItem>
-          ))}
+          );
+          })}
         </CarouselContent>
 
         <button

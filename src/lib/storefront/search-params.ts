@@ -2,12 +2,51 @@ import { OrderByDirection, type SearchQueryVariables } from "@/gql/graphql";
 
 export type ProductListMode = "search" | "featured";
 
+export function pageSearchParamsToUrlSearchParams(
+  searchParams: Record<string, string | string[] | undefined>,
+): URLSearchParams {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      value.forEach((entry) => params.append(key, entry));
+    } else {
+      params.set(key, value);
+    }
+  }
+
+  return params;
+}
+
+export function buildShopSearchVariables(
+  searchParams:
+    | URLSearchParams
+    | Record<string, string | string[] | undefined>,
+  collectionId?: string,
+): SearchQueryVariables {
+  const params =
+    searchParams instanceof URLSearchParams
+      ? new URLSearchParams(searchParams)
+      : pageSearchParamsToUrlSearchParams(searchParams);
+
+  if (collectionId) {
+    params.set("collectionId", collectionId);
+  }
+
+  const { mode, variables } = parseProductListRequest(params);
+  if (mode !== "search") {
+    throw new Error("Expected search mode");
+  }
+
+  return variables as SearchQueryVariables;
+}
+
 export function parseProductListRequest(searchParams: URLSearchParams): {
   mode: ProductListMode;
   variables: SearchQueryVariables | { first: number; after?: string | null };
 } {
-  const mode =
-    searchParams.get("mode") === "featured" ? "featured" : "search";
+  const mode = searchParams.get("mode") === "featured" ? "featured" : "search";
 
   const first = Math.min(
     24,
@@ -114,9 +153,7 @@ export function searchVariablesToQueryString(
       params.set("sort", "BEST_MATCH");
     } else if (orderBy.some((o) => "price" in o && o.price?.includes("Asc"))) {
       params.set("sort", "PRICE_LOW_TO_HIGH");
-    } else if (
-      orderBy.some((o) => "price" in o && o.price?.includes("Desc"))
-    ) {
+    } else if (orderBy.some((o) => "price" in o && o.price?.includes("Desc"))) {
       params.set("sort", "PRICE_HIGH_TO_LOW");
     } else if (orderBy.some((o) => "created_at" in o)) {
       params.set("sort", "NEWEST");

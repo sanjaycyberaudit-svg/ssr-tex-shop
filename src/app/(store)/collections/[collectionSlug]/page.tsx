@@ -9,6 +9,9 @@ import {
 } from "@/features/search";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import { getCollectionPageCached } from "@/lib/storefront/collection-detail";
+import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
+import { fetchProductSearchCached } from "@/lib/storefront/product-queries";
+import { buildShopSearchVariables } from "@/lib/storefront/search-params";
 import { toTitleCase, unslugify } from "@/lib/utils";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -32,7 +35,7 @@ export function generateMetadata({ params }: CategoryPageProps) {
   };
 }
 
-async function CategoryPage({ params }: CategoryPageProps) {
+async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const requestedSlug = decodeURIComponent(params.collectionSlug).trim();
   const data = await getCollectionPageCached(requestedSlug);
   const collection = data?.collectionsCollection?.edges?.[0]?.node;
@@ -42,6 +45,12 @@ async function CategoryPage({ params }: CategoryPageProps) {
   if (requestedSlug !== collection.slug) {
     redirect(`/collections/${encodeURIComponent(collection.slug)}`);
   }
+
+  const variables = buildShopSearchVariables(searchParams, collection.id);
+  const [initialSearchResult, initialDraftIds] = await Promise.all([
+    fetchProductSearchCached(variables),
+    getDraftProductIdsCached(),
+  ]);
 
   return (
     <Shell>
@@ -63,7 +72,11 @@ async function CategoryPage({ params }: CategoryPageProps) {
       </Suspense>
 
       <Suspense fallback={<SearchProductsGridSkeleton />}>
-        <SearchProductsInifiteScroll collectionId={collection.id} />
+        <SearchProductsInifiteScroll
+          collectionId={collection.id}
+          initialSearchResult={initialSearchResult}
+          initialDraftIds={initialDraftIds}
+        />
       </Suspense>
     </Shell>
   );

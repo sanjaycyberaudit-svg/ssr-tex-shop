@@ -105,7 +105,6 @@ function ProductStockEditor({
   productId: string;
   stock: number | null;
 }) {
-  const router = useRouter();
   const { toast } = useToast();
   const [value, setValue] = useState(String(stock ?? 0));
   const [isSaving, setIsSaving] = useState(false);
@@ -140,7 +139,6 @@ function ProductStockEditor({
       }
 
       toast({ title: "Stock updated." });
-      router.refresh();
     } catch (error) {
       toast({
         title: "Stock update failed",
@@ -225,9 +223,7 @@ const ProductsColumns: ColumnDef<ProductRow>[] = [
       const product = row.original.node;
 
       return (
-        <div className="font-mono text-sm">
-          {product.productCode ?? "—"}
-        </div>
+        <div className="font-mono text-sm">{product.productCode ?? "—"}</div>
       );
     },
   },

@@ -7,6 +7,7 @@ import { DocumentType } from "@/gql";
 import {
   useDraftProductIds,
   useStorefrontFeaturedProducts,
+  type StorefrontProductsInitialData,
 } from "@/hooks/useStorefrontProducts";
 import SearchProductsGridSkeleton from "./SearchProductsGridSkeleton";
 
@@ -16,16 +17,22 @@ type Props = {
   variables: { first: number; after?: string | null };
   isLastPage: boolean;
   onLoadMore: (cursor: string) => void;
+  initialData?: StorefrontProductsInitialData;
+  initialDraftIds?: string[];
 };
 
 export function FeaturedProductsResultPage({
   variables,
   isLastPage,
   onLoadMore,
+  initialData,
+  initialDraftIds,
 }: Props) {
-  const { productsCollection, fetching, error } =
-    useStorefrontFeaturedProducts(variables);
-  const { draftIds, draftLoaded } = useDraftProductIds();
+  const { productsCollection, fetching, error } = useStorefrontFeaturedProducts(
+    variables,
+    { initialData },
+  );
+  const { draftIds, draftLoaded } = useDraftProductIds(initialDraftIds);
 
   const visibleEdges = useMemo(
     () =>
@@ -34,7 +41,10 @@ export function FeaturedProductsResultPage({
     [draftIds, productsCollection?.edges],
   );
 
-  if ((fetching && !productsCollection) || !draftLoaded) {
+  const showSkeleton =
+    ((fetching && !productsCollection) || !draftLoaded) && !productsCollection;
+
+  if (showSkeleton) {
     return <SearchProductsGridSkeleton />;
   }
 
@@ -52,8 +62,12 @@ export function FeaturedProductsResultPage({
         <p>No featured products yet.</p>
       ) : (
         <section className="grid grid-cols-2 lg:grid-cols-4 w-full gap-y-8 gap-x-3 py-5">
-          {visibleEdges.map(({ node }) => (
-            <ProductCard key={node.id} product={node as ProductNode} />
+          {visibleEdges.map(({ node }, index) => (
+            <ProductCard
+              key={node.id}
+              product={node as ProductNode}
+              priorityImage={!variables.after && index < 2}
+            />
           ))}
         </section>
       )}

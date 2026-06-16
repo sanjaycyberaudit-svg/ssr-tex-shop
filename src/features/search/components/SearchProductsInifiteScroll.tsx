@@ -1,15 +1,21 @@
 "use client";
-import { OrderByDirection, SearchQueryVariables } from "@/gql/graphql";
+
+import type { StorefrontProductSearchResult } from "@/lib/storefront/product-queries";
+import { buildShopSearchVariables } from "@/lib/storefront/search-params";
 import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import SearchResultPage from "./SearchResultPage";
 
 interface SearchProductsInifiteScrollProps {
   collectionId?: string;
+  initialSearchResult?: StorefrontProductSearchResult;
+  initialDraftIds?: string[];
 }
 
 function SearchProductsInifiteScroll({
   collectionId,
+  initialSearchResult,
+  initialDraftIds,
 }: SearchProductsInifiteScrollProps) {
   const searchParmas = useSearchParams();
   const varaibles = searchParamsVariablesFactory(searchParmas, collectionId);
@@ -20,7 +26,7 @@ function SearchProductsInifiteScroll({
     setPageVariables([
       searchParamsVariablesFactory(searchParmas, collectionId),
     ]);
-  }, [searchParmas]);
+  }, [searchParmas, collectionId]);
 
   const loadMoreHandler = (after: string) => {
     setPageVariables([...pageVariables, { ...varaibles, after, first: 8 }]);
@@ -36,6 +42,8 @@ function SearchProductsInifiteScroll({
           isLastPage={i === pageVariables.length - 1}
           showMatchingCollections={i === 0}
           onLoadMore={loadMoreHandler}
+          initialData={i === 0 ? initialSearchResult : undefined}
+          initialDraftIds={i === 0 ? initialDraftIds : undefined}
         />
       ))}
     </section>
@@ -47,62 +55,4 @@ export default SearchProductsInifiteScroll;
 const searchParamsVariablesFactory = (
   searchParams: ReadonlyURLSearchParams,
   collectionId?: string,
-) => {
-  const priceRange = searchParams.get("price_range");
-  const range = priceRange ? priceRange.split("-") : undefined;
-  let collections: string[] = [];
-  const collectionsRaw = searchParams.get("collections");
-  if (collectionsRaw) {
-    try {
-      const parsed = JSON.parse(collectionsRaw) as unknown;
-      collections = Array.isArray(parsed)
-        ? parsed.filter((id): id is string => typeof id === "string")
-        : [];
-    } catch {
-      collections = [];
-    }
-  }
-  const sort = searchParams.get("sort") ?? undefined;
-  const search = searchParams.get("search") ?? undefined;
-
-  let orderBy = undefined;
-
-  switch (sort) {
-    case "BEST_MATCH":
-      orderBy = [
-        { featured: OrderByDirection["DescNullsFirst"] },
-        { created_at: OrderByDirection["DescNullsLast"] },
-      ];
-      break;
-    case "PRICE_LOW_TO_HIGH":
-      orderBy = [{ price: OrderByDirection["AscNullsLast"] }];
-      break;
-    case "PRICE_HIGH_TO_LOW":
-      orderBy = [{ price: OrderByDirection["DescNullsLast"] }];
-      break;
-    case "NEWEST":
-      orderBy = [{ created_at: OrderByDirection["DescNullsLast"] }];
-      break;
-    case "NAME_ASCE":
-      orderBy = [{ name: OrderByDirection["AscNullsLast"] }];
-
-      break;
-    default:
-      orderBy = undefined;
-  }
-
-  const varaibles: SearchQueryVariables = {
-    search: search ? `%${search.trim()}%` : "%%",
-    lower: range && range[0] ? `${range[0]}` : undefined,
-    upper: range && range[1] ? `${range[1]}` : undefined,
-    collections: collectionId
-      ? [collectionId]
-      : collections && collections.length > 0
-        ? collections
-        : undefined,
-    orderBy,
-    first: 4,
-    after: undefined,
-  };
-  return varaibles;
-};
+) => buildShopSearchVariables(searchParams, collectionId);

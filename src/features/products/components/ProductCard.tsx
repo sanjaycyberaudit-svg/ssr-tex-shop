@@ -27,6 +27,7 @@ type CardProps = React.ComponentProps<typeof Card>;
 
 export type ProductCardProps = CardProps & {
   product: DocumentType<typeof ProductCardFragment>;
+  priorityImage?: boolean;
 };
 
 export const ProductCardFragment = gql(/* GraphQL */ `
@@ -55,6 +56,7 @@ export const ProductCardFragment = gql(/* GraphQL */ `
 export function ProductCard({
   className,
   product,
+  priorityImage = false,
   ...props
 }: ProductCardProps) {
   const { id, name, slug, featuredImage, badge, price, stock } = product;
@@ -70,6 +72,7 @@ export function ProductCard({
             imageKey={featuredImage.key}
             alt={featuredImage.alt || name}
             imageClassName={productThumbnailImageHoverClass}
+            priority={priorityImage}
           />
         </Link>
         {badge && (

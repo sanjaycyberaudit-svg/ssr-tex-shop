@@ -5,6 +5,8 @@ import { FeaturedProductsScroll } from "@/features/search";
 import { Suspense } from "react";
 import { Metadata } from "next";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
+import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
+import { fetchFeaturedProductsCached } from "@/lib/storefront/product-queries";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
@@ -13,7 +15,15 @@ export const metadata: Metadata = {
   description: "Handpicked featured sarees at Sakthi Textile",
 };
 
-export default function FeaturedProductsPage() {
+const FEATURED_PAGE_SIZE = 12;
+
+async function FeaturedProductsPage() {
+  const variables = { first: FEATURED_PAGE_SIZE, after: undefined };
+  const [productsCollection, initialDraftIds] = await Promise.all([
+    fetchFeaturedProductsCached(variables),
+    getDraftProductIdsCached(),
+  ]);
+
   return (
     <Shell>
       <Header
@@ -22,8 +32,13 @@ export default function FeaturedProductsPage() {
       />
 
       <Suspense fallback={<SearchProductsGridSkeleton />}>
-        <FeaturedProductsScroll />
+        <FeaturedProductsScroll
+          initialData={{ productsCollection }}
+          initialDraftIds={initialDraftIds}
+        />
       </Suspense>
     </Shell>
   );
 }
+
+export default FeaturedProductsPage;

@@ -5,6 +5,8 @@ const nextConfig = {
   swcMinify: true,
   output: "standalone",
   images: {
+    formats: ["image/avif", "image/webp"],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 320, 384, 400],
     remotePatterns: [
       // Demo images (HiyoRi default S3)
       {

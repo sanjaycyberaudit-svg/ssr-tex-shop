@@ -1,14 +1,15 @@
 import Header from "@/components/layouts/Header";
 import { Shell } from "@/components/layouts/Shell";
-import { Skeleton } from "@/components/ui/skeleton";
-import { listCollectionsAction } from "@/features/collections";
 import { SearchProductsGridSkeleton } from "@/features/products";
 import {
   FilterSelections,
   SearchProductsInifiteScroll,
 } from "@/features/search";
-import { Suspense } from "react";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
+import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
+import { fetchProductSearchCached } from "@/lib/storefront/product-queries";
+import { buildShopSearchVariables } from "@/lib/storefront/search-params";
+import { Suspense } from "react";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
@@ -18,28 +19,22 @@ interface ProductsPageProps {
   };
 }
 
-async function ProductsPage({}: ProductsPageProps) {
-  // TODO: PROBLEM in server actrion
-  // const collectionsData = await listCollectionsAction();
+async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const variables = buildShopSearchVariables(searchParams);
+  const [initialSearchResult, initialDraftIds] = await Promise.all([
+    fetchProductSearchCached(variables),
+    getDraftProductIdsCached(),
+  ]);
 
   return (
     <Shell>
       <Header heading="Shop Now" />
 
-      {/* <Suspense
-        fallback={
-          <div>
-            <Skeleton className="max-w-xl h-8 mb-3" />
-            <Skeleton className="max-w-2xl h-8" />
-          </div>
-        }
-      >
-        <FilterSelections collectionsSection={collectionsData} />
-      </Suspense>
-       */}
-
       <Suspense fallback={<SearchProductsGridSkeleton />}>
-        <SearchProductsInifiteScroll />
+        <SearchProductsInifiteScroll
+          initialSearchResult={initialSearchResult}
+          initialDraftIds={initialDraftIds}
+        />
       </Suspense>
     </Shell>
   );

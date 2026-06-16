@@ -23,33 +23,46 @@ type AdminProjectsPageProps = {
 };
 
 async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
-  let productRows: Awaited<ReturnType<typeof getAdminProductsList>> = [];
+  let productRows: Awaited<ReturnType<typeof getAdminProductsList>>["rows"] = [];
   let loadError: string | null = null;
 
   try {
-    const [rows, bulkOrderGuard, stockControl] = await Promise.all([
-      getAdminProductsList(),
+    const page = Math.max(
+      1,
+      Number.parseInt(String(searchParams.page ?? "1"), 10) || 1,
+    );
+    const pageSize = Math.min(
+      100,
+      Math.max(10, Number.parseInt(String(searchParams.pageSize ?? "30"), 10) || 30),
+    );
+    const query =
+      typeof searchParams.q === "string" ? searchParams.q.trim() : "";
+
+    const [productsPage, bulkOrderGuard, stockControl] = await Promise.all([
+      getAdminProductsList({ page, pageSize, query }),
       resolveBulkOrderGuardConfig(),
       resolveStockControlConfig(),
     ]);
-    productRows = rows;
+    productRows = productsPage.rows;
 
-    const bulkHitCountRows = bulkOrderGuard.enabled
-      ? await db
-          .select({
-            count: sql<number>`count(distinct ${carts.productId})::int`,
-          })
-          .from(carts)
-          .where(gte(carts.quantity, bulkOrderGuard.threshold))
-      : [{ count: 0 }];
-    const lowStockCountRows = stockControl.enabled
-      ? await db
-          .select({
-            count: sql<number>`count(*)::int`,
-          })
-          .from(products)
-          .where(lt(products.stock, stockControl.lowStockThreshold))
-      : [{ count: 0 }];
+    const [bulkHitCountRows, lowStockCountRows] = await Promise.all([
+      bulkOrderGuard.enabled
+        ? db
+            .select({
+              count: sql<number>`count(distinct ${carts.productId})::int`,
+            })
+            .from(carts)
+            .where(gte(carts.quantity, bulkOrderGuard.threshold))
+        : Promise.resolve([{ count: 0 }]),
+      stockControl.enabled
+        ? db
+            .select({
+              count: sql<number>`count(*)::int`,
+            })
+            .from(products)
+            .where(lt(products.stock, stockControl.lowStockThreshold))
+        : Promise.resolve([{ count: 0 }]),
+    ]);
 
     const threshold = bulkOrderGuard.threshold;
     const bulkHitCount = bulkOrderGuard.enabled
@@ -58,7 +71,7 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
     const lowStockCount = stockControl.enabled
       ? Number(lowStockCountRows[0]?.count ?? 0)
       : 0;
-    const totalProducts = productRows.length;
+    const totalProducts = productsPage.totalCount;
 
     return (
       <AdminShell
@@ -109,6 +122,10 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
         <ProductsDataTable
           columns={ProductsColumns}
           data={productRows}
+          totalCount={productsPage.totalCount}
+          page={productsPage.page}
+          pageSize={productsPage.pageSize}
+          appliedQuery={query}
           bulkDeleteEndpoint="/api/admin/products/manage"
           bulkDeleteLabel="Delete selected products"
           enableDragSelect
@@ -129,7 +146,9 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
       description="Product catalog could not be loaded."
     >
       <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-6 text-sm">
-        <p className="font-semibold text-destructive">Failed to load products</p>
+        <p className="font-semibold text-destructive">
+          Failed to load products
+        </p>
         <p className="mt-2 text-muted-foreground">{loadError}</p>
         <p className="mt-2 text-muted-foreground">
           Refresh the page. If this continues, check the database connection in

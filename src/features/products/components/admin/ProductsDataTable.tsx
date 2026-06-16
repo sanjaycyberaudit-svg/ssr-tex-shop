@@ -9,8 +9,6 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -27,17 +25,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  filterAdminProductTableRows,
-  selectAllFilteredRows,
-} from "@/lib/admin/table-search";
-import { useRouter } from "next/navigation";
+import { selectAllFilteredRows } from "@/lib/admin/table-search";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  appliedQuery?: string;
   enableDragSelect?: boolean;
   bulkDeleteEndpoint?: string;
   bulkDeleteLabel?: string;
@@ -46,12 +44,18 @@ interface DataTableProps<TData, TValue> {
 function DataTable<TData, TValue>({
   columns,
   data,
+  totalCount,
+  page,
+  pageSize,
+  appliedQuery: initialAppliedQuery = "",
   enableDragSelect = false,
   bulkDeleteEndpoint,
   bulkDeleteLabel = "Delete selected",
 }: DataTableProps<TData, TValue>) {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -59,8 +63,8 @@ function DataTable<TData, TValue>({
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [appliedSearch, setAppliedSearch] = React.useState("");
-  const [draftSearch, setDraftSearch] = React.useState("");
+  const [appliedSearch, setAppliedSearch] = React.useState(initialAppliedQuery);
+  const [draftSearch, setDraftSearch] = React.useState(initialAppliedQuery);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [drag, setDrag] = React.useState<{
     startX: number;
@@ -74,13 +78,24 @@ function DataTable<TData, TValue>({
   const tableWrapRef = React.useRef<HTMLDivElement | null>(null);
   const rowRefs = React.useRef<Record<string, HTMLTableRowElement | null>>({});
 
-  const filteredData = React.useMemo(
-    () =>
-      filterAdminProductTableRows(
-        data as Parameters<typeof filterAdminProductTableRows>[0],
-        appliedSearch,
-      ) as TData[],
-    [appliedSearch, data],
+  const filteredData = data;
+
+  React.useEffect(() => {
+    setAppliedSearch(initialAppliedQuery);
+    setDraftSearch(initialAppliedQuery);
+  }, [initialAppliedQuery]);
+
+  const pushQueryParams = React.useCallback(
+    (next: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      Object.entries(next).forEach(([key, value]) => {
+        if (value == null || value === "") params.delete(key);
+        else params.set(key, value);
+      });
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [pathname, router, searchParams],
   );
 
   const applySearch = React.useCallback(
@@ -89,15 +104,17 @@ function DataTable<TData, TValue>({
       setAppliedSearch(next);
       setDraftSearch(next);
       setRowSelection({});
+      pushQueryParams({ q: next || null, page: "1" });
     },
-    [draftSearch],
+    [draftSearch, pushQueryParams],
   );
 
   const clearSearch = React.useCallback(() => {
     setAppliedSearch("");
     setDraftSearch("");
     setRowSelection({});
-  }, []);
+    pushQueryParams({ q: null, page: "1" });
+  }, [pushQueryParams]);
 
   const table = useReactTable({
     data: filteredData,
@@ -124,8 +141,6 @@ function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
   const selectedIds = React.useMemo(
@@ -135,9 +150,9 @@ function DataTable<TData, TValue>({
         .map(([id]) => id),
     [rowSelection],
   );
-  const filteredCount = filteredData.length;
-  const totalCount = data.length;
+  const filteredCount = totalCount;
   const isFiltering = appliedSearch.trim().length > 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   React.useEffect(() => {
     table.setPageIndex(0);
@@ -371,9 +386,34 @@ function DataTable<TData, TValue>({
           />
         ) : null}
       </div>
-      {isFiltering && filteredCount === 0 ? null : (
-        <DataTablePagination table={table} />
-      )}
+      <div className="flex items-center justify-between px-2">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {selectedIds.length} of {filteredCount} row(s) selected.
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="h-8 px-2"
+            disabled={page <= 1}
+            onClick={() => pushQueryParams({ page: String(Math.max(1, page - 1)) })}
+          >
+            Prev
+          </Button>
+          <span className="text-sm font-medium">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            className="h-8 px-2"
+            disabled={page >= totalPages}
+            onClick={() =>
+              pushQueryParams({ page: String(Math.min(totalPages, page + 1)) })
+            }
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

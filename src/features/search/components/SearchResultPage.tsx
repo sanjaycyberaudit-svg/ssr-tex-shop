@@ -7,6 +7,7 @@ import { DocumentType } from "@/gql";
 import {
   useDraftProductIds,
   useStorefrontProductSearch,
+  type StorefrontProductsInitialData,
 } from "@/hooks/useStorefrontProducts";
 import { normalizeStorefrontSearchTerm } from "@/lib/storefront/search-utils";
 import { useMemo } from "react";
@@ -21,16 +22,20 @@ const SearchResultPage = ({
   isLastPage,
   collectionId,
   showMatchingCollections = false,
+  initialData,
+  initialDraftIds,
 }: {
   variables: SearchQueryVariables;
   onLoadMore: (cursor: string) => void;
   isLastPage: boolean;
   collectionId?: string;
   showMatchingCollections?: boolean;
+  initialData?: StorefrontProductsInitialData;
+  initialDraftIds?: string[];
 }) => {
   const { productsCollection, matchingCollections, fetching, error } =
-    useStorefrontProductSearch(variables, collectionId);
-  const { draftIds, draftLoaded } = useDraftProductIds();
+    useStorefrontProductSearch(variables, collectionId, { initialData });
+  const { draftIds, draftLoaded } = useDraftProductIds(initialDraftIds);
 
   const searchTerm = normalizeStorefrontSearchTerm(variables.search);
 
@@ -45,14 +50,16 @@ const SearchResultPage = ({
     showMatchingCollections && matchingCollections.length > 0;
   const hasProductMatches = visibleEdges.length > 0;
   const hasAnyMatches = hasCollectionMatches || hasProductMatches;
+  const showSkeleton =
+    (fetching || !draftLoaded) && !productsCollection;
 
   return (
     <div>
       {error && <p>Oh no... {error}</p>}
 
-      {(fetching || !draftLoaded) && <SearchProductsGridSkeleton />}
+      {showSkeleton && <SearchProductsGridSkeleton />}
 
-      {productsCollection && draftLoaded && !fetching && (
+      {productsCollection && draftLoaded && !showSkeleton && (
         <>
           {hasCollectionMatches ? (
             <SearchMatchingCollections
@@ -70,8 +77,12 @@ const SearchResultPage = ({
 
           {hasProductMatches ? (
             <section className="grid grid-cols-2 w-full gap-x-3 gap-y-8 py-5 lg:grid-cols-4">
-              {visibleEdges.map(({ node }) => (
-                <ProductCard key={node.id} product={node as ProductNode} />
+              {visibleEdges.map(({ node }, index) => (
+                <ProductCard
+                  key={node.id}
+                  product={node as ProductNode}
+                  priorityImage={showMatchingCollections && index < 2}
+                />
               ))}
             </section>
           ) : hasCollectionMatches ? (

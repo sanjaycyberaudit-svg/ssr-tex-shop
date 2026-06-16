@@ -14,5 +14,6 @@ export const productThumbnailImageClass =
 /** Hover state used on product cards. */
 export const productThumbnailImageHoverClass = `${productThumbnailImageClass} hover:scale-[1.02] hover:opacity-90`;
 
+/** ~360–400px served width on 2-col mobile grids (incl. 2x DPR). */
 export const productThumbnailSizes =
-  "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw";
+  "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px";

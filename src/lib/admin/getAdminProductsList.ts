@@ -1,6 +1,6 @@
 import db from "@/lib/supabase/db";
 import { collections, medias, products } from "@/lib/supabase/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, ilike, or, sql } from "drizzle-orm";
 import { cache } from "react";
 
 export const ADMIN_PRODUCTS_LIST_TAG = "admin-products-list";
@@ -30,6 +30,19 @@ export type AdminProductTableNode = {
 
 export type AdminProductTableRow = {
   node: AdminProductTableNode;
+};
+
+export type AdminProductsListParams = {
+  page?: number;
+  pageSize?: number;
+  query?: string;
+};
+
+export type AdminProductsListResult = {
+  rows: AdminProductTableRow[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
 };
 
 /** Map joined DB rows into admin table shape. */
@@ -86,10 +99,25 @@ function mapAdminProductRows(
 }
 
 /** Lean admin catalog query — no HTML description blobs. */
-export async function loadAdminProductsListFromDb(): Promise<
-  AdminProductTableRow[]
-> {
-  const rows = await db
+export async function loadAdminProductsListFromDb(
+  params: AdminProductsListParams = {},
+): Promise<AdminProductsListResult> {
+  const pageSize = Math.min(100, Math.max(10, params.pageSize ?? 30));
+  const page = Math.max(1, params.page ?? 1);
+  const offset = (page - 1) * pageSize;
+  const query = (params.query ?? "").trim();
+  const normalizedQuery = query.replace(/[%_]/g, "\\$&");
+  const whereClause = normalizedQuery
+    ? or(
+        ilike(products.name, `%${normalizedQuery}%`),
+        ilike(products.slug, `%${normalizedQuery}%`),
+        ilike(products.productCode, `%${normalizedQuery}%`),
+        ilike(collections.label, `%${normalizedQuery}%`),
+      )
+    : undefined;
+
+  const [rows, countRows] = await Promise.all([
+    db
     .select({
       id: products.id,
       name: products.name,
@@ -111,9 +139,27 @@ export async function loadAdminProductsListFromDb(): Promise<
     .from(products)
     .leftJoin(collections, eq(products.collectionId, collections.id))
     .leftJoin(medias, eq(products.featuredImageId, medias.id))
-    .orderBy(desc(products.createdAt));
+    .where(whereClause)
+    .orderBy(desc(products.createdAt))
+    .limit(pageSize)
+    .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(products)
+      .leftJoin(collections, eq(products.collectionId, collections.id))
+      .where(whereClause),
+  ]);
 
-  return mapAdminProductRows(rows);
+  const totalCount = Number(countRows[0]?.count ?? 0);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  return {
+    rows: mapAdminProductRows(rows),
+    totalCount,
+    page: safePage,
+    pageSize,
+  };
 }
 
 /** Per-request dedupe only — avoids unstable_cache hangs on serverless DB. */

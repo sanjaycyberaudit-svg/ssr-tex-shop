@@ -33,6 +33,7 @@ export function CollectionCardSurface({
         alt={imageAlt}
         fill
         priority={priority}
+        loading={priority ? undefined : "lazy"}
         sizes={sizes}
         className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
       />

@@ -2,11 +2,11 @@
 
 import type { SearchQueryVariables } from "@/gql/graphql";
 import type { StorefrontCollectionMatch } from "@/lib/storefront/search-utils";
-import { useEffect, useState } from "react";
 import {
   featuredVariablesToQueryString,
   searchVariablesToQueryString,
 } from "@/lib/storefront/search-params";
+import { useEffect, useRef, useState } from "react";
 
 type ProductsCollection = {
   edges: { node: { id: string } }[];
@@ -20,20 +20,47 @@ type State = {
   error: string | null;
 };
 
+export type StorefrontProductsInitialData = {
+  productsCollection: ProductsCollection;
+  matchingCollections?: StorefrontCollectionMatch[];
+};
+
+type HookOptions = {
+  initialData?: StorefrontProductsInitialData;
+};
+
 export function useStorefrontProductSearch(
   variables: SearchQueryVariables,
   collectionId?: string,
+  options?: HookOptions,
 ) {
-  const [state, setState] = useState<State>({
-    productsCollection: null,
-    matchingCollections: [],
-    fetching: true,
-    error: null,
-  });
-
   const queryKey = searchVariablesToQueryString(variables, collectionId);
+  const skipInitialFetchRef = useRef(
+    options?.initialData ? queryKey : null,
+  );
+
+  const [state, setState] = useState<State>(() =>
+    options?.initialData
+      ? {
+          productsCollection: options.initialData.productsCollection,
+          matchingCollections: options.initialData.matchingCollections ?? [],
+          fetching: false,
+          error: null,
+        }
+      : {
+          productsCollection: null,
+          matchingCollections: [],
+          fetching: true,
+          error: null,
+        },
+  );
 
   useEffect(() => {
+    if (skipInitialFetchRef.current === queryKey) {
+      skipInitialFetchRef.current = null;
+      return;
+    }
+
     let active = true;
 
     setState((prev) => ({ ...prev, fetching: true, error: null }));
@@ -74,20 +101,40 @@ export function useStorefrontProductSearch(
   return state;
 }
 
-export function useStorefrontFeaturedProducts(variables: {
-  first: number;
-  after?: string | null;
-}) {
-  const [state, setState] = useState<State>({
-    productsCollection: null,
-    matchingCollections: [],
-    fetching: true,
-    error: null,
-  });
-
+export function useStorefrontFeaturedProducts(
+  variables: {
+    first: number;
+    after?: string | null;
+  },
+  options?: HookOptions,
+) {
   const queryKey = featuredVariablesToQueryString(variables);
+  const skipInitialFetchRef = useRef(
+    options?.initialData ? queryKey : null,
+  );
+
+  const [state, setState] = useState<State>(() =>
+    options?.initialData
+      ? {
+          productsCollection: options.initialData.productsCollection,
+          matchingCollections: [],
+          fetching: false,
+          error: null,
+        }
+      : {
+          productsCollection: null,
+          matchingCollections: [],
+          fetching: true,
+          error: null,
+        },
+  );
 
   useEffect(() => {
+    if (skipInitialFetchRef.current === queryKey) {
+      skipInitialFetchRef.current = null;
+      return;
+    }
+
     let active = true;
 
     setState((prev) => ({ ...prev, fetching: true, error: null }));
@@ -128,11 +175,16 @@ export function useStorefrontFeaturedProducts(variables: {
   return state;
 }
 
-export function useDraftProductIds() {
-  const [draftIds, setDraftIds] = useState<Set<string>>(new Set());
-  const [loaded, setLoaded] = useState(false);
+export function useDraftProductIds(initialIds?: string[]) {
+  const hasServerIds = initialIds !== undefined;
+  const [draftIds, setDraftIds] = useState<Set<string>>(
+    () => new Set(initialIds ?? []),
+  );
+  const [loaded, setLoaded] = useState(hasServerIds);
 
   useEffect(() => {
+    if (hasServerIds) return;
+
     let active = true;
 
     void fetch("/api/products/drafts")
@@ -154,7 +206,7 @@ export function useDraftProductIds() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [hasServerIds]);
 
   return { draftIds, draftLoaded: loaded };
 }

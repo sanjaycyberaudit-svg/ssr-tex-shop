@@ -35,6 +35,7 @@ export function ProductThumbnail({
         sizes={productThumbnailSizes}
         className={cn(productThumbnailImageClass, imageClassName)}
         priority={priority}
+        loading={priority ? undefined : "lazy"}
       />
     </div>
   );

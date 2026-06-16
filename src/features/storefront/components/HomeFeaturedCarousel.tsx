@@ -45,9 +45,9 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
             src={keytoUrl(featuredImage?.key)}
             alt={featuredImage?.alt || name}
             fill
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 85vw, 480px"
+            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 85vw, 400px"
             className="object-cover object-top"
-            priority={false}
+            loading="lazy"
           />
         </Link>
         {badge ? (
