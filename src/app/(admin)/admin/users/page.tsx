@@ -5,8 +5,8 @@ import {
   AdminUserNav,
 } from "@/features/users";
 import AdminShell from "@/components/admin/AdminShell";
-import { ProductsDataTable } from "@/features/products";
 import ErrorToaster from "@/components/layouts/ErrorToaster";
+import DataTable from "@/features/cms/components/DataTable";
 // TODO: CREATE New Data Table for golbaluse
 
 type AdminUsersPageProps = {
@@ -23,7 +23,7 @@ async function UsersPage({ searchParams }: AdminUsersPageProps) {
   return (
     <AdminShell heading="Users" description="Edit/Create new user by admin.">
       <AdminUserNav />
-      <ProductsDataTable columns={UsersColumns} data={users || []} />
+      <DataTable columns={UsersColumns} data={users || []} />
       <ErrorToaster />
     </AdminShell>
   );

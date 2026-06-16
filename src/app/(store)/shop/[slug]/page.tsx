@@ -73,8 +73,8 @@ async function ProductDetailPage({ params }: Props) {
     commentsCollection,
     totalComments,
     featuredImage,
-    slug,
   } = productEdge.node;
+  const productSlug = params.slug;
   const sizeConfig = await getProductSizeConfig(id);
   const hasConfiguredSizes =
     sizeConfig.enabled &&
@@ -98,11 +98,11 @@ async function ProductDetailPage({ params }: Props) {
           buildBreadcrumbJsonLd([
             { name: "Home", path: "/" },
             { name: "Shop", path: "/shop" },
-            { name, path: `/shop/${slug}` },
+            { name, path: `/shop/${productSlug}` },
           ]),
           buildProductJsonLd({
             name,
-            slug,
+            slug: productSlug,
             description,
             price,
             imageUrl: featuredImage?.key ? keytoUrl(featuredImage.key) : null,

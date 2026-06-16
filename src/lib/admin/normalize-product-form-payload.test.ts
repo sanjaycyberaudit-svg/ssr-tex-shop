@@ -17,6 +17,7 @@ describe("normalizeProductFormPayload", () => {
       badge: "best_sale",
       tags: [],
       collectionId: null,
+      featuredImageId: "img-1",
     });
 
     expect(payload.name).toBe("Silk Saree");
@@ -36,6 +37,7 @@ describe("normalizeProductFormPayload", () => {
       badge: "invalid" as never,
       tags: [],
       collectionId: null,
+      featuredImageId: "img-1",
     });
 
     expect(payload.badge).toBeNull();
