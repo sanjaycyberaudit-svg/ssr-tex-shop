@@ -18,8 +18,10 @@ import {
 import { AddToWishListButton } from "@/features/wishlists";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import { getProductSizeConfig } from "@/lib/products/sizeConfig";
+import { buildBreadcrumbJsonLd, buildProductJsonLd } from "@/lib/seo/json-ld";
 import { getProductDetailCached } from "@/lib/storefront/product-detail";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, keytoUrl } from "@/lib/utils";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -33,12 +35,23 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getProductDetailCached(params.slug);
   const productName = data?.productsCollection?.edges?.[0]?.node?.name;
+  const path = `/shop/${params.slug}`;
+
   if (productName) {
     return {
-      title: `${productName} | Sakthi Textile`,
-      description: `Buy ${productName} from Sakthi Textile.`,
+      title: productName,
+      description: `Buy ${productName} online from Sakthi Textile. Premium silk and cotton sarees with secure checkout.`,
+      alternates: {
+        canonical: path,
+      },
+      openGraph: {
+        title: `${productName} | Sakthi Textile`,
+        description: `Buy ${productName} online from Sakthi Textile.`,
+        url: path,
+      },
     };
   }
+
   return {
     title: "Sakthi Textile | Silk & Cotton Sarees",
     description: "Authentic silk and cotton sarees — wholesale and retail",
@@ -59,6 +72,8 @@ async function ProductDetailPage({ params }: Props) {
     stock,
     commentsCollection,
     totalComments,
+    featuredImage,
+    slug,
   } = productEdge.node;
   const sizeConfig = await getProductSizeConfig(id);
   const hasConfiguredSizes =
@@ -78,6 +93,23 @@ async function ProductDetailPage({ params }: Props) {
 
   return (
     <Shell>
+      <JsonLd
+        data={[
+          buildBreadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Shop", path: "/shop" },
+            { name, path: `/shop/${slug}` },
+          ]),
+          buildProductJsonLd({
+            name,
+            slug,
+            description,
+            price,
+            imageUrl: featuredImage?.key ? keytoUrl(featuredImage.key) : null,
+            inStock: Number(stock ?? 0) > 0,
+          }),
+        ]}
+      />
       <div className="grid grid-cols-12 gap-x-8">
         <div className="space-y-8 relative col-span-12 md:col-span-7">
           <ProductImageShowcase data={productEdge.node} />

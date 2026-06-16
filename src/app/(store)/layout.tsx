@@ -4,7 +4,14 @@ import { MobileMenuProvider } from "@/components/layouts/MobileMenuContext";
 import Navbar from "@/components/layouts/MainNavbar";
 import { StoreFloatingActions } from "@/components/layouts/StoreFloatingActions";
 import { MobileBottomNav } from "@/components/layouts/MobileBottomNav";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { resolveStorefrontRuntimeBundle } from "@/lib/integrations/settings";
+import {
+  buildOrganizationJsonLd,
+  buildSiteNavigationJsonLd,
+  buildStoreJsonLd,
+  buildWebsiteJsonLd,
+} from "@/lib/seo/json-ld";
 import { AnnouncementsProvider } from "@/providers/AnnouncementsProvider";
 import { BulkOrderGuardProvider } from "@/providers/BulkOrderGuardProvider";
 import { CourierChargesProvider } from "@/providers/CourierChargesProvider";
@@ -29,6 +36,14 @@ async function StoreLayout({ children }: Props) {
 
   return (
     <SocialLinksProvider social={social}>
+      <JsonLd
+        data={[
+          buildOrganizationJsonLd(),
+          buildWebsiteJsonLd(),
+          buildStoreJsonLd(),
+          buildSiteNavigationJsonLd(),
+        ]}
+      />
       <AnnouncementsProvider announcements={announcements}>
         <BulkOrderGuardProvider config={bulkOrderGuard}>
           <StockControlProvider config={stockControl}>

@@ -29,9 +29,19 @@ interface CategoryPageProps {
 
 export function generateMetadata({ params }: CategoryPageProps) {
   const collectionName = toTitleCase(unslugify(params.collectionSlug));
+  const path = `/collections/${params.collectionSlug}`;
+
   return {
-    title: `${collectionName} | Sakthi Textile`,
-    description: `Shop ${collectionName} sarees at Sakthi Textile.`,
+    title: `${collectionName} Sarees`,
+    description: `Shop ${collectionName} sarees at Sakthi Textile. Premium silk and cotton sarees with secure online ordering.`,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: {
+      title: `${collectionName} Sarees | Sakthi Textile`,
+      description: `Shop ${collectionName} sarees at Sakthi Textile.`,
+      url: path,
+    },
   };
 }
 

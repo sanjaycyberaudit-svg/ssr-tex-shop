@@ -7,6 +7,7 @@ import {
   HomeCategoriesCarousel,
   HomeTestimonialsCarousel,
   HomeFeaturedCarousel,
+  HomeExploreLinks,
 } from "@/features/storefront/components";
 import { TestimonialCardFragment } from "@/features/testimonials";
 import { gql } from "@/gql";
@@ -15,8 +16,24 @@ import { getHomeBannerSlides } from "@/lib/integrations/settings";
 import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
 import { getClient } from "@/lib/urql";
 import { siteConfig } from "@/config/site";
+import type { Metadata } from "next";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: "Sakthi Textile | Premium Silk & Cotton Sarees Online",
+  description:
+    "Shop authentic silk and cotton sarees at Sakthi Textile. Explore featured sarees, wedding collections, Kanjivaram styles, and wholesale sarees from Salem.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Sakthi Textile | Premium Silk & Cotton Sarees Online",
+    description:
+      "Shop authentic silk and cotton sarees at Sakthi Textile. Explore featured sarees, wedding collections, and wholesale sarees from Salem.",
+    url: "/",
+  },
+};
 
 const LandingRouteQuery = gql(/* GraphQL */ `
   query LandingRouteQuery {
@@ -61,11 +78,12 @@ const LandingRouteQuery = gql(/* GraphQL */ `
 `);
 
 export default async function Home() {
-  const [homeBannerSlides, landingResponse, draftProductIds] = await Promise.all([
-    getHomeBannerSlides(),
-    getClient().query(LandingRouteQuery, {}),
-    getDraftProductIdsCached(),
-  ]);
+  const [homeBannerSlides, landingResponse, draftProductIds] =
+    await Promise.all([
+      getHomeBannerSlides(),
+      getClient().query(LandingRouteQuery, {}),
+      getDraftProductIdsCached(),
+    ]);
   const { data, error } = landingResponse;
 
   if (data === null && error) {
@@ -109,6 +127,7 @@ export default async function Home() {
           <HomeFeaturedCarousel products={featuredProducts} />
         ) : null}
 
+        <HomeExploreLinks />
         <TrustFeatures />
       </Shell>
     </main>

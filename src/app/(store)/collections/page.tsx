@@ -9,8 +9,18 @@ import { Metadata } from "next";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "All Categories | Sakthi Textile",
-  description: "Browse all saree collections at Sakthi Textile",
+  title: "All Collections",
+  description:
+    "Browse all saree collections at Sakthi Textile — Kanjivaram wedding sarees, cotton sarees, soft silk, traditional silk and festive collections.",
+  alternates: {
+    canonical: "/collections",
+  },
+  openGraph: {
+    title: "All Collections | Sakthi Textile",
+    description:
+      "Browse Kanjivaram, cotton, soft silk, wedding and festive saree collections at Sakthi Textile.",
+    url: "/collections",
+  },
 };
 
 const AllCollectionsQuery = gql(/* GraphQL */ `

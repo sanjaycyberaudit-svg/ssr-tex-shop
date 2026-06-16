@@ -9,9 +9,25 @@ import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
 import { fetchProductSearchCached } from "@/lib/storefront/product-queries";
 import { buildShopSearchVariables } from "@/lib/storefront/search-params";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
+
+export const metadata: Metadata = {
+  title: "Shop All Sarees",
+  description:
+    "Browse all silk, cotton, wedding and festive sarees at Sakthi Textile. Shop online with secure checkout and delivery across India.",
+  alternates: {
+    canonical: "/shop",
+  },
+  openGraph: {
+    title: "Shop All Sarees | Sakthi Textile",
+    description:
+      "Browse all silk, cotton, wedding and festive sarees at Sakthi Textile.",
+    url: "/shop",
+  },
+};
 
 interface ProductsPageProps {
   searchParams: {

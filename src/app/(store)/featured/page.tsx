@@ -11,8 +11,18 @@ import { fetchFeaturedProductsCached } from "@/lib/storefront/product-queries";
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 export const metadata: Metadata = {
-  title: "Featured Products | Sakthi Textile",
-  description: "Handpicked featured sarees at Sakthi Textile",
+  title: "Featured Sarees",
+  description:
+    "Discover handpicked featured sarees at Sakthi Textile — premium styles for weddings, festivals and special occasions.",
+  alternates: {
+    canonical: "/featured",
+  },
+  openGraph: {
+    title: "Featured Sarees | Sakthi Textile",
+    description:
+      "Discover handpicked featured sarees at Sakthi Textile for weddings and festivals.",
+    url: "/featured",
+  },
 };
 
 const FEATURED_PAGE_SIZE = 12;

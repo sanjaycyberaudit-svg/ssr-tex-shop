@@ -34,6 +34,28 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
               <Branding size="md" />
             </div>
 
+            {!adminLayout ? (
+              <nav
+                className="hidden lg:flex items-center gap-5 text-sm font-medium"
+                aria-label="Primary"
+              >
+                {[
+                  { title: "Shop", href: "/shop" },
+                  { title: "Featured", href: "/featured" },
+                  { title: "Collections", href: "/collections" },
+                  { title: "Contact", href: "/contact" },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="text-foreground/80 transition hover:text-[#00542E]"
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+              </nav>
+            ) : null}
+
             {adminLayout ? (
               <></>
             ) : (
