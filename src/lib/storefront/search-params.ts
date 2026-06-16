@@ -20,9 +20,7 @@ export function pageSearchParamsToUrlSearchParams(
 }
 
 export function buildShopSearchVariables(
-  searchParams:
-    | URLSearchParams
-    | Record<string, string | string[] | undefined>,
+  searchParams: URLSearchParams | Record<string, string | string[] | undefined>,
   collectionId?: string,
 ): SearchQueryVariables {
   const params =

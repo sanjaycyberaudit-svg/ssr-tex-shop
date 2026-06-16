@@ -51,7 +51,9 @@ export function AddressCard({
           <span
             className={cn(
               "mt-1 h-4 w-4 shrink-0 rounded-full border",
-              selected ? "border-primary bg-primary" : "border-muted-foreground",
+              selected
+                ? "border-primary bg-primary"
+                : "border-muted-foreground",
             )}
             aria-hidden="true"
           />
@@ -65,7 +67,12 @@ export function AddressCard({
       {showActions ? (
         <div className="mt-4 flex flex-wrap gap-2">
           {!address.isDefault && onSetDefault ? (
-            <Button type="button" variant="outline" size="sm" onClick={onSetDefault}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onSetDefault}
+            >
               Set as default
             </Button>
           ) : null}
@@ -75,7 +82,12 @@ export function AddressCard({
             </Button>
           ) : null}
           {onDelete ? (
-            <Button type="button" variant="destructive" size="sm" onClick={onDelete}>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={onDelete}
+            >
               Delete
             </Button>
           ) : null}

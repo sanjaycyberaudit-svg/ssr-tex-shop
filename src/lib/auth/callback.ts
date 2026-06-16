@@ -20,7 +20,10 @@ export function getPostAuthRedirectUrl(
   return `${origin}${nextPath}`;
 }
 
-export function buildOAuthCallbackUrl(origin: string, nextPath: string): string {
+export function buildOAuthCallbackUrl(
+  origin: string,
+  nextPath: string,
+): string {
   const callbackUrl = new URL("/auth/callback", origin);
   callbackUrl.searchParams.set("next", nextPath);
   return callbackUrl.toString();

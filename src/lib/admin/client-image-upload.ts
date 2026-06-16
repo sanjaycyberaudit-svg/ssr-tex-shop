@@ -202,7 +202,10 @@ export async function compressImageForUpload(file: File): Promise<File> {
   return file;
 }
 
-function postCompressRejectReason(file: File, sourceName: string): string | null {
+function postCompressRejectReason(
+  file: File,
+  sourceName: string,
+): string | null {
   if (file.size > UPLOAD_LIMIT_BYTES) {
     return `${sourceName}: still ${formatFileSize(file.size)} after compression. Resize to 2000px and under ${UPLOAD_LIMIT_MB} MB on your computer.`;
   }
@@ -380,7 +383,8 @@ async function uploadViaDirectStorage(
         const payload = (await completeRes.json().catch(() => ({}))) as {
           message?: string;
         };
-        lastError = payload.message ?? `Finalize failed (${completeRes.status}).`;
+        lastError =
+          payload.message ?? `Finalize failed (${completeRes.status}).`;
         if (completeRes.status < 500) break;
         // eslint-disable-next-line no-continue
         continue;
@@ -777,10 +781,7 @@ export async function runBulkDraftUpload(params: {
       if (result.payload.errors?.length) {
         errors.push(...result.payload.errors);
       }
-      if (
-        result.status >= 400 &&
-        (result.payload.created?.length ?? 0) === 0
-      ) {
+      if (result.status >= 400 && (result.payload.created?.length ?? 0) === 0) {
         errors.push(result.payload.message ?? "Library bulk create failed.");
       }
       continue;
@@ -856,10 +857,7 @@ export async function runBulkDraftUpload(params: {
     if (result.payload.errors?.length) {
       errors.push(...result.payload.errors);
     }
-    if (
-      result.status >= 400 &&
-      (result.payload.created?.length ?? 0) === 0
-    ) {
+    if (result.status >= 400 && (result.payload.created?.length ?? 0) === 0) {
       const reason =
         result.payload.message ??
         result.payload.errors?.[0] ??

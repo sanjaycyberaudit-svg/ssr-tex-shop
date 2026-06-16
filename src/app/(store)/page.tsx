@@ -1,20 +1,16 @@
 import { Shell } from "@/components/layouts/Shell";
 import { Icons } from "@/components/layouts/icons";
-import { CollectionCardFragment } from "@/features/collections";
 import {
-  HomeFeaturedProductFragment,
   HomeHeroCarousel,
   HomeCategoriesCarousel,
   HomeTestimonialsCarousel,
   HomeFeaturedCarousel,
   HomeExploreLinks,
 } from "@/features/storefront/components";
-import { TestimonialCardFragment } from "@/features/testimonials";
-import { gql } from "@/gql";
 import { heroSlides } from "@/config/heroSlides";
 import { getHomeBannerSlides } from "@/lib/integrations/settings";
 import { getDraftProductIdsCached } from "@/lib/storefront/draft-product-ids";
-import { getClient } from "@/lib/urql";
+import { getLandingPageDataCached } from "@/lib/storefront/landing-data";
 import { siteConfig } from "@/config/site";
 import type { Metadata } from "next";
 
@@ -35,60 +31,12 @@ export const metadata: Metadata = {
   },
 };
 
-const LandingRouteQuery = gql(/* GraphQL */ `
-  query LandingRouteQuery {
-    products: productsCollection(
-      filter: { featured: { eq: true } }
-      first: 12
-      orderBy: [{ created_at: DescNullsLast }]
-    ) {
-      edges {
-        node {
-          id
-          ...HomeFeaturedProductFragment
-        }
-      }
-    }
-
-    collectionScrollCards: collectionsCollection(
-      first: 10
-      orderBy: [{ order: DescNullsLast }]
-    ) {
-      edges {
-        node {
-          id
-          ...CollectionCardFragment
-        }
-      }
-    }
-
-    homeTestimonials: testimonialsCollection(
-      filter: { is_published: { eq: true } }
-      first: 12
-      orderBy: [{ order: DescNullsLast }, { created_at: DescNullsLast }]
-    ) {
-      edges {
-        node {
-          id
-          ...TestimonialCardFragment
-        }
-      }
-    }
-  }
-`);
-
 export default async function Home() {
-  const [homeBannerSlides, landingResponse, draftProductIds] =
-    await Promise.all([
-      getHomeBannerSlides(),
-      getClient().query(LandingRouteQuery, {}),
-      getDraftProductIdsCached(),
-    ]);
-  const { data, error } = landingResponse;
-
-  if (data === null && error) {
-    console.error("LandingRouteQuery failed:", error.message);
-  }
+  const [homeBannerSlides, data, draftProductIds] = await Promise.all([
+    getHomeBannerSlides(),
+    getLandingPageDataCached(),
+    getDraftProductIdsCached(),
+  ]);
 
   const draftIds = new Set(draftProductIds);
   const products = data?.products;
@@ -103,7 +51,7 @@ export default async function Home() {
       <HomeHeroCarousel slides={slides} />
 
       <Shell>
-        {error ? (
+        {!data ? (
           <div className="rounded-lg border border-amber-300 bg-amber-50 p-6 my-6 text-sm">
             <p className="font-semibold mb-2">Store data not loaded</p>
             <p className="text-muted-foreground mb-2">

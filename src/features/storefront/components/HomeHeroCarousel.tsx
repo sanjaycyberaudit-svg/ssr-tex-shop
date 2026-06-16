@@ -79,49 +79,49 @@ export function HomeHeroCarousel({ slides }: Props) {
           {activeSlides.map((slide, index) => {
             const isFirstSlide = index === 0;
             return (
-            <CarouselItem key={slide.id} className="basis-full pl-0">
-              <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] md:aspect-[21/9] md:max-h-[min(72vh,520px)]">
-                <Link
-                  href={slide.href}
-                  className="absolute inset-0 z-[1]"
-                  aria-label={`${slide.title} — ${slide.cta}`}
-                />
-                <Image
-                  src={slide.image}
-                  alt={slide.imageAlt}
-                  fill
-                  priority={isFirstSlide}
-                  loading={isFirstSlide ? undefined : "lazy"}
-                  sizes="100vw"
-                  className="object-cover object-[center_20%] sm:object-center"
-                />
-                <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/15"
-                  aria-hidden
-                />
-
-                <div className="pointer-events-none absolute inset-0 z-[2] flex flex-col items-center justify-center px-6 pb-14 pt-16 text-center sm:px-10 sm:pb-16">
-                  <h2 className="font-[family-name:var(--font-hero-serif)] text-3xl font-medium tracking-wide text-white sm:text-4xl md:text-5xl">
-                    {slide.title}
-                  </h2>
+              <CarouselItem key={slide.id} className="basis-full pl-0">
+                <div className="relative aspect-[4/5] w-full sm:aspect-[16/10] md:aspect-[21/9] md:max-h-[min(72vh,520px)]">
+                  <Link
+                    href={slide.href}
+                    className="absolute inset-0 z-[1]"
+                    aria-label={`${slide.title} — ${slide.cta}`}
+                  />
+                  <Image
+                    src={slide.image}
+                    alt={slide.imageAlt}
+                    fill
+                    priority={isFirstSlide}
+                    loading={isFirstSlide ? undefined : "lazy"}
+                    sizes="100vw"
+                    className="object-cover object-[center_20%] sm:object-center"
+                  />
                   <div
-                    className="my-3 flex w-28 items-center gap-2 sm:my-4 sm:w-36"
+                    className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/15"
                     aria-hidden
-                  >
-                    <span className="h-px flex-1 bg-[#C5A059]/80" />
-                    <span className="text-[#C5A059]">◆</span>
-                    <span className="h-px flex-1 bg-[#C5A059]/80" />
+                  />
+
+                  <div className="pointer-events-none absolute inset-0 z-[2] flex flex-col items-center justify-center px-6 pb-14 pt-16 text-center sm:px-10 sm:pb-16">
+                    <h2 className="font-[family-name:var(--font-hero-serif)] text-3xl font-medium tracking-wide text-white sm:text-4xl md:text-5xl">
+                      {slide.title}
+                    </h2>
+                    <div
+                      className="my-3 flex w-28 items-center gap-2 sm:my-4 sm:w-36"
+                      aria-hidden
+                    >
+                      <span className="h-px flex-1 bg-[#C5A059]/80" />
+                      <span className="text-[#C5A059]">◆</span>
+                      <span className="h-px flex-1 bg-[#C5A059]/80" />
+                    </div>
+                    <p className="max-w-md text-sm leading-relaxed text-white/90 sm:max-w-xl sm:text-base md:text-lg">
+                      {slide.subtitle}
+                    </p>
+                    <span className="pointer-events-auto relative z-[3] mt-6 inline-flex min-h-[44px] items-center justify-center bg-[#00542E] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#004225] sm:mt-8 sm:px-10 sm:text-sm">
+                      <Link href={slide.href}>{slide.cta}</Link>
+                    </span>
                   </div>
-                  <p className="max-w-md text-sm leading-relaxed text-white/90 sm:max-w-xl sm:text-base md:text-lg">
-                    {slide.subtitle}
-                  </p>
-                  <span className="pointer-events-auto relative z-[3] mt-6 inline-flex min-h-[44px] items-center justify-center bg-[#00542E] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#004225] sm:mt-8 sm:px-10 sm:text-sm">
-                    <Link href={slide.href}>{slide.cta}</Link>
-                  </span>
                 </div>
-              </div>
-            </CarouselItem>
-          );
+              </CarouselItem>
+            );
           })}
         </CarouselContent>
 

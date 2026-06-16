@@ -65,7 +65,10 @@ describe("linesFingerprint", () => {
 describe("mergeDeepLinkLines", () => {
   it("caps quantity at 99", () => {
     expect(
-      mergeDeepLinkLines([{ productId: "x", quantity: 80 }, { productId: "x", quantity: 30 }]),
+      mergeDeepLinkLines([
+        { productId: "x", quantity: 80 },
+        { productId: "x", quantity: 30 },
+      ]),
     ).toEqual([{ productId: "x", quantity: 99 }]);
   });
 });

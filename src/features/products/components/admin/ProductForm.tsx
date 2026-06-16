@@ -225,7 +225,11 @@ function ProductFrom({ product }: ProductsFormProps) {
   const isFeatured = watch("featured");
   const isSavingSingle = singleSaveStep !== null;
   const isFormBusy =
-    isPending || isSavingSingle || bulkPhase === "preparing" || bulkPhase === "uploading" || bulkPhase === "creating";
+    isPending ||
+    isSavingSingle ||
+    bulkPhase === "preparing" ||
+    bulkPhase === "uploading" ||
+    bulkPhase === "creating";
   const singleSaveStepIndex = singleSaveStep
     ? SINGLE_SAVE_STEPS.findIndex((step) => step.key === singleSaveStep) + 1
     : 0;
@@ -1225,8 +1229,7 @@ function ProductFrom({ product }: ProductsFormProps) {
               <LoadingButtonLabel
                 isLoading={isFormBusy && !inBulkMode}
                 loadingText={
-                  singleSaveMessage ||
-                  (product ? "Updating..." : "Creating...")
+                  singleSaveMessage || (product ? "Updating..." : "Creating...")
                 }
                 idleText={
                   product ? "Update" : inBulkMode ? "Create Bulk" : "Create"

@@ -115,7 +115,9 @@ export async function finalizeDirectUpload(params: {
     processed = await processUploadedImage(uploadFile);
   } catch (error) {
     await deleteStagingFile(params.storagePath);
-    throw error instanceof Error ? error : new Error("Image processing failed.");
+    throw error instanceof Error
+      ? error
+      : new Error("Image processing failed.");
   }
 
   const namePrefix =

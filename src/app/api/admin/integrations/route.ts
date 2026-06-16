@@ -224,9 +224,8 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    const productSlugById = await loadProductSlugsForBannerSlides(
-      fallbackSlides,
-    );
+    const productSlugById =
+      await loadProductSlugsForBannerSlides(fallbackSlides);
     const slidesWithResolvedLinks = fallbackSlides.map((slide) => ({
       ...slide,
       href: resolveHomeBannerSlideHref(slide, productSlugById),

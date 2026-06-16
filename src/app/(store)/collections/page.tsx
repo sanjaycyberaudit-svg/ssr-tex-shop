@@ -1,9 +1,7 @@
 import Header from "@/components/layouts/Header";
 import { Shell } from "@/components/layouts/Shell";
-import { CollectionCardFragment } from "@/features/collections";
 import CollectionsCard from "@/features/collections/components/CollectionsCard";
-import { gql } from "@/gql";
-import { getClient } from "@/lib/urql";
+import { getAllCollectionsCached } from "@/lib/storefront/collections-list";
 import { Metadata } from "next";
 
 export const revalidate = 300;
@@ -23,26 +21,9 @@ export const metadata: Metadata = {
   },
 };
 
-const AllCollectionsQuery = gql(/* GraphQL */ `
-  query AllCollectionsQuery {
-    collectionsCollection(
-      first: 50
-      orderBy: [{ order: DescNullsLast }, { label: AscNullsLast }]
-    ) {
-      edges {
-        node {
-          id
-          ...CollectionCardFragment
-        }
-      }
-    }
-  }
-`);
-
 export default async function AllCollectionsPage() {
-  const { data } = await getClient().query(AllCollectionsQuery, {});
-
-  const collections = data?.collectionsCollection?.edges ?? [];
+  const collectionsCollection = await getAllCollectionsCached();
+  const collections = collectionsCollection?.edges ?? [];
 
   return (
     <Shell>

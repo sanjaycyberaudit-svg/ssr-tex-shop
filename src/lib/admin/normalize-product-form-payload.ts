@@ -13,7 +13,9 @@ export function normalizeProductFormPayload(
 
   const badgeRaw = data.badge == null ? null : String(data.badge).trim();
   const badge =
-    badgeRaw && BADGE_VALUES.has(badgeRaw) ? (badgeRaw as InsertProducts["badge"]) : null;
+    badgeRaw && BADGE_VALUES.has(badgeRaw)
+      ? (badgeRaw as InsertProducts["badge"])
+      : null;
 
   return {
     ...data,

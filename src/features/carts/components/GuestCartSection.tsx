@@ -1,5 +1,7 @@
 "use client";
-import { DocumentType, gql } from "@/gql";
+import { DocumentType } from "@/gql";
+import { FetchGuestCartQuery } from "../queries/cart-page-queries";
+import type { CartSizeConfigPayload } from "@/lib/storefront/cart-server";
 import {
   calculateCourierCharge,
   calculateGstAmount,
@@ -7,7 +9,7 @@ import {
 import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import { useQuery } from "@urql/next";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -44,12 +46,19 @@ type CartSizeConfigOption = {
   qty: number;
 };
 
-type CartSizeConfig = {
-  enabled: boolean;
-  options: CartSizeConfigOption[];
+type CartSizeConfig = CartSizeConfigPayload;
+
+type GuestCartSectionProps = {
+  initialProducts?: DocumentType<typeof FetchGuestCartQuery> | null;
+  initialSizeConfigs?: Record<string, CartSizeConfig>;
+  prefetchedProductIds?: string[];
 };
 
-function GuestCartSection() {
+function GuestCartSection({
+  initialProducts,
+  initialSizeConfigs,
+  prefetchedProductIds,
+}: GuestCartSectionProps) {
   const { toast } = useToast();
   const bulkOrder = useBulkOrderGuardConfig();
   const courierConfig = useCourierChargesConfig();
@@ -65,7 +74,11 @@ function GuestCartSection() {
   const setProductSize = useCartStore((s) => s.setProductSize);
   const [sizeConfigsByProductId, setSizeConfigsByProductId] = useState<
     Record<string, CartSizeConfig>
-  >({});
+  >(() => initialSizeConfigs ?? {});
+  const prefetchedIdsKey = prefetchedProductIds?.slice().sort().join(",") ?? "";
+  const skippedSizePrefetchRef = useRef(
+    Boolean(initialSizeConfigs && prefetchedIdsKey),
+  );
 
   const cartProductIds = Object.keys(cartItems);
 
@@ -78,9 +91,11 @@ function GuestCartSection() {
     pause: cartProductIds.length === 0,
   });
 
+  const productsData = data ?? initialProducts ?? null;
+
   const subtotal = useMemo(
-    () => calcSubtotal({ prdouctsDetails: data, quantity: cartItems }),
-    [data, cartItems],
+    () => calcSubtotal({ prdouctsDetails: productsData, quantity: cartItems }),
+    [productsData, cartItems],
   );
 
   const productCount = useMemo(
@@ -163,10 +178,10 @@ function GuestCartSection() {
 
   const cartLines = useMemo(
     () =>
-      data?.productsCollection?.edges?.filter(
+      productsData?.productsCollection?.edges?.filter(
         ({ node }) => cartItems[node.id],
       ) ?? [],
-    [cartItems, data?.productsCollection?.edges],
+    [cartItems, productsData?.productsCollection?.edges],
   );
 
   useEffect(() => {
@@ -176,11 +191,16 @@ function GuestCartSection() {
       return;
     }
 
+    const currentKey = cartProductIds.slice().sort().join(",");
+    if (skippedSizePrefetchRef.current && currentKey === prefetchedIdsKey) {
+      skippedSizePrefetchRef.current = false;
+      return;
+    }
+
     const loadSizeConfigs = async () => {
       try {
         const res = await fetchWithTimeout(
           `/api/products/size-config?productIds=${encodeURIComponent(cartProductIds.join(","))}`,
-          { cache: "no-store" },
         );
         if (!active) return;
         if (!res.ok) {
@@ -229,9 +249,9 @@ function GuestCartSection() {
     [cartItems, cartLines, sizeConfigsByProductId],
   );
   if (cartProductIds.length === 0) return <EmptyCart />;
-  if (fetching) return LoadingCartSection();
-  if (error) return <div>Error</div>;
-  if (!data?.productsCollection?.edges?.length) return <EmptyCart />;
+  if (fetching && !productsData) return LoadingCartSection();
+  if (error && !productsData) return <div>Error</div>;
+  if (!productsData?.productsCollection?.edges?.length) return <EmptyCart />;
 
   const addOneHandler = (
     productId: string,
@@ -433,13 +453,11 @@ const calcSubtotal = ({
   prdouctsDetails,
   quantity,
 }: {
-  prdouctsDetails: DocumentType<typeof FetchGuestCartQuery>;
+  prdouctsDetails: DocumentType<typeof FetchGuestCartQuery> | null;
   quantity: CartItems;
 }) => {
   const productPrices =
-    prdouctsDetails && prdouctsDetails.productsCollection.edges
-      ? prdouctsDetails.productsCollection.edges
-      : [];
+    prdouctsDetails?.productsCollection?.edges ?? [];
 
   if (!productPrices.length) return 0;
 
@@ -449,24 +467,3 @@ const calcSubtotal = ({
     return acc + item.quantity * cur.node.price;
   }, 0);
 };
-
-const FetchGuestCartQuery = gql(/* GraphQL */ `
-  query FetchGuestCartQuery(
-    $cartItems: [String!]
-    $first: Int
-    $after: Cursor
-  ) {
-    productsCollection(
-      first: $first
-      after: $after
-      filter: { id: { in: $cartItems } }
-    ) {
-      edges {
-        node {
-          id
-          ...CartItemCardFragment
-        }
-      }
-    }
-  }
-`);

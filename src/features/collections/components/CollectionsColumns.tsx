@@ -111,9 +111,7 @@ const CollectionsColumns: ColumnDef<{
     cell: ({ row }) => {
       const collection = row.original.node;
 
-      return (
-        <p className="font-medium capitalize px-3">{collection.title}</p>
-      );
+      return <p className="font-medium capitalize px-3">{collection.title}</p>;
     },
   },
   {

@@ -159,9 +159,7 @@ export function CartOrderSummaryFields({
         </div>
         <div className="flex items-center justify-between border-t pt-2 font-semibold">
           <span>Total</span>
-          <span>
-            {totalReady ? formatPrice(totalAmount) : "Select state"}
-          </span>
+          <span>{totalReady ? formatPrice(totalAmount) : "Select state"}</span>
         </div>
       </div>
     </>

@@ -13,7 +13,9 @@ async function main() {
       /\s/.test(row.slug) ||
       row.slug !== row.slug.toLowerCase() ||
       row.slug !== fromSlug;
-    const normalized = slugNeedsFix ? fromLabel || fromSlug : fromSlug || fromLabel;
+    const normalized = slugNeedsFix
+      ? fromLabel || fromSlug
+      : fromSlug || fromLabel;
     if (!normalized || normalized === row.slug) continue;
 
     await db

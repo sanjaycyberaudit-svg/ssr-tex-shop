@@ -35,9 +35,7 @@ export function useStorefrontProductSearch(
   options?: HookOptions,
 ) {
   const queryKey = searchVariablesToQueryString(variables, collectionId);
-  const skipInitialFetchRef = useRef(
-    options?.initialData ? queryKey : null,
-  );
+  const skipInitialFetchRef = useRef(options?.initialData ? queryKey : null);
 
   const [state, setState] = useState<State>(() =>
     options?.initialData
@@ -109,9 +107,7 @@ export function useStorefrontFeaturedProducts(
   options?: HookOptions,
 ) {
   const queryKey = featuredVariablesToQueryString(variables);
-  const skipInitialFetchRef = useRef(
-    options?.initialData ? queryKey : null,
-  );
+  const skipInitialFetchRef = useRef(options?.initialData ? queryKey : null);
 
   const [state, setState] = useState<State>(() =>
     options?.initialData

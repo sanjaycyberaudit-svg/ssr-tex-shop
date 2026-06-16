@@ -23,7 +23,8 @@ type AdminProjectsPageProps = {
 };
 
 async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
-  let productRows: Awaited<ReturnType<typeof getAdminProductsList>>["rows"] = [];
+  let productRows: Awaited<ReturnType<typeof getAdminProductsList>>["rows"] =
+    [];
   let loadError: string | null = null;
 
   try {
@@ -33,7 +34,10 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
     );
     const pageSize = Math.min(
       100,
-      Math.max(10, Number.parseInt(String(searchParams.pageSize ?? "30"), 10) || 30),
+      Math.max(
+        10,
+        Number.parseInt(String(searchParams.pageSize ?? "30"), 10) || 30,
+      ),
     );
     const query =
       typeof searchParams.q === "string" ? searchParams.q.trim() : "";

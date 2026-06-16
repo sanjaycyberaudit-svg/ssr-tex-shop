@@ -147,8 +147,7 @@ function useCartActions(
     quantity: number,
     opts: { silent?: boolean; size?: string } | string = {},
   ) => {
-    const normalizedOpts =
-      typeof opts === "string" ? { size: opts } : opts;
+    const normalizedOpts = typeof opts === "string" ? { size: opts } : opts;
     return !user
       ? guestAddProduct(quantity, normalizedOpts)
       : authAddOrUpdateProduct(quantity, normalizedOpts);

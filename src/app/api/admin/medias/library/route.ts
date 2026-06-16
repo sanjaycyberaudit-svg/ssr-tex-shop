@@ -7,7 +7,12 @@ import {
 } from "@/lib/admin/media-library";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import db from "@/lib/supabase/db";
-import { apiSettings, medias, orderLines, products } from "@/lib/supabase/schema";
+import {
+  apiSettings,
+  medias,
+  orderLines,
+  products,
+} from "@/lib/supabase/schema";
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
@@ -35,7 +40,11 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
   const limit = Math.min(
     ADMIN_MEDIA_PAGE_SIZE,
-    Math.max(12, Number(searchParams.get("limit") ?? ADMIN_MEDIA_PAGE_SIZE) || ADMIN_MEDIA_PAGE_SIZE),
+    Math.max(
+      12,
+      Number(searchParams.get("limit") ?? ADMIN_MEDIA_PAGE_SIZE) ||
+        ADMIN_MEDIA_PAGE_SIZE,
+    ),
   );
   const section: MediaSection =
     searchParams.get("section") === "banner" ? "banner" : "product";

@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import { DocumentType, gql } from "@/gql";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DocumentType } from "@/gql";
+import { FetchCartQuery } from "../queries/cart-page-queries";
 import { expectedErrorsHandler } from "@/lib/urql";
 import {
   calculateCourierCharge,
@@ -10,7 +11,6 @@ import { fetchWithTimeout } from "@/lib/network/fetchWithTimeout";
 import { cn } from "@/lib/utils";
 import { User } from "@supabase/supabase-js";
 import { useMutation, useQuery } from "@urql/next";
-import { notFound } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -40,31 +40,14 @@ import { RemoveCartsMutation, updateCartsMutation } from "../query";
 import useCartStore, { CartItems } from "../useCartStore";
 import { isBulkOrderQuantity } from "../constants/bulkOrder";
 
-export const FetchCartQuery = gql(/* GraphQL */ `
-  query FetchCartQuery($userId: UUID, $first: Int, $after: Cursor) {
-    cartsCollection(
-      first: $first
-      filter: { user_id: { eq: $userId } }
-      after: $after
-    ) {
-      __typename
-      edges {
-        __typename
-        node {
-          __typename
-          product_id
-          user_id
-          quantity
-          product: products {
-            ...CartItemCardFragment
-          }
-        }
-      }
-    }
-  }
-`);
+export { FetchCartQuery };
 
-type UserCartSectionProps = { user: User };
+type UserCartSectionProps = {
+  user: User;
+  initialCart?: DocumentType<typeof FetchCartQuery> | null;
+  initialSizeConfigs?: Record<string, CartSizeConfig>;
+  prefetchedProductIds?: string[];
+};
 
 type CartSizeConfigOption = {
   size: string;
@@ -80,7 +63,12 @@ type CartEdge = NonNullable<
   NonNullable<DocumentType<typeof FetchCartQuery>["cartsCollection"]>["edges"]
 >[number];
 
-function UserCartSection({ user }: UserCartSectionProps) {
+function UserCartSection({
+  user,
+  initialCart,
+  initialSizeConfigs,
+  prefetchedProductIds,
+}: UserCartSectionProps) {
   const bulkOrder = useBulkOrderGuardConfig();
   const courierConfig = useCourierChargesConfig();
   const offerCodesConfig = useOfferCodesConfig();
@@ -91,6 +79,8 @@ function UserCartSection({ user }: UserCartSectionProps) {
       userId: user.id,
     },
   });
+
+  const cartData = data ?? initialCart ?? null;
 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -104,10 +94,14 @@ function UserCartSection({ user }: UserCartSectionProps) {
   const setProductSize = useCartStore((s) => s.setProductSize);
   const [sizeConfigsByProductId, setSizeConfigsByProductId] = useState<
     Record<string, CartSizeConfig>
-  >({});
+  >(() => initialSizeConfigs ?? {});
+  const prefetchedIdsKey = prefetchedProductIds?.slice().sort().join(",") ?? "";
+  const skippedSizePrefetchRef = useRef(
+    Boolean(initialSizeConfigs && prefetchedIdsKey),
+  );
 
   const cart: CartEdge[] =
-    data?.cartsCollection?.edges?.filter((edge) => edge.node.product) ?? [];
+    cartData?.cartsCollection?.edges?.filter((edge) => edge.node.product) ?? [];
   const subtotal = useMemo(() => calcSubtotal(cart), [cart]);
   const productCount = useMemo(() => calcProductCount(cart), [cart]);
   const courierBreakdown = useMemo(() => {
@@ -192,11 +186,16 @@ function UserCartSection({ user }: UserCartSectionProps) {
       return;
     }
 
+    const currentKey = productIds.slice().sort().join(",");
+    if (skippedSizePrefetchRef.current && currentKey === prefetchedIdsKey) {
+      skippedSizePrefetchRef.current = false;
+      return;
+    }
+
     const loadSizeConfigs = async () => {
       try {
         const res = await fetchWithTimeout(
           `/api/products/size-config?productIds=${encodeURIComponent(productIds.join(","))}`,
-          { cache: "no-store" },
         );
         if (!active) return;
         if (!res.ok) {
@@ -245,15 +244,13 @@ function UserCartSection({ user }: UserCartSectionProps) {
     [cart, localCart, sizeConfigsByProductId],
   );
 
-  if (fetching) {
+  if (fetching && !cartData) {
     return <LoadingCartSection />;
   }
 
-  if (error) {
+  if (error && !cartData) {
     return <div>Error: {error.message}</div>;
   }
-
-  if (!data || !data.cartsCollection) return notFound();
 
   const addOneHandler = async (
     productId: string,

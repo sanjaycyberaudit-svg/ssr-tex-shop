@@ -118,31 +118,31 @@ export async function loadAdminProductsListFromDb(
 
   const [rows, countRows] = await Promise.all([
     db
-    .select({
-      id: products.id,
-      name: products.name,
-      slug: products.slug,
-      rating: products.rating,
-      badge: products.badge,
-      price: products.price,
-      stock: products.stock,
-      featured: products.featured,
-      productCode: products.productCode,
-      isDraft: products.isDraft,
-      collectionId: collections.id,
-      collectionLabel: collections.label,
-      collectionSlug: collections.slug,
-      mediaId: medias.id,
-      mediaKey: medias.key,
-      mediaAlt: medias.alt,
-    })
-    .from(products)
-    .leftJoin(collections, eq(products.collectionId, collections.id))
-    .leftJoin(medias, eq(products.featuredImageId, medias.id))
-    .where(whereClause)
-    .orderBy(desc(products.createdAt))
-    .limit(pageSize)
-    .offset(offset),
+      .select({
+        id: products.id,
+        name: products.name,
+        slug: products.slug,
+        rating: products.rating,
+        badge: products.badge,
+        price: products.price,
+        stock: products.stock,
+        featured: products.featured,
+        productCode: products.productCode,
+        isDraft: products.isDraft,
+        collectionId: collections.id,
+        collectionLabel: collections.label,
+        collectionSlug: collections.slug,
+        mediaId: medias.id,
+        mediaKey: medias.key,
+        mediaAlt: medias.alt,
+      })
+      .from(products)
+      .leftJoin(collections, eq(products.collectionId, collections.id))
+      .leftJoin(medias, eq(products.featuredImageId, medias.id))
+      .where(whereClause)
+      .orderBy(desc(products.createdAt))
+      .limit(pageSize)
+      .offset(offset),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(products)

@@ -15,9 +15,7 @@ import type {
 import { siteConfig } from "@/config/site";
 import db from "@/lib/supabase/db";
 import { apiSettings, medias } from "@/lib/supabase/schema";
-import {
-  resolveHomeBannerSlideHref,
-} from "@/lib/admin/home-banner-links";
+import { resolveHomeBannerSlideHref } from "@/lib/admin/home-banner-links";
 import { loadProductSlugsForBannerSlides } from "@/lib/admin/home-banner-product-slugs.server";
 import { eq, inArray } from "drizzle-orm";
 import { keytoUrl } from "@/lib/utils";

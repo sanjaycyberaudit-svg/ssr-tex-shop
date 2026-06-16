@@ -9,11 +9,14 @@ async function fetchCollectionByLookup(slugParam: string) {
   const lookup = buildCollectionLookup(slugParam);
   if (!lookup) return null;
 
-  const { data, error } = await getClient().query(CollectionRouteQueryDocument, {
-    exactSlug: lookup.exactSlug,
-    slugified: lookup.slugified,
-    labelPattern: lookup.labelPattern,
-  });
+  const { data, error } = await getClient().query(
+    CollectionRouteQueryDocument,
+    {
+      exactSlug: lookup.exactSlug,
+      slugified: lookup.slugified,
+      labelPattern: lookup.labelPattern,
+    },
+  );
 
   if (error) throw error;
   return data;

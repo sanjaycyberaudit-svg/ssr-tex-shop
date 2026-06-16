@@ -24,12 +24,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: page.priority,
   }));
 
-  const collectionEntries: MetadataRoute.Sitemap = collectionRows.map((row) => ({
-    url: `${base}collections/${encodeURIComponent(row.slug)}`,
-    lastModified: now,
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
+  const collectionEntries: MetadataRoute.Sitemap = collectionRows.map(
+    (row) => ({
+      url: `${base}collections/${encodeURIComponent(row.slug)}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }),
+  );
 
   const productEntries: MetadataRoute.Sitemap = productRows.map((row) => ({
     url: `${base}shop/${encodeURIComponent(row.slug)}`,

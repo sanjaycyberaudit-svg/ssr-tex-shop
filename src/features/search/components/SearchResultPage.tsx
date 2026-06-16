@@ -50,8 +50,7 @@ const SearchResultPage = ({
     showMatchingCollections && matchingCollections.length > 0;
   const hasProductMatches = visibleEdges.length > 0;
   const hasAnyMatches = hasCollectionMatches || hasProductMatches;
-  const showSkeleton =
-    (fetching || !draftLoaded) && !productsCollection;
+  const showSkeleton = (fetching || !draftLoaded) && !productsCollection;
 
   return (
     <div>

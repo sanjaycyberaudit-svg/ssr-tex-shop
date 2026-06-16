@@ -98,8 +98,7 @@ export function CheckoutAddressDialog({
         if (cancelled) return;
         toast({
           title: "Could not load saved addresses",
-          description:
-            err instanceof Error ? err.message : "Please try again.",
+          description: err instanceof Error ? err.message : "Please try again.",
           variant: "destructive",
         });
         setStep("form");

@@ -5,6 +5,7 @@ export { default as ProductCardSkeleton } from "./ProductCardSkeleton";
 export { default as ProductImageShowcase } from "./ProductImageShowcase";
 export { default as LowStockNotice } from "./LowStockNotice";
 export { default as RecommendationProducts } from "./RecommendationProducts";
+export { default as RecommendationProductsSection } from "./RecommendationProductsSection";
 export { default as RecommendationProductsSkeleton } from "./RecommendationProductsSkeleton";
 export { default as SearchProductsGridSkeleton } from "../../search/components/SearchProductsGridSkeleton";
 export { default as ProductsDataTable } from "./admin/ProductsDataTable";

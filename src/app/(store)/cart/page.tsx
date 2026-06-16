@@ -1,16 +1,19 @@
 import CartDeepLinkAdd from "@/features/carts/components/CartDeepLinkAdd";
 import CartSection from "@/features/carts/components/CartSection";
-import CartSectionSkeleton from "@/features/carts/components/CartSectionSkeleton";
+import RecommendationProductsSection from "@/features/products/components/RecommendationProductsSection";
 import { Shell } from "@/components/layouts/Shell";
-import {
-  RecommendationProducts,
-  RecommendationProductsSkeleton,
-} from "@/features/products";
-
+import { getSessionUser } from "@/lib/auth/admin";
+import { prefetchCartPageData } from "@/lib/storefront/cart-server";
 import Link from "next/link";
-import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 
 async function CartPage() {
+  const [prefetch, serverUser] = await Promise.all([
+    prefetchCartPageData(),
+    getSessionUser(),
+  ]);
+
   return (
     <Shell>
       <section className="flex items-center justify-between gap-3 py-4 md:py-8">
@@ -25,14 +28,16 @@ async function CartPage() {
 
       <CartDeepLinkAdd />
 
-      <Suspense fallback={<CartSectionSkeleton />}>
-        <CartSection />
-      </Suspense>
+      <CartSection
+        serverUserId={serverUser?.id ?? null}
+        guestCartProducts={prefetch.guestCartProducts}
+        userCart={prefetch.userCart}
+        sizeConfigs={prefetch.sizeConfigs}
+        prefetchedProductIds={prefetch.prefetchedProductIds}
+      />
 
       <div className="mt-6 hidden md:block">
-        <Suspense fallback={<RecommendationProductsSkeleton />}>
-          <RecommendationProducts />
-        </Suspense>
+        <RecommendationProductsSection />
       </div>
     </Shell>
   );

@@ -395,7 +395,9 @@ function DataTable<TData, TValue>({
             variant="outline"
             className="h-8 px-2"
             disabled={page <= 1}
-            onClick={() => pushQueryParams({ page: String(Math.max(1, page - 1)) })}
+            onClick={() =>
+              pushQueryParams({ page: String(Math.max(1, page - 1)) })
+            }
           >
             Prev
           </Button>

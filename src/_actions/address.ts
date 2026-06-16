@@ -144,9 +144,7 @@ export async function updateUserAddress(
       email: data.email.trim(),
       mobile: data.mobile.trim(),
     })
-    .where(
-      and(eq(address.id, addressId), eq(address.userProfileId, userId)),
-    )
+    .where(and(eq(address.id, addressId), eq(address.userProfileId, userId)))
     .returning({ id: address.id });
 
   if (!updated?.id) {
@@ -163,9 +161,7 @@ export async function deleteUserAddress(addressId: string) {
   const userId = await requireUserId();
   const [deleted] = await db
     .delete(address)
-    .where(
-      and(eq(address.id, addressId), eq(address.userProfileId, userId)),
-    )
+    .where(and(eq(address.id, addressId), eq(address.userProfileId, userId)))
     .returning({ id: address.id, is_default: address.is_default });
 
   if (!deleted?.id) {
@@ -194,9 +190,7 @@ export async function setDefaultUserAddress(addressId: string) {
   const [target] = await db
     .select({ id: address.id })
     .from(address)
-    .where(
-      and(eq(address.id, addressId), eq(address.userProfileId, userId)),
-    );
+    .where(and(eq(address.id, addressId), eq(address.userProfileId, userId)));
 
   if (!target?.id) {
     throw new Error("Address not found.");
@@ -218,9 +212,7 @@ export async function getSavedShippingAddress(
   const [row] = await db
     .select()
     .from(address)
-    .where(
-      and(eq(address.id, addressId), eq(address.userProfileId, userId)),
-    );
+    .where(and(eq(address.id, addressId), eq(address.userProfileId, userId)));
 
   if (!row) {
     throw new Error("Address not found.");

@@ -419,17 +419,16 @@ export function HomeBannerForm() {
               <Select
                 value={slide.productId || "__none__"}
                 onValueChange={(value) =>
-                  selectBannerProduct(
-                    index,
-                    value === "__none__" ? "" : value,
-                  )
+                  selectBannerProduct(index, value === "__none__" ? "" : value)
                 }
               >
                 <SelectTrigger id={`slide-product-${index}`}>
                   <SelectValue placeholder="Select a published product" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Custom link (no product)</SelectItem>
+                  <SelectItem value="__none__">
+                    Custom link (no product)
+                  </SelectItem>
                   {productOptions.map((product) => (
                     <SelectItem key={product.id} value={product.id}>
                       {product.productCode

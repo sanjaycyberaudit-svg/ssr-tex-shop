@@ -1,5 +1,6 @@
 "use client";
-import { DocumentType, gql } from "@/gql";
+import { DocumentType } from "@/gql";
+import { CartItemCardFragment } from "../fragments/CartItemCardFragment";
 
 import Image from "next/image";
 import React from "react";
@@ -20,20 +21,7 @@ import Link from "next/link";
 import { Icons } from "../../../components/layouts/icons";
 import { Button } from "../../../components/ui/button";
 
-export const CartItemCardFragment = gql(/* GraphQL */ `
-  fragment CartItemCardFragment on products {
-    id
-    slug
-    name
-    price
-    stock
-    featuredImage: medias {
-      id
-      key
-      alt
-    }
-  }
-`);
+export { CartItemCardFragment };
 
 type CartItemCardProps = React.ComponentProps<typeof Card> & {
   product: DocumentType<typeof CartItemCardFragment>;

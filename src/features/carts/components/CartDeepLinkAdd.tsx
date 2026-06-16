@@ -2,7 +2,14 @@
 
 import { useAuth } from "@/providers/AuthProvider";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useClient, useMutation } from "@urql/next";
 import useCartStore from "../useCartStore";
 import { FetchCartQuery } from "./UserCartSection";

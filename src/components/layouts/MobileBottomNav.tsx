@@ -64,8 +64,7 @@ export function MobileBottomNav() {
     {
       href: "/sign-in",
       label: "Account",
-      active:
-        pathname.startsWith("/sign") || pathname.startsWith("/setting"),
+      active: pathname.startsWith("/sign") || pathname.startsWith("/setting"),
       icon: <User className="h-5 w-5 shrink-0" strokeWidth={1.75} />,
     },
     {

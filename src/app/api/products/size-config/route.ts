@@ -6,7 +6,6 @@ import {
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 function toApiPayload(config: ProductSizeConfig) {
@@ -49,7 +48,11 @@ export async function GET(request: NextRequest) {
           configs.get(id) ?? { enabled: false, options: [] },
         );
       });
-      return NextResponse.json(payload);
+      return NextResponse.json(payload, {
+        headers: {
+          "Cache-Control": `public, s-maxage=${STOREFRONT_REVALIDATE_SECONDS}, stale-while-revalidate=${STOREFRONT_REVALIDATE_SECONDS * 2}`,
+        },
+      });
     }
 
     if (!productId) {
@@ -60,7 +63,11 @@ export async function GET(request: NextRequest) {
     }
 
     const config = await getProductSizeConfig(productId);
-    return NextResponse.json(toApiPayload(config));
+    return NextResponse.json(toApiPayload(config), {
+      headers: {
+        "Cache-Control": `public, s-maxage=${STOREFRONT_REVALIDATE_SECONDS}, stale-while-revalidate=${STOREFRONT_REVALIDATE_SECONDS * 2}`,
+      },
+    });
   } catch (error) {
     console.error("[size-config] GET failed:", error);
     return NextResponse.json({ enabled: false, options: [] }, { status: 200 });

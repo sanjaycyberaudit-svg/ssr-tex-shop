@@ -24,7 +24,9 @@ export function parseCartItemsParam(raw: string | null): CartDeepLinkLine[] {
 }
 
 /** Merge duplicate product IDs in one deep link (sum quantities, cap at 99). */
-export function mergeDeepLinkLines(lines: CartDeepLinkLine[]): CartDeepLinkLine[] {
+export function mergeDeepLinkLines(
+  lines: CartDeepLinkLine[],
+): CartDeepLinkLine[] {
   const merged = new Map<string, number>();
   for (const line of lines) {
     const id = line.productId.trim();
@@ -45,7 +47,9 @@ export function linesFingerprint(lines: CartDeepLinkLine[]): string {
     .join("|");
 }
 
-export function parseDeepLinkLines(searchParams: URLSearchParams): CartDeepLinkLine[] {
+export function parseDeepLinkLines(
+  searchParams: URLSearchParams,
+): CartDeepLinkLine[] {
   const multi = parseCartItemsParam(searchParams.get("items"));
   if (multi.length > 0) return multi;
 
