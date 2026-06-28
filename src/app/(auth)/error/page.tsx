@@ -45,7 +45,7 @@ export default async function ErrorPage({ searchParams }: ErrorPageProps) {
       <p className="text-sm text-muted-foreground">
         We could not finish signing you in. Please try again.
       </p>
-      <Button asChild className="w-full bg-[#00542E] hover:bg-[#004225]">
+      <Button asChild className="w-full bg-[#C1105A] hover:bg-[#9A0E48]">
         <Link href="/sign-in">Back to sign in</Link>
       </Button>
     </section>

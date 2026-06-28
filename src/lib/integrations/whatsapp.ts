@@ -145,7 +145,7 @@ export async function sendOrderSuccessWhatsApp(
         to,
         type: "text",
         text: {
-          body: `Hi ${params.customerName || "Customer"}, your order #${params.orderId} is confirmed. Amount paid: INR ${params.amount}. Thank you for shopping with Sakthi Textile.`,
+          body: `Hi ${params.customerName || "Customer"}, your order #${params.orderId} is confirmed. Amount paid: INR ${params.amount}. Thank you for shopping with SRI SAI RAGHAVENDRA TEX.`,
         },
       };
   return postWhatsAppMessage(config.phoneNumberId, config.accessToken, body);

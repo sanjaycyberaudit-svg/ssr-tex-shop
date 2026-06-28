@@ -64,7 +64,7 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="text-foreground/80 transition hover:text-[#00542E]"
+                    className="text-foreground/80 transition hover:text-[#C1105A]"
                   >
                     {item.title}
                   </Link>

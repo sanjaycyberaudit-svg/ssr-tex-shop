@@ -17,16 +17,16 @@ import type { Metadata } from "next";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "Sakthi Textile | Premium Silk & Cotton Sarees Online",
+  title: "SRI SAI RAGHAVENDRA TEX | Premium Silk & Cotton Sarees Online",
   description:
-    "Shop authentic silk and cotton sarees at Sakthi Textile. Explore featured sarees, wedding collections, Kanjivaram styles, and wholesale sarees from Salem.",
+    "Shop authentic silk and cotton sarees at SRI SAI RAGHAVENDRA TEX. Explore featured sarees, wedding collections, Kanjivaram styles, and wholesale sarees from Salem.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Sakthi Textile | Premium Silk & Cotton Sarees Online",
+    title: "SRI SAI RAGHAVENDRA TEX | Premium Silk & Cotton Sarees Online",
     description:
-      "Shop authentic silk and cotton sarees at Sakthi Textile. Explore featured sarees, wedding collections, and wholesale sarees from Salem.",
+      "Shop authentic silk and cotton sarees at SRI SAI RAGHAVENDRA TEX. Explore featured sarees, wedding collections, and wholesale sarees from Salem.",
     url: "/",
   },
 };

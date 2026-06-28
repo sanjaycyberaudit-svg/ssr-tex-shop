@@ -39,8 +39,8 @@ export function StoreFloatingActions() {
         </span>
         <a
           href={siteConfig.phoneHref}
-          className="animate-phone-glow flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0EA5E9] text-white ring-2 ring-[#0EA5E9]/40 transition-transform hover:scale-105 active:scale-95"
-          aria-label="Call Sakthi Textile"
+          className="animate-phone-glow flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#C1105A] text-white ring-2 ring-[#C1105A]/40 transition-transform hover:scale-105 active:scale-95"
+          aria-label="Call SRI SAI RAGHAVENDRA TEX"
         >
           <PhoneCall className="h-5 w-5" strokeWidth={2} />
         </a>

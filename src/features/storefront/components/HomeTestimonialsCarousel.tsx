@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Star } from "lucide-react";
+import { Quote, Star } from "lucide-react";
 import { DocumentType } from "@/gql";
 import { CarouselItem } from "@/components/ui/carousel";
 import { TestimonialCardFragment } from "@/features/testimonials";
@@ -19,7 +19,7 @@ type Props = {
 
 /** Same shell as Product Categories cards */
 const cardClass =
-  "block h-full overflow-hidden rounded-2xl border border-[#00542E]/15 bg-muted/40 shadow-sm active:scale-[0.99] transition-transform";
+  "group block h-full overflow-hidden rounded-[1.25rem] border border-[#C1105A]/15 bg-muted/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#C1105A]/30 hover:shadow-[0_18px_40px_-18px_rgba(193,16,90,0.45)] active:scale-[0.99]";
 const mediaClass = "relative w-full aspect-[5/3] sm:aspect-[16/10]";
 
 function TestimonialMeta({ node }: { node: TestimonialNode }) {
@@ -30,14 +30,14 @@ function TestimonialMeta({ node }: { node: TestimonialNode }) {
   return (
     <>
       <div
-        className="flex gap-0.5"
+        className="inline-flex w-fit items-center gap-0.5 rounded-full bg-white/15 px-2 py-1 backdrop-blur-sm ring-1 ring-white/20"
         aria-label={`${node.rating ?? 5} out of 5 stars`}
       >
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
             className={cn(
-              "h-3.5 w-3.5",
+              "h-3 w-3",
               i < (node.rating ?? 5)
                 ? "fill-[#FFD700] text-[#FFD700]"
                 : "fill-transparent text-white/40",
@@ -46,8 +46,12 @@ function TestimonialMeta({ node }: { node: TestimonialNode }) {
         ))}
       </div>
       {node.quote ? (
-        <p className="mt-1.5 line-clamp-3 text-sm font-medium leading-snug">
-          &ldquo;{node.quote}&rdquo;
+        <p className="mt-2 flex gap-1.5 text-sm font-medium leading-snug">
+          <Quote
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-[#FFD700] text-[#FFD700]"
+            aria-hidden
+          />
+          <span className="line-clamp-3">{node.quote}</span>
         </p>
       ) : null}
       <p className="mt-1.5 text-base font-bold leading-tight">
@@ -90,7 +94,7 @@ function TestimonialCard({
           />
         ) : (
           <div
-            className="absolute inset-0 bg-gradient-to-br from-[#00542E] via-[#006b3a] to-[#003d22]"
+            className="absolute inset-0 bg-gradient-to-br from-[#C1105A] via-[#D6347E] to-[#7A0E43]"
             aria-hidden
           />
         )}

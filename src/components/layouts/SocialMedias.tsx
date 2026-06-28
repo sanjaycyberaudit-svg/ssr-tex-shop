@@ -76,16 +76,16 @@ function SocialMedias({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${label} — Sakthi Textile`}
+            aria-label={`${label} — SRI SAI RAGHAVENDRA TEX`}
             title={label}
-            className="rounded-md p-0.5 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00542E]/40"
+            className="rounded-md p-0.5 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C1105A]/40"
           >
             <Icon
               className={cn(
                 isCompact ? "h-5 w-5" : "h-4 w-4 md:h-5 md:w-5",
                 colored
                   ? iconColor
-                  : "text-muted-foreground transition-colors hover:text-[#00542E]",
+                  : "text-muted-foreground transition-colors hover:text-[#C1105A]",
                 itemsClassName,
               )}
             />

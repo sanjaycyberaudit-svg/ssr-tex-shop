@@ -45,20 +45,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (productName) {
     return {
       title: productName,
-      description: `Buy ${productName} online from Sakthi Textile. Premium silk and cotton sarees with secure checkout.`,
+      description: `Buy ${productName} online from SRI SAI RAGHAVENDRA TEX. Premium silk and cotton sarees with secure checkout.`,
       alternates: {
         canonical: path,
       },
       openGraph: {
-        title: `${productName} | Sakthi Textile`,
-        description: `Buy ${productName} online from Sakthi Textile.`,
+        title: `${productName} | SRI SAI RAGHAVENDRA TEX`,
+        description: `Buy ${productName} online from SRI SAI RAGHAVENDRA TEX.`,
         url: path,
       },
     };
   }
 
   return {
-    title: "Sakthi Textile | Silk & Cotton Sarees",
+    title: "SRI SAI RAGHAVENDRA TEX | Silk & Cotton Sarees",
     description: "Authentic silk and cotton sarees — wholesale and retail",
   };
 }

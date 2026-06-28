@@ -3,7 +3,7 @@ import db from "../db";
 import * as schema from "../schema";
 import { slugify } from "@/lib/utils";
 
-/** Sakthi Textile saree categories (homepage carousel + /collections/[slug]) */
+/** SRI SAI RAGHAVENDRA TEX saree categories (homepage carousel + /collections/[slug]) */
 export const SAKTHI_COLLECTION_LABELS = [
   "Softie Sarees",
   "Kanjivaram Wedding Sarees",
@@ -38,7 +38,7 @@ const DEMO_COLLECTION_SLUGS = [
 function collectionCopy(label: string) {
   return {
     title: label,
-    description: `Explore our ${label} at Sakthi Textile — premium sarees for every occasion.`,
+    description: `Explore our ${label} at SRI SAI RAGHAVENDRA TEX — premium sarees for every occasion.`,
   };
 }
 

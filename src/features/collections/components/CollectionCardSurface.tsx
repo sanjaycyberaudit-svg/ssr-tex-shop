@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CollectionCardSurfaceProps = {
@@ -38,7 +39,7 @@ export function CollectionCardSurface({
         className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
       />
       <div
-        className="absolute inset-0 bg-gradient-to-t from-[#002818]/95 via-[#002818]/45 to-transparent"
+        className="absolute inset-0 bg-gradient-to-t from-[#5A0A33]/95 via-[#5A0A33]/45 to-transparent"
         aria-hidden
       />
       <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
@@ -46,8 +47,9 @@ export function CollectionCardSurface({
           <p className="font-[family-name:var(--font-hero-serif)] text-sm font-semibold leading-snug text-white drop-shadow-md sm:text-base lg:text-lg">
             {label}
           </p>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E8D5A3] sm:text-[11px]">
+          <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E8D5A3] sm:text-[11px]">
             View collection
+            <ArrowUpRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </p>
         </div>
       </div>

@@ -47,7 +47,7 @@ export function TestimonialVideoPlayer({
       <div
         className={cn(
           boxClass,
-          "flex items-center justify-center bg-[#00542E] p-4 text-center text-sm text-white",
+          "flex items-center justify-center bg-[#C1105A] p-4 text-center text-sm text-white",
           className,
         )}
       >
@@ -87,7 +87,7 @@ export function TestimonialVideoPlayer({
       onClick={onPlay}
       className={cn(
         boxClass,
-        "group overflow-hidden bg-[#003d22] text-left",
+        "group overflow-hidden bg-[#7A0E43] text-left",
         className,
       )}
       aria-label={`Play video review from ${customerName}`}
@@ -104,13 +104,13 @@ export function TestimonialVideoPlayer({
         />
       ) : (
         <div
-          className="absolute inset-0 bg-gradient-to-br from-[#00542E] via-[#006b3a] to-[#003d22]"
+          className="absolute inset-0 bg-gradient-to-br from-[#C1105A] via-[#D6347E] to-[#7A0E43]"
           aria-hidden
         />
       )}
       <div className="absolute inset-0 bg-black/30" />
       <span className="absolute left-1/2 top-1/2 z-[1] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/90 bg-[#00542E]/90 text-white shadow-lg sm:h-12 sm:w-12">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/90 bg-[#C1105A]/90 text-white shadow-lg sm:h-12 sm:w-12">
           <Play className="ml-0.5 h-5 w-5 fill-current" />
         </span>
       </span>

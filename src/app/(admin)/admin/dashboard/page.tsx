@@ -8,7 +8,7 @@ import { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Dashboard | Sakthi Textile Admin",
+  title: "Dashboard | SRI SAI RAGHAVENDRA TEX Admin",
   description: "Store overview, analytics, reports and notifications",
 };
 

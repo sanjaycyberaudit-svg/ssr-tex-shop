@@ -78,7 +78,7 @@ export function buildSiteNavigationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Sakthi Textile primary navigation",
+    name: "SRI SAI RAGHAVENDRA TEX primary navigation",
     itemListElement: SEO_PRIMARY_NAV.map((item, index) => ({
       "@type": "SiteNavigationElement",
       position: index + 1,
@@ -116,7 +116,7 @@ export function buildProductJsonLd(input: {
     "@context": "https://schema.org",
     "@type": "Product",
     name: input.name,
-    description: input.description ?? `Buy ${input.name} from Sakthi Textile.`,
+    description: input.description ?? `Buy ${input.name} from SRI SAI RAGHAVENDRA TEX.`,
     image: input.imageUrl ? [input.imageUrl] : undefined,
     sku: input.slug,
     brand: {

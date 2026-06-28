@@ -5,9 +5,9 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact | Sakthi Textile",
+  title: "Contact | SRI SAI RAGHAVENDRA TEX",
   description:
-    "Contact Sakthi Textile — phone, email, WhatsApp, and store address",
+    "Contact SRI SAI RAGHAVENDRA TEX — phone, email, WhatsApp, and store address",
 };
 
 export const revalidate = 60;
@@ -18,7 +18,7 @@ export default async function ContactPage() {
   return (
     <InfoPage
       heading="Contact Us"
-      description="Reach Sakthi Textile by phone, WhatsApp, email, or visit our store in Salem."
+      description="Reach SRI SAI RAGHAVENDRA TEX by phone, WhatsApp, email, or visit our store in Salem."
     >
       <section id="store" className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">
@@ -28,41 +28,43 @@ export default async function ContactPage() {
           {siteConfig.addressLines.map((line) => (
             <p key={line}>{line}</p>
           ))}
-          <p className="pt-2 text-muted-foreground">
-            <span className="font-medium text-foreground">GSTIN: </span>
-            {siteConfig.gstin}
-          </p>
-          <p>
-            <Link
-              href={`mailto:${siteConfig.email}`}
-              className="text-primary hover:underline"
-            >
-              {siteConfig.email}
-            </Link>
-          </p>
+          {siteConfig.gstin ? (
+            <p className="pt-2 text-muted-foreground">
+              <span className="font-medium text-foreground">GSTIN: </span>
+              {siteConfig.gstin}
+            </p>
+          ) : null}
+          {siteConfig.email ? (
+            <p>
+              <Link
+                href={`mailto:${siteConfig.email}`}
+                className="text-primary hover:underline"
+              >
+                {siteConfig.email}
+              </Link>
+            </p>
+          ) : null}
         </address>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">
-          Phone & email
-        </h2>
-        <p>
-          <Link
-            href={siteConfig.phoneHref}
-            className="text-primary hover:underline"
-          >
-            {siteConfig.phone}
-          </Link>
-        </p>
-        <p>
-          <Link
-            href={`mailto:${siteConfig.email}`}
-            className="text-primary hover:underline"
-          >
-            {siteConfig.email}
-          </Link>
-        </p>
+        <h2 className="text-base font-semibold text-foreground">Phone</h2>
+        <ul className="space-y-1.5">
+          {siteConfig.contacts.map((contact) => (
+            <li key={contact.phoneHref}>
+              <span className="font-medium text-foreground">
+                {contact.name}
+              </span>
+              {" — "}
+              <Link
+                href={contact.phoneHref}
+                className="text-primary hover:underline"
+              >
+                {contact.phone}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="space-y-3">
@@ -80,41 +82,49 @@ export default async function ContactPage() {
         </p>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Follow us</h2>
-        <ul className="space-y-1">
-          <li>
-            <Link
-              href={social.instagram}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Instagram
-            </Link>
-          </li>
-          <li>
-            <Link
-              href={social.facebook}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Facebook
-            </Link>
-          </li>
-          <li>
-            <Link
-              href={social.youtube}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              YouTube
-            </Link>
-          </li>
-        </ul>
-      </section>
+      {social.instagram || social.facebook || social.youtube ? (
+        <section className="space-y-3">
+          <h2 className="text-base font-semibold text-foreground">Follow us</h2>
+          <ul className="space-y-1">
+            {social.instagram ? (
+              <li>
+                <Link
+                  href={social.instagram}
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Instagram
+                </Link>
+              </li>
+            ) : null}
+            {social.facebook ? (
+              <li>
+                <Link
+                  href={social.facebook}
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Facebook
+                </Link>
+              </li>
+            ) : null}
+            {social.youtube ? (
+              <li>
+                <Link
+                  href={social.youtube}
+                  className="text-primary hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  YouTube
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+        </section>
+      ) : null}
     </InfoPage>
   );
 }

@@ -2,28 +2,36 @@ import type { NavItemWithOptionalChildren } from "@/types";
 
 export type SiteConfig = typeof siteConfig;
 
-/** Business card — Sakthi Textile */
+/** Business card — SRI SAI RAGHAVENDRA TEX (SSR Tex) */
 const ADDRESS_LINES = [
-  "337/55 Palakara Thottam Street",
-  "Mottur, Elampillai PO",
-  "Salem Dt, 637502",
+  "Chettiyar Street, Perumal Kovil Opp. Road",
+  "Elampillai – Kadayampatty",
+  "Elampillai, Salem – 637 502",
 ] as const;
 
-const PHONE = "+91 77080 69049";
-const PHONE_HREF = "tel:+917708069049";
-const EMAIL = "sakthitextilest@gmail.com";
-const GSTIN = "33CUTPS8607N1ZM";
+/** Proprietors / contact persons from the business card */
+const CONTACTS = [
+  { name: "J. Moulee", phone: "+91 80127 15132", phoneHref: "tel:+918012715132" },
+  { name: "J. Vimal", phone: "+91 95667 84543", phoneHref: "tel:+919566784543" },
+] as const;
+
+const PHONE = CONTACTS[0].phone;
+const PHONE_HREF = CONTACTS[0].phoneHref;
+const EMAIL = "";
+const GSTIN = "33BMCPV3652G1Z1";
 
 const SOCIAL = {
-  instagram: "https://www.instagram.com/sakthitextiles",
-  youtube: "https://www.youtube.com/@sakthitextiles",
-  facebook: "https://www.facebook.com/sakthitextiles",
-  whatsapp: "https://wa.me/917708069049",
+  instagram: "",
+  youtube: "",
+  facebook: "",
+  whatsapp: "https://wa.me/918012715132",
 } as const;
 
 export const siteConfig = {
-  name: "Sakthi Textile®",
-  description: "Authentic silk and cotton sarees — wholesale and retail",
+  name: "SRI SAI RAGHAVENDRA TEX®",
+  shortName: "SSR Tex",
+  tagline: "Sarees Wholesale & Retail Merchant",
+  description: "Sarees wholesale & retail merchant — silk and cotton sarees",
   searchPlaceholder: "Search silk & cotton sarees, collections…",
   url: "https://sakthi-textiles-shop.vercel.app",
   addressLines: ADDRESS_LINES,
@@ -32,6 +40,8 @@ export const siteConfig = {
   phone: PHONE,
   /** `tel:` href (digits only, with country code) */
   phoneHref: PHONE_HREF,
+  /** All proprietors / contact numbers from the business card */
+  contacts: CONTACTS,
   email: EMAIL,
   gstin: GSTIN,
   currency: "INR",
@@ -41,7 +51,7 @@ export const siteConfig = {
   /** Top offer ribbon — rotates on the storefront */
   announcements: [
     {
-      text: "Premium silk & cotton sarees — wholesale & retail at Sakthi Textile",
+      text: "Premium silk & cotton sarees — wholesale & retail at SRI SAI RAGHAVENDRA TEX",
       href: "/shop",
       cta: "Shop now",
     },
@@ -131,7 +141,7 @@ export const siteConfig = {
       ],
     },
     {
-      title: "About Sakthi Textile",
+      title: "About SRI SAI RAGHAVENDRA TEX",
       items: [
         { title: "Our Story", href: "/about", items: [] },
         { title: "Our Collections", href: "/collections", items: [] },

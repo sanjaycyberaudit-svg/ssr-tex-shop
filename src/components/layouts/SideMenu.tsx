@@ -63,14 +63,14 @@ function SideNavLink({
         className={cn(
           navLinkBase,
           active
-            ? "border-l-[3px] border-[#00542E] bg-[#00542E]/12 pl-[calc(0.75rem-3px)] font-semibold text-[#00542E]"
-            : "border-l-[3px] border-transparent text-foreground hover:bg-[#00542E]/10",
+            ? "border-l-[3px] border-[#C1105A] bg-[#C1105A]/12 pl-[calc(0.75rem-3px)] font-semibold text-[#C1105A]"
+            : "border-l-[3px] border-transparent text-foreground hover:bg-[#C1105A]/10",
         )}
       >
         <span className="flex-1">{item.title}</span>
         {active ? (
           <Check
-            className="h-4 w-4 shrink-0 text-[#00542E]"
+            className="h-4 w-4 shrink-0 text-[#C1105A]"
             strokeWidth={2.5}
             aria-hidden
           />
@@ -117,9 +117,9 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
       <SheetContent
         side="left"
         mobileNavSafe
-        className="flex w-[min(100vw-3rem,320px)] flex-col gap-0 border-r border-[#00542E]/15 p-0 sm:max-w-xs"
+        className="flex w-[min(100vw-3rem,320px)] flex-col gap-0 border-r border-[#C1105A]/15 p-0 sm:max-w-xs"
       >
-        <SheetHeader className="overflow-hidden border-b border-[#00542E]/15 bg-[#00542E]/[0.06] px-4 py-4 text-left">
+        <SheetHeader className="overflow-hidden border-b border-[#C1105A]/15 bg-[#C1105A]/[0.06] px-4 py-4 text-left">
           <SheetTitle className="sr-only">Navigation menu</SheetTitle>
           <div className="min-w-0 max-w-full">
             <BrandLogo size="sidebar" className="shrink-0" />
@@ -143,8 +143,8 @@ export function SideMenu({ triggerClassName }: SideMenuProps) {
           ))}
         </nav>
 
-        <div className="shrink-0 border-t border-[#00542E]/15 bg-muted/30 px-4 py-4">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#00542E]/70">
+        <div className="shrink-0 border-t border-[#C1105A]/15 bg-muted/30 px-4 py-4">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#C1105A]/70">
             Follow us
           </p>
           <SocialMedias variant="compact" colored />

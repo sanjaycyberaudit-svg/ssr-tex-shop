@@ -36,7 +36,7 @@ function CollectionBanner({
         className="object-cover object-center"
       />
       <div
-        className="absolute inset-0 bg-gradient-to-t from-[#002818]/90 via-[#002818]/40 to-black/20"
+        className="absolute inset-0 bg-gradient-to-t from-[#5A0A33]/90 via-[#5A0A33]/40 to-black/20"
         aria-hidden
       />
       <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">
@@ -45,7 +45,7 @@ function CollectionBanner({
             {label}
           </h1>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#E8D5A3] sm:text-sm">
-            Sakthi Textile collection
+            SRI SAI RAGHAVENDRA TEX collection
           </p>
         </div>
       </div>

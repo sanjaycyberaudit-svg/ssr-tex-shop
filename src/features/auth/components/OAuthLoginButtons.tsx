@@ -48,7 +48,7 @@ function OAuthLoginButtons() {
     <Button
       type="button"
       variant="outline"
-      className="w-full border-[#00542E]/25 hover:bg-[#00542E]/5"
+      className="w-full border-[#C1105A]/25 hover:bg-[#C1105A]/5"
       onClick={signWithGoogle}
       disabled={isLoading}
     >

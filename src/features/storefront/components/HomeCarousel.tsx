@@ -23,7 +23,7 @@ type Props = {
 };
 
 const arrowClass =
-  "absolute top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border-2 border-[#00542E]/20 bg-white/95 text-[#00542E] shadow-md transition-all duration-300 ease-out hover:bg-white hover:border-[#00542E]/50 disabled:pointer-events-none disabled:!opacity-0 sm:h-11 sm:w-11";
+  "absolute top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border-2 border-[#C1105A]/20 bg-white/95 text-[#C1105A] shadow-md transition-all duration-300 ease-out hover:bg-white hover:border-[#C1105A]/50 disabled:pointer-events-none disabled:!opacity-0 sm:h-11 sm:w-11";
 
 const arrowRevealClass =
   "pointer-events-none scale-90 opacity-0 group-hover/carousel:pointer-events-auto group-hover/carousel:scale-100 group-hover/carousel:opacity-100 group-focus-within/carousel:pointer-events-auto group-focus-within/carousel:scale-100 group-focus-within/carousel:opacity-100 focus-visible:pointer-events-auto focus-visible:scale-100 focus-visible:opacity-100";

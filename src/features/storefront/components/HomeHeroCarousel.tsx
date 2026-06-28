@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 const HERO_AUTOPLAY_MS = 5500;
 
 const heroArrowClass =
-  "absolute top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-sm border-0 bg-white/95 text-neutral-900 shadow-md transition hover:bg-white sm:h-12 sm:w-12";
+  "absolute top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/15 text-white shadow-lg backdrop-blur-md transition hover:bg-white/30 hover:scale-105 sm:h-12 sm:w-12";
 
 type Props = {
   slides?: HeroSlide[];
@@ -115,9 +115,12 @@ export function HomeHeroCarousel({ slides }: Props) {
                     <p className="max-w-md text-sm leading-relaxed text-white/90 sm:max-w-xl sm:text-base md:text-lg">
                       {slide.subtitle}
                     </p>
-                    <span className="pointer-events-auto relative z-[3] mt-6 inline-flex min-h-[44px] items-center justify-center bg-[#00542E] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#004225] sm:mt-8 sm:px-10 sm:text-sm">
-                      <Link href={slide.href}>{slide.cta}</Link>
-                    </span>
+                    <Link
+                      href={slide.href}
+                      className="pointer-events-auto relative z-[3] mt-6 inline-flex min-h-[44px] items-center justify-center rounded-full bg-gradient-to-r from-[#C1105A] to-[#9A0E48] px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-[0_12px_30px_-8px_rgba(193,16,90,0.75)] transition-all duration-300 hover:-translate-y-0.5 hover:from-[#9A0E48] hover:to-[#C1105A] hover:shadow-[0_16px_36px_-8px_rgba(193,16,90,0.9)] sm:mt-8 sm:px-10 sm:text-sm"
+                    >
+                      {slide.cta}
+                    </Link>
                   </div>
                 </div>
               </CarouselItem>

@@ -8,49 +8,45 @@ export type HeroSlide = {
   imageAlt: string;
 };
 
-/** Homepage hero carousel — Sakthi saree photography from Supabase Storage */
+/** Homepage hero carousel — defaults until banners are set in Admin → Settings → Home Banner */
 export const heroSlides: HeroSlide[] = [
   {
     id: "festive-silk",
     title: "Festive Silk",
     subtitle:
       "Kanjivaram, soft silk, and wedding weaves — curated for every celebration",
-    href: "/collections/kanjivaram-wedding-sarees",
+    href: "/collections",
     cta: "Shop now",
-    image:
-      "https://qhtwwyqlsnckorndmhmt.supabase.co/storage/v1/object/public/media/sakthi/saree-R-tapgdDCDppiSQlGdkRl.webp",
-    imageAlt: "Model in Kanjivaram silk saree",
+    image: "https://placehold.co/1400x900/C1105A/FFFFFF/png?text=Festive+Silk+Sarees",
+    imageAlt: "Festive silk saree collection — SRI SAI RAGHAVENDRA TEX",
   },
   {
     id: "summer-weaves",
     title: "Summer Weaves",
     subtitle:
       "Light cotton, silk cotton, and soft silks for comfort and elegance",
-    href: "/collections/cotton-sarees",
+    href: "/collections",
     cta: "Shop now",
-    image:
-      "https://qhtwwyqlsnckorndmhmt.supabase.co/storage/v1/object/public/media/sakthi/saree-pdIkXPnfznIDPsDJ4k4PE.webp",
-    imageAlt: "Model in cotton saree",
+    image: "https://placehold.co/1400x900/9A0E48/FFFFFF/png?text=Cotton+%26+Soft+Silk",
+    imageAlt: "Cotton and soft silk sarees — SRI SAI RAGHAVENDRA TEX",
   },
   {
     id: "wedding-edit",
     title: "Wedding Edit",
     subtitle:
-      "Traditional silks, Kubera pattu, and celebrity-inspired bridal looks",
-    href: "/collections/wedding-collections",
+      "Traditional silks and bridal weaves for your special day",
+    href: "/featured",
     cta: "Shop now",
-    image:
-      "https://qhtwwyqlsnckorndmhmt.supabase.co/storage/v1/object/public/media/sakthi/saree-U0Rtn9BZSywuxw19vrXla.webp",
-    imageAlt: "Model in wedding silk saree",
+    image: "https://placehold.co/1400x900/7A0E43/FFFFFF/png?text=Wedding+Collection",
+    imageAlt: "Wedding silk saree collection — SRI SAI RAGHAVENDRA TEX",
   },
   {
     id: "daily-elegance",
     title: "Daily Elegance",
-    subtitle: "Softie sarees and fancy silks — premium quality, trusted weave",
+    subtitle: "Premium quality sarees — wholesale and retail from Salem",
     href: "/shop",
     cta: "Shop now",
-    image:
-      "https://qhtwwyqlsnckorndmhmt.supabase.co/storage/v1/object/public/media/sakthi/saree-N2Osq4mnOsiSNYN62fSbu.webp",
-    imageAlt: "Model in soft silk saree",
+    image: "https://placehold.co/1400x900/D6347E/FFFFFF/png?text=Daily+Wear+Sarees",
+    imageAlt: "Daily wear sarees — SRI SAI RAGHAVENDRA TEX",
   },
 ];

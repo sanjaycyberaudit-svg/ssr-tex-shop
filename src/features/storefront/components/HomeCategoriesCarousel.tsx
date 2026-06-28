@@ -30,7 +30,7 @@ export function HomeCategoriesCarousel({ collections }: Props) {
           <CarouselItem key={node.id} className={homeCarouselItemClass}>
             <Link
               href={`/collections/${node.slug}`}
-              className="group block h-full overflow-hidden rounded-2xl border border-[#00542E]/15 bg-muted/30 shadow-sm transition-shadow hover:shadow-md active:scale-[0.99]"
+              className="group block h-full overflow-hidden rounded-[1.25rem] border border-[#C1105A]/15 bg-muted/30 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#C1105A]/30 hover:shadow-[0_18px_40px_-18px_rgba(193,16,90,0.45)] active:scale-[0.99]"
             >
               <CollectionCardSurface
                 label={node.label}
