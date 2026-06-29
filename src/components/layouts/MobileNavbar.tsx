@@ -7,10 +7,8 @@ import { UserNav } from "@/features/auth";
 
 type Props = { adminLayout: boolean };
 
-const edgeInset =
-  "max(0.75rem, env(safe-area-inset-left, 0px))" as const;
-const edgeInsetRight =
-  "max(0.75rem, env(safe-area-inset-right, 0px))" as const;
+const edgeInset = "max(0.75rem, env(safe-area-inset-left, 0px))" as const;
+const edgeInsetRight = "max(0.75rem, env(safe-area-inset-right, 0px))" as const;
 
 function MobileNavbar({ adminLayout }: Props) {
   return (
