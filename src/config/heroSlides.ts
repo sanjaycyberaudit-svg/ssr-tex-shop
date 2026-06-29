@@ -1,3 +1,5 @@
+import { heroBannerImage } from "@/lib/supabase/seedData/collectionPlaceholders";
+
 export type HeroSlide = {
   id: string;
   title: string;
@@ -8,7 +10,7 @@ export type HeroSlide = {
   imageAlt: string;
 };
 
-/** Homepage hero carousel — defaults until banners are set in Admin → Settings → Home Banner */
+/** Homepage hero carousel — Tamil Nadu saree model placeholders until Admin → Home Banner uploads. */
 export const heroSlides: HeroSlide[] = [
   {
     id: "festive-silk",
@@ -17,9 +19,9 @@ export const heroSlides: HeroSlide[] = [
       "Kanjivaram, soft silk, and wedding weaves — curated for every celebration",
     href: "/collections",
     cta: "Shop now",
-    image:
-      "https://placehold.co/1400x900/C1105A/FFFFFF/png?text=Festive+Silk+Sarees",
-    imageAlt: "Festive silk saree collection — SRI SAI RAGHAVENDRA TEX",
+    image: heroBannerImage("festiveSilk"),
+    imageAlt:
+      "Model in festive silk saree — SRI SAI RAGHAVENDRA TEX, Salem Tamil Nadu",
   },
   {
     id: "summer-weaves",
@@ -28,9 +30,9 @@ export const heroSlides: HeroSlide[] = [
       "Light cotton, silk cotton, and soft silks for comfort and elegance",
     href: "/collections",
     cta: "Shop now",
-    image:
-      "https://placehold.co/1400x900/9A0E48/FFFFFF/png?text=Cotton+%26+Soft+Silk",
-    imageAlt: "Cotton and soft silk sarees — SRI SAI RAGHAVENDRA TEX",
+    image: heroBannerImage("summerWeaves"),
+    imageAlt:
+      "Woman in traditional cotton saree — SRI SAI RAGHAVENDRA TEX, Tamil Nadu",
   },
   {
     id: "wedding-edit",
@@ -38,9 +40,9 @@ export const heroSlides: HeroSlide[] = [
     subtitle: "Traditional silks and bridal weaves for your special day",
     href: "/featured",
     cta: "Shop now",
-    image:
-      "https://placehold.co/1400x900/7A0E43/FFFFFF/png?text=Wedding+Collection",
-    imageAlt: "Wedding silk saree collection — SRI SAI RAGHAVENDRA TEX",
+    image: heroBannerImage("weddingEdit"),
+    imageAlt:
+      "Bridal silk saree collection — SRI SAI RAGHAVENDRA TEX, Salem",
   },
   {
     id: "daily-elegance",
@@ -48,8 +50,8 @@ export const heroSlides: HeroSlide[] = [
     subtitle: "Premium quality sarees — wholesale and retail from Salem",
     href: "/shop",
     cta: "Shop now",
-    image:
-      "https://placehold.co/1400x900/D6347E/FFFFFF/png?text=Daily+Wear+Sarees",
-    imageAlt: "Daily wear sarees — SRI SAI RAGHAVENDRA TEX",
+    image: heroBannerImage("dailyElegance"),
+    imageAlt:
+      "Daily wear saree model — SRI SAI RAGHAVENDRA TEX, Tamil Nadu",
   },
 ];
