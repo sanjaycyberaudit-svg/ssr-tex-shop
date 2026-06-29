@@ -263,9 +263,16 @@ body {
   position: absolute;
   top: 0;
   bottom: 0.5rem;
-  width: 1.25rem;
+  width: 0.75rem;
   z-index: 2;
   pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .scroll-snap-strip::before,
+  .scroll-snap-strip::after {
+    width: 1.25rem;
+  }
 }
 
 .scroll-snap-strip::before {
@@ -307,6 +314,7 @@ body {
   min-width: 0;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  align-self: stretch;
 }
 
 @supports (view-transition-name: none) {

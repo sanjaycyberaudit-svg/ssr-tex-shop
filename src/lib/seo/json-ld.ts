@@ -19,7 +19,7 @@ export function buildOrganizationJsonLd() {
     "@type": "Organization",
     name: siteConfig.name.replace("®", "").trim(),
     url: absoluteUrl(),
-    logo: absoluteUrl("/images/sakthi-st-emblem.png"),
+    logo: absoluteUrl("/images/ssr-tex-emblem.svg"),
     email: siteConfig.email,
     telephone: siteConfig.phone,
     address: {
@@ -59,7 +59,7 @@ export function buildStoreJsonLd() {
     "@type": "Store",
     name: siteConfig.name.replace("®", "").trim(),
     url: absoluteUrl(),
-    image: absoluteUrl("/images/sakthi-st-emblem.png"),
+    image: absoluteUrl("/images/ssr-tex-emblem.svg"),
     telephone: siteConfig.phone,
     email: siteConfig.email,
     address: {

@@ -31,8 +31,8 @@ function ReelProductCard({ product }: { product: ProductNode }) {
   if (!featuredImage?.key) return null;
 
   return (
-    <ViewTransitionLink href={`/shop/${slug}`} className="group block h-full">
-      <article className="relative aspect-[9/16] w-full overflow-hidden rounded-2xl border border-[#C1105A]/20 bg-muted shadow-[0_16px_40px_-20px_rgba(193,16,90,0.55)]">
+    <ViewTransitionLink href={`/shop/${slug}`} className="group block w-full">
+      <article className="relative aspect-[9/16] w-full min-h-[220px] overflow-hidden rounded-2xl border border-[#C1105A]/20 bg-muted shadow-[0_16px_40px_-20px_rgba(193,16,90,0.55)]">
         <Image
           src={keytoUrl(featuredImage.key)}
           alt={featuredImage.alt || name}
@@ -86,7 +86,7 @@ export function HomeShoppableReels({ products }: Props) {
       <HomeScrollSnapStrip ariaLabel="Watch and shop featured sarees">
         {items.map((product, index) => (
           <ScrollSnapItem key={product.id} className={scrollSnapReelItemClass}>
-            <MotionRevealItem index={index} className="h-full">
+            <MotionRevealItem index={index} instant className="w-full">
               <ReelProductCard product={product} />
             </MotionRevealItem>
           </ScrollSnapItem>

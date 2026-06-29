@@ -37,11 +37,11 @@ export function HomeCategoriesCarousel({ collections }: Props) {
       <HomeScrollSnapStrip ariaLabel="Product categories">
         {collections.map(({ node }, index) => (
           <ScrollSnapItem key={node.id} className={scrollSnapCategoryItemClass}>
-            <MotionRevealItem index={index} className="h-full">
-              <MotionHoverLift className="h-full">
+            <MotionRevealItem index={index} instant className="w-full">
+              <MotionHoverLift className="w-full">
                 <ViewTransitionLink
                   href={`/collections/${node.slug}`}
-                  className="group block h-full overflow-hidden rounded-[1.25rem] border border-[#C1105A]/15 bg-muted/30 shadow-sm transition-[border-color,box-shadow] duration-300 hover:border-[#C1105A]/35 hover:shadow-[0_18px_40px_-18px_rgba(193,16,90,0.45)]"
+                  className="group block w-full overflow-hidden rounded-[1.25rem] border border-[#C1105A]/15 bg-muted/30 shadow-sm transition-[border-color,box-shadow] duration-300 hover:border-[#C1105A]/35 hover:shadow-[0_18px_40px_-18px_rgba(193,16,90,0.45)]"
                 >
                   <CollectionCardSurface
                     label={node.label}

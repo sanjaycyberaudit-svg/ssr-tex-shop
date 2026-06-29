@@ -22,10 +22,10 @@ type Props = {
 };
 
 const scrollSnapTestimonialItemClass =
-  "basis-[88%] sm:basis-[62%] md:basis-[46%] lg:basis-[34%] xl:basis-[30%]";
+  "w-[88vw] max-w-[320px] shrink-0 grow-0 sm:w-auto sm:max-w-none sm:basis-[62%] md:basis-[46%] lg:basis-[34%] xl:basis-[30%]";
 
 const scrollSnapTestimonialVideoItemClass =
-  "basis-[52%] sm:basis-[38%] md:basis-[28%] lg:basis-[22%]";
+  "w-[48vw] max-w-[160px] shrink-0 grow-0 sm:w-auto sm:max-w-none sm:basis-[38%] md:basis-[28%] lg:basis-[22%]";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -89,14 +89,17 @@ function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
   const imageKey = node.featuredImage?.key;
 
   return (
-    <article className="flex h-full min-h-[260px] flex-col rounded-2xl border border-[#C1105A]/12 bg-card p-5 shadow-[0_16px_40px_-28px_rgba(193,16,90,0.45)] sm:min-h-[280px] sm:p-6">
-      <div className="mb-4 flex items-start justify-between gap-3">
+    <article className="flex w-full flex-col rounded-2xl border border-[#C1105A]/12 bg-card p-4 shadow-[0_16px_40px_-28px_rgba(193,16,90,0.45)] sm:min-h-[280px] sm:p-6">
+      <div className="mb-3 flex items-start justify-between gap-2 sm:mb-4 sm:gap-3">
         <StarRating rating={node.rating ?? 5} />
-        <Quote className="h-8 w-8 shrink-0 text-[#C1105A]/15" aria-hidden />
+        <Quote
+          className="h-6 w-6 shrink-0 text-[#C1105A]/15 sm:h-8 sm:w-8"
+          aria-hidden
+        />
       </div>
 
       {node.quote ? (
-        <blockquote className="flex-1 font-[family-name:var(--font-hero-serif)] text-base leading-relaxed text-foreground/90 sm:text-lg">
+        <blockquote className="line-clamp-5 flex-1 font-[family-name:var(--font-hero-serif)] text-sm leading-relaxed text-foreground/90 sm:line-clamp-none sm:text-lg">
           “{node.quote}”
         </blockquote>
       ) : (
@@ -105,7 +108,7 @@ function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
         </p>
       )}
 
-      <footer className="mt-5 flex items-center gap-3 border-t border-[#C1105A]/10 pt-4">
+      <footer className="mt-4 flex items-center gap-2.5 border-t border-[#C1105A]/10 pt-3 sm:mt-5 sm:gap-3 sm:pt-4">
         <CustomerAvatar
           name={node.customer_name}
           imageKey={imageKey}
@@ -115,9 +118,9 @@ function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
           <p className="truncate text-sm font-bold text-foreground sm:text-base">
             {node.customer_name}
           </p>
-          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[#C1105A]" />
-            <span className="truncate">
+          <p className="mt-0.5 flex items-start gap-1 text-[11px] leading-snug text-muted-foreground sm:text-xs">
+            <BadgeCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C1105A]" />
+            <span className="line-clamp-2">
               {node.location
                 ? `Verified buyer · ${node.location}`
                 : "Verified buyer"}
@@ -134,8 +137,8 @@ function ModernVideoTestimonialCard({ node }: { node: TestimonialNode }) {
   const posterUrl = imageKey ? keytoUrl(imageKey) : null;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#C1105A]/15 bg-[#5A0A33]/5 shadow-[0_16px_40px_-24px_rgba(193,16,90,0.5)]">
-      <div className="relative aspect-[9/14] w-full bg-muted sm:aspect-[3/4]">
+    <article className="group flex w-full flex-col overflow-hidden rounded-2xl border border-[#C1105A]/15 bg-[#5A0A33]/5 shadow-[0_16px_40px_-24px_rgba(193,16,90,0.5)]">
+      <div className="relative aspect-[9/13] w-full max-h-[min(62vh,360px)] bg-muted sm:aspect-[3/4] sm:max-h-none">
         <TestimonialVideoPlayer
           fill
           showTapHint
@@ -143,18 +146,20 @@ function ModernVideoTestimonialCard({ node }: { node: TestimonialNode }) {
           posterUrl={posterUrl}
           customerName={node.customer_name}
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#5A0A33]/95 via-[#5A0A33]/50 to-transparent p-4 pt-16">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#5A0A33]/95 via-[#5A0A33]/50 to-transparent p-3 pt-12 sm:p-4 sm:pt-16">
           <StarRating rating={node.rating ?? 5} />
           {node.quote ? (
-            <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-white">
+            <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug text-white sm:mt-2 sm:text-sm">
               “{node.quote}”
             </p>
           ) : null}
-          <p className="mt-2 text-base font-bold text-white">
+          <p className="mt-1.5 text-sm font-bold leading-tight text-white sm:mt-2 sm:text-base">
             {node.customer_name}
           </p>
           {node.location ? (
-            <p className="mt-0.5 text-xs text-white/80">{node.location}</p>
+            <p className="mt-0.5 line-clamp-1 text-[10px] text-white/80 sm:text-xs">
+              {node.location}
+            </p>
           ) : null}
         </div>
       </div>
@@ -186,8 +191,8 @@ export function HomeTestimonialsCarousel({ testimonials }: Props) {
                   : scrollSnapTestimonialItemClass
               }
             >
-              <MotionRevealItem index={index} className="h-full">
-                <MotionHoverLift className="h-full">
+              <MotionRevealItem index={index} instant className="w-full">
+                <MotionHoverLift className="w-full">
                   {isVideo ? (
                     <ModernVideoTestimonialCard node={node} />
                   ) : (

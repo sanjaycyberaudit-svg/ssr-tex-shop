@@ -45,10 +45,10 @@ export function ScrollSnapItem({ children, className }: ItemProps) {
 }
 
 export const scrollSnapCategoryItemClass =
-  "basis-[82%] sm:basis-[62%] md:basis-[44%] lg:basis-[34%] xl:basis-[30%]";
+  "w-[86vw] max-w-[360px] shrink-0 grow-0 sm:w-auto sm:max-w-none sm:basis-[62%] md:basis-[44%] lg:basis-[34%] xl:basis-[30%]";
 
 export const scrollSnapFeaturedItemClass =
-  "basis-[78%] sm:basis-[58%] md:basis-[42%] lg:basis-[32%] xl:basis-[28%]";
+  "w-[80vw] max-w-[320px] shrink-0 grow-0 sm:w-auto sm:max-w-none sm:basis-[58%] md:basis-[42%] lg:basis-[32%] xl:basis-[28%]";
 
 export const scrollSnapReelItemClass =
-  "basis-[46%] sm:basis-[34%] md:basis-[26%] lg:basis-[20%]";
+  "w-[44vw] max-w-[180px] shrink-0 grow-0 sm:w-auto sm:max-w-none sm:basis-[34%] md:basis-[26%] lg:basis-[20%]";

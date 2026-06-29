@@ -14,6 +14,8 @@ type ItemProps = {
   children: ReactNode;
   className?: string;
   index?: number;
+  /** Use inside horizontal scroll strips — avoids whileInView hiding off-screen cards */
+  instant?: boolean;
 };
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -46,11 +48,12 @@ export function MotionRevealItem({
   children,
   className,
   index = 0,
+  instant = false,
 }: ItemProps) {
   const reduceMotion = useReducedMotion();
 
-  if (reduceMotion) {
-    return <div className={className}>{children}</div>;
+  if (reduceMotion || instant) {
+    return <div className={cn(className)}>{children}</div>;
   }
 
   return (
@@ -58,7 +61,7 @@ export function MotionRevealItem({
       className={cn(className)}
       initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-4% 0px" }}
+      viewport={{ once: true, margin: "0px 0px -5% 0px" }}
       transition={{
         duration: 0.45,
         ease,

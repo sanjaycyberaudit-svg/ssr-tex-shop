@@ -65,9 +65,9 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   icons: {
-    icon: [{ url: "/images/sakthi-st-emblem.png", type: "image/png" }],
-    shortcut: ["/images/sakthi-st-emblem.png"],
-    apple: [{ url: "/images/sakthi-st-emblem.png", type: "image/png" }],
+    icon: [{ url: "/images/ssr-tex-emblem.svg", type: "image/svg+xml" }],
+    shortcut: ["/images/ssr-tex-emblem.svg"],
+    apple: [{ url: "/images/ssr-tex-emblem.svg", type: "image/svg+xml" }],
   },
 };
 
