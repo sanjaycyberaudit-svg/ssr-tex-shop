@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Quote, Star } from "lucide-react";
+import { BadgeCheck, Quote, Star } from "lucide-react";
 import { DocumentType } from "@/gql";
 import { TestimonialCardFragment } from "@/features/testimonials";
 import { TestimonialVideoPlayer } from "@/features/testimonials/components/TestimonialVideoPlayer";
@@ -11,9 +11,8 @@ import { HomeSectionHeader } from "./HomeSectionHeader";
 import {
   HomeScrollSnapStrip,
   ScrollSnapItem,
-  scrollSnapCategoryItemClass,
 } from "./HomeScrollSnapStrip";
-import { MotionRevealItem, MotionSection } from "./MotionSection";
+import { MotionHoverLift, MotionRevealItem, MotionSection } from "./MotionSection";
 
 type TestimonialNode = DocumentType<typeof TestimonialCardFragment>;
 
@@ -21,89 +20,144 @@ type Props = {
   testimonials: { node: TestimonialNode }[];
 };
 
-const cardClass =
-  "group block h-full overflow-hidden rounded-[1.25rem] border border-[#C1105A]/15 bg-muted/40 shadow-sm transition-[border-color,box-shadow] duration-300 hover:border-[#C1105A]/30 hover:shadow-[0_18px_40px_-18px_rgba(193,16,90,0.45)]";
-const mediaClass = "relative w-full aspect-[5/3] sm:aspect-[16/10]";
+const scrollSnapTestimonialItemClass =
+  "basis-[88%] sm:basis-[62%] md:basis-[46%] lg:basis-[34%] xl:basis-[30%]";
 
-function TestimonialMeta({ node }: { node: TestimonialNode }) {
-  const subtitle = node.location
-    ? `Verified customer · ${node.location}`
-    : "Verified customer";
+const scrollSnapTestimonialVideoItemClass =
+  "basis-[52%] sm:basis-[38%] md:basis-[28%] lg:basis-[22%]";
 
+function StarRating({ rating }: { rating: number }) {
   return (
-    <>
-      <div
-        className="inline-flex w-fit items-center gap-0.5 rounded-full bg-white/15 px-2 py-1 backdrop-blur-sm ring-1 ring-white/20"
-        aria-label={`${node.rating ?? 5} out of 5 stars`}
-      >
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={cn(
-              "h-3 w-3",
-              i < (node.rating ?? 5)
-                ? "fill-[#FFD700] text-[#FFD700]"
-                : "fill-transparent text-white/40",
-            )}
-          />
-        ))}
-      </div>
-      {node.quote ? (
-        <p className="mt-2 flex gap-1.5 text-sm font-medium leading-snug">
-          <Quote
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-[#FFD700] text-[#FFD700]"
-            aria-hidden
-          />
-          <span className="line-clamp-3">{node.quote}</span>
-        </p>
-      ) : null}
-      <p className="mt-1.5 text-base font-bold leading-tight">
-        {node.customer_name}
-      </p>
-      <p className="mt-0.5 text-xs opacity-90">{subtitle}</p>
-    </>
+    <div
+      className="inline-flex items-center gap-0.5"
+      aria-label={`${rating} out of 5 stars`}
+    >
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star
+          key={i}
+          className={cn(
+            "h-3.5 w-3.5 sm:h-4 sm:w-4",
+            i < rating
+              ? "fill-[#C5A059] text-[#C5A059]"
+              : "fill-transparent text-[#C1105A]/20",
+          )}
+        />
+      ))}
+    </div>
   );
 }
 
-function TestimonialCard({
-  node,
-  variant,
+function CustomerAvatar({
+  name,
+  imageKey,
+  imageAlt,
 }: {
-  node: TestimonialNode;
-  variant: "text" | "video";
+  name: string;
+  imageKey?: string | null;
+  imageAlt?: string | null;
 }) {
+  const initials = name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
+  if (imageKey) {
+    return (
+      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-[#C1105A]/15 ring-offset-2 ring-offset-background">
+        <Image
+          src={keytoUrl(imageKey)}
+          alt={imageAlt || name}
+          fill
+          sizes="44px"
+          className="object-cover"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#C1105A] to-[#7A0E43] text-sm font-bold text-white ring-2 ring-[#C1105A]/15 ring-offset-2 ring-offset-background">
+      {initials || "ST"}
+    </div>
+  );
+}
+
+function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
+  const imageKey = node.featuredImage?.key;
+
+  return (
+    <article className="flex h-full min-h-[260px] flex-col rounded-2xl border border-[#C1105A]/12 bg-card p-5 shadow-[0_16px_40px_-28px_rgba(193,16,90,0.45)] sm:min-h-[280px] sm:p-6">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <StarRating rating={node.rating ?? 5} />
+        <Quote
+          className="h-8 w-8 shrink-0 text-[#C1105A]/15"
+          aria-hidden
+        />
+      </div>
+
+      {node.quote ? (
+        <blockquote className="flex-1 font-[family-name:var(--font-hero-serif)] text-base leading-relaxed text-foreground/90 sm:text-lg">
+          “{node.quote}”
+        </blockquote>
+      ) : (
+        <p className="flex-1 text-sm text-muted-foreground">
+          Thank you for shopping with SRI SAI RAGHAVENDRA TEX.
+        </p>
+      )}
+
+      <footer className="mt-5 flex items-center gap-3 border-t border-[#C1105A]/10 pt-4">
+        <CustomerAvatar
+          name={node.customer_name}
+          imageKey={imageKey}
+          imageAlt={node.featuredImage?.alt}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-foreground sm:text-base">
+            {node.customer_name}
+          </p>
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[#C1105A]" />
+            <span className="truncate">
+              {node.location
+                ? `Verified buyer · ${node.location}`
+                : "Verified buyer"}
+            </span>
+          </p>
+        </div>
+      </footer>
+    </article>
+  );
+}
+
+function ModernVideoTestimonialCard({ node }: { node: TestimonialNode }) {
   const imageKey = node.featuredImage?.key;
   const posterUrl = imageKey ? keytoUrl(imageKey) : null;
 
   return (
-    <article className={cardClass}>
-      <div className={mediaClass}>
-        {variant === "video" ? (
-          <TestimonialVideoPlayer
-            fill
-            showTapHint={false}
-            videoUrl={node.video_url ?? ""}
-            posterUrl={posterUrl}
-            customerName={node.customer_name}
-          />
-        ) : imageKey ? (
-          <Image
-            src={keytoUrl(imageKey)}
-            alt={node.featuredImage?.alt || `Review from ${node.customer_name}`}
-            fill
-            sizes="(max-width: 640px) 82vw, (max-width: 1024px) 44vw, 360px"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-[#C1105A] via-[#D6347E] to-[#7A0E43]"
-            aria-hidden
-          />
-        )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-        <div className="pointer-events-none absolute inset-0 z-[2] flex flex-col justify-end p-3 text-white sm:p-4">
-          <TestimonialMeta node={node} />
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#C1105A]/15 bg-[#5A0A33]/5 shadow-[0_16px_40px_-24px_rgba(193,16,90,0.5)]">
+      <div className="relative aspect-[9/14] w-full bg-muted sm:aspect-[3/4]">
+        <TestimonialVideoPlayer
+          fill
+          showTapHint
+          videoUrl={node.video_url ?? ""}
+          posterUrl={posterUrl}
+          customerName={node.customer_name}
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#5A0A33]/95 via-[#5A0A33]/50 to-transparent p-4 pt-16">
+          <StarRating rating={node.rating ?? 5} />
+          {node.quote ? (
+            <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-white">
+              “{node.quote}”
+            </p>
+          ) : null}
+          <p className="mt-2 text-base font-bold text-white">
+            {node.customer_name}
+          </p>
+          {node.location ? (
+            <p className="mt-0.5 text-xs text-white/80">{node.location}</p>
+          ) : null}
         </div>
       </div>
     </article>
@@ -117,23 +171,31 @@ export function HomeTestimonialsCarousel({ testimonials }: Props) {
     <MotionSection className="w-full min-w-0 py-4 sm:py-8 md:py-10">
       <HomeSectionHeader
         title="Customer"
-        titleAccent="Feedback"
+        titleAccent="Testimonials"
         showViewMore={false}
       />
-      <HomeScrollSnapStrip ariaLabel="Customer testimonials">
+      <HomeScrollSnapStrip ariaLabel="Customer testimonials from admin">
         {testimonials.map(({ node }, index) => {
           const isVideo =
             node.kind === "video" && Boolean(node.video_url?.trim());
+
           return (
             <ScrollSnapItem
               key={node.id}
-              className={scrollSnapCategoryItemClass}
+              className={
+                isVideo
+                  ? scrollSnapTestimonialVideoItemClass
+                  : scrollSnapTestimonialItemClass
+              }
             >
               <MotionRevealItem index={index} className="h-full">
-                <TestimonialCard
-                  node={node}
-                  variant={isVideo ? "video" : "text"}
-                />
+                <MotionHoverLift className="h-full">
+                  {isVideo ? (
+                    <ModernVideoTestimonialCard node={node} />
+                  ) : (
+                    <ModernTextTestimonialCard node={node} />
+                  )}
+                </MotionHoverLift>
               </MotionRevealItem>
             </ScrollSnapItem>
           );

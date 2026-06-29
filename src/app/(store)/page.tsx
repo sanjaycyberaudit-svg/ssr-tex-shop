@@ -4,7 +4,6 @@ import {
   HomeHeroCarousel,
   HomeCategoriesCarousel,
   HomeTestimonialsCarousel,
-  HomeFeaturedCarousel,
   HomeShoppableReels,
   HomeExploreLinks,
 } from "@/features/storefront/components";
@@ -68,19 +67,12 @@ export default async function Home() {
           <HomeCategoriesCarousel collections={collectionScrollCards.edges} />
         ) : null}
 
-        {homeTestimonials?.edges?.length || featuredProducts.length ? (
-          <HomeShoppableReels
-            testimonials={homeTestimonials?.edges ?? []}
-            products={featuredProducts}
-          />
+        {featuredProducts.length ? (
+          <HomeShoppableReels products={featuredProducts} />
         ) : null}
 
         {homeTestimonials?.edges?.length ? (
           <HomeTestimonialsCarousel testimonials={homeTestimonials.edges} />
-        ) : null}
-
-        {featuredProducts.length ? (
-          <HomeFeaturedCarousel products={featuredProducts} />
         ) : null}
 
         <HomeExploreLinks />
