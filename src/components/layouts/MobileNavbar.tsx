@@ -7,20 +7,33 @@ import { UserNav } from "@/features/auth";
 
 type Props = { adminLayout: boolean };
 
+const edgeInset =
+  "max(0.75rem, env(safe-area-inset-left, 0px))" as const;
+const edgeInsetRight =
+  "max(0.75rem, env(safe-area-inset-right, 0px))" as const;
+
 function MobileNavbar({ adminLayout }: Props) {
   return (
-    <div className="grid h-[3.75rem] min-h-[3.75rem] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-4 md:hidden">
-      <SideMenu triggerClassName="justify-self-start -ml-1.5" />
-
-      <div className="flex min-w-0 justify-center overflow-visible px-0.5">
-        <Branding size="nav" className="mx-auto shrink-0" />
+    <div className="relative h-[3.75rem] min-h-[3.75rem] w-full md:hidden">
+      <div
+        className="absolute inset-y-0 left-0 flex items-center"
+        style={{ paddingLeft: edgeInset }}
+      >
+        <SideMenu triggerClassName="ml-0" />
       </div>
 
-      <div className="flex justify-end mr-0.5">
+      <div className="flex h-full items-center justify-center px-14">
+        <Branding size="nav" className="shrink-0" />
+      </div>
+
+      <div
+        className="absolute inset-y-0 right-0 flex items-center"
+        style={{ paddingRight: edgeInsetRight }}
+      >
         {!adminLayout ? (
           <Link
             href="/cart"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted touch-manipulation"
             aria-label="Cart"
           >
             <Suspense fallback={null}>

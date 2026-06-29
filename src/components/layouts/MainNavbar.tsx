@@ -21,14 +21,8 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
     >
       {!adminLayout ? <AnnouncementBar /> : null}
       <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
-        <div
-          className={cn(
-            adminLayout
-              ? "flex min-h-[var(--admin-header-height-mobile)] w-full md:min-h-[var(--admin-header-height-desktop)]"
-              : "container",
-          )}
-        >
-          {adminLayout ? (
+        {adminLayout ? (
+          <div className="flex min-h-[var(--admin-header-height-mobile)] w-full md:min-h-[var(--admin-header-height-desktop)]">
             <div className="hidden w-full md:flex">
               <div className="flex w-[var(--admin-sidebar-width)] shrink-0 items-center border-r px-3 py-2">
                 <Branding size="sm" className="min-w-0 max-w-full" />
@@ -44,55 +38,59 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
                 </Link>
               </div>
             </div>
-          ) : (
-            <div className="hidden w-full items-center justify-between gap-x-8 md:flex">
-              <div className="flex items-center gap-x-3">
-                <SideMenu />
-                <Branding size="md" />
-              </div>
+            <MobileNavbar adminLayout={adminLayout} />
+          </div>
+        ) : (
+          <>
+            <div className="container hidden md:block">
+              <div className="flex w-full items-center justify-between gap-x-8">
+                <div className="flex items-center gap-x-3">
+                  <SideMenu />
+                  <Branding size="md" />
+                </div>
 
-              <nav
-                className="hidden items-center gap-5 text-sm font-medium lg:flex"
-                aria-label="Primary"
-              >
-                {[
-                  { title: "Shop", href: "/shop" },
-                  { title: "Featured", href: "/featured" },
-                  { title: "Collections", href: "/collections" },
-                  { title: "Contact", href: "/contact" },
-                ].map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="text-foreground/80 transition hover:text-[#C1105A]"
-                  >
-                    {item.title}
-                  </Link>
-                ))}
-              </nav>
+                <nav
+                  className="hidden items-center gap-5 text-sm font-medium lg:flex"
+                  aria-label="Primary"
+                >
+                  {[
+                    { title: "Shop", href: "/shop" },
+                    { title: "Featured", href: "/featured" },
+                    { title: "Collections", href: "/collections" },
+                    { title: "Contact", href: "/contact" },
+                  ].map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="text-foreground/80 transition hover:text-[#C1105A]"
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
+                </nav>
 
-              <Suspense>
-                <SearchInput />
-              </Suspense>
-
-              <div className="relative flex items-center gap-x-5">
                 <Suspense>
-                  <UserNav />
+                  <SearchInput />
                 </Suspense>
 
-                <Link href={"/wish-list"}>
-                  <Icons.heart className="h-4 w-4" aria-label="wishlist" />
-                </Link>
+                <div className="relative flex items-center gap-x-5">
+                  <Suspense>
+                    <UserNav />
+                  </Suspense>
 
-                <Suspense fallback={<CartLink productCount={0} />}>
-                  <CartNav />
-                </Suspense>
+                  <Link href={"/wish-list"}>
+                    <Icons.heart className="h-4 w-4" aria-label="wishlist" />
+                  </Link>
+
+                  <Suspense fallback={<CartLink productCount={0} />}>
+                    <CartNav />
+                  </Suspense>
+                </div>
               </div>
             </div>
-          )}
-
-          <MobileNavbar adminLayout={adminLayout} />
-        </div>
+            <MobileNavbar adminLayout={adminLayout} />
+          </>
+        )}
       </nav>
     </header>
   );
