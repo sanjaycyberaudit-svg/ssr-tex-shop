@@ -246,4 +246,79 @@ body {
   .announcement-marquee-track .duplicate {
     display: none;
   }
+
+  .scroll-snap-strip__track {
+    scroll-snap-type: none;
+  }
+}
+
+/* Homepage horizontal scroll strips — Myntra/Ajio-style swipe */
+.scroll-snap-strip {
+  position: relative;
+}
+
+.scroll-snap-strip::before,
+.scroll-snap-strip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0.5rem;
+  width: 1.25rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.scroll-snap-strip::before {
+  left: 0;
+  background: linear-gradient(to right, hsl(var(--background)), transparent);
+}
+
+.scroll-snap-strip::after {
+  right: 0;
+  background: linear-gradient(to left, hsl(var(--background)), transparent);
+}
+
+.scroll-snap-strip__track {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.75rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 0.35rem;
+}
+
+@media (min-width: 640px) {
+  .scroll-snap-strip__track {
+    gap: 1rem;
+    scroll-padding-inline: 1rem;
+  }
+}
+
+.scroll-snap-strip__track::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-snap-item {
+  flex: 0 0 auto;
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.32s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }

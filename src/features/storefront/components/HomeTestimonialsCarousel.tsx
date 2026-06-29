@@ -3,13 +3,17 @@
 import Image from "next/image";
 import { Quote, Star } from "lucide-react";
 import { DocumentType } from "@/gql";
-import { CarouselItem } from "@/components/ui/carousel";
 import { TestimonialCardFragment } from "@/features/testimonials";
 import { TestimonialVideoPlayer } from "@/features/testimonials/components/TestimonialVideoPlayer";
 import { keytoUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { HomeSectionHeader } from "./HomeSectionHeader";
-import { HomeCarousel, homeCarouselItemClass } from "./HomeCarousel";
+import {
+  HomeScrollSnapStrip,
+  ScrollSnapItem,
+  scrollSnapCategoryItemClass,
+} from "./HomeScrollSnapStrip";
+import { MotionRevealItem, MotionSection } from "./MotionSection";
 
 type TestimonialNode = DocumentType<typeof TestimonialCardFragment>;
 
@@ -17,9 +21,8 @@ type Props = {
   testimonials: { node: TestimonialNode }[];
 };
 
-/** Same shell as Product Categories cards */
 const cardClass =
-  "group block h-full overflow-hidden rounded-[1.25rem] border border-[#C1105A]/15 bg-muted/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#C1105A]/30 hover:shadow-[0_18px_40px_-18px_rgba(193,16,90,0.45)] active:scale-[0.99]";
+  "group block h-full overflow-hidden rounded-[1.25rem] border border-[#C1105A]/15 bg-muted/40 shadow-sm transition-[border-color,box-shadow] duration-300 hover:border-[#C1105A]/30 hover:shadow-[0_18px_40px_-18px_rgba(193,16,90,0.45)]";
 const mediaClass = "relative w-full aspect-[5/3] sm:aspect-[16/10]";
 
 function TestimonialMeta({ node }: { node: TestimonialNode }) {
@@ -88,8 +91,8 @@ function TestimonialCard({
             src={keytoUrl(imageKey)}
             alt={node.featuredImage?.alt || `Review from ${node.customer_name}`}
             fill
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 78vw, 400px"
-            className="object-cover"
+            sizes="(max-width: 640px) 82vw, (max-width: 1024px) 44vw, 360px"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             loading="lazy"
           />
         ) : (
@@ -111,29 +114,31 @@ export function HomeTestimonialsCarousel({ testimonials }: Props) {
   if (!testimonials.length) return null;
 
   return (
-    <section className="w-full min-w-0 py-4 sm:py-8 md:py-10">
+    <MotionSection className="w-full min-w-0 py-4 sm:py-8 md:py-10">
       <HomeSectionHeader
         title="Customer"
         titleAccent="Feedback"
         showViewMore={false}
       />
-      <HomeCarousel loop={testimonials.length > 1} delayMs={4000}>
-        {testimonials.map(({ node }) => {
+      <HomeScrollSnapStrip ariaLabel="Customer testimonials">
+        {testimonials.map(({ node }, index) => {
           const isVideo =
             node.kind === "video" && Boolean(node.video_url?.trim());
           return (
-            <CarouselItem
+            <ScrollSnapItem
               key={node.id}
-              className={cn(homeCarouselItemClass, "h-full")}
+              className={scrollSnapCategoryItemClass}
             >
-              <TestimonialCard
-                node={node}
-                variant={isVideo ? "video" : "text"}
-              />
-            </CarouselItem>
+              <MotionRevealItem index={index} className="h-full">
+                <TestimonialCard
+                  node={node}
+                  variant={isVideo ? "video" : "text"}
+                />
+              </MotionRevealItem>
+            </ScrollSnapItem>
           );
         })}
-      </HomeCarousel>
-    </section>
+      </HomeScrollSnapStrip>
+    </MotionSection>
   );
 }

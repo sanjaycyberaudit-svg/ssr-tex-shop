@@ -2,6 +2,7 @@ export { HomeHeroCarousel } from "./HomeHeroCarousel";
 export { HomeHeroBanner } from "./HomeHeroBanner";
 export { HomeCategoriesCarousel } from "./HomeCategoriesCarousel";
 export { HomeTestimonialsCarousel } from "./HomeTestimonialsCarousel";
+export { HomeShoppableReels } from "./HomeShoppableReels";
 export { HomeExploreLinks } from "./HomeExploreLinks";
 export {
   HomeFeaturedProductFragment,

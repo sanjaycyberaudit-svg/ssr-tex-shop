@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { Suspense } from "react";
 import { DocumentType, gql } from "@/gql";
 import { ProductCardSkeleton } from "@/features/products";
@@ -11,11 +10,24 @@ import {
 } from "@/features/products/components/ProductPriceDisplay";
 import { AddToCartButton } from "@/features/carts";
 import { AddToWishListButton } from "@/features/wishlists";
-import { CarouselItem } from "@/components/ui/carousel";
+import { ViewTransitionLink } from "@/components/ui/ViewTransitionLink";
 import { Badge } from "@/components/ui/badge";
 import { keytoUrl } from "@/lib/utils";
+import {
+  productImageTransitionName,
+  viewTransitionStyle,
+} from "@/lib/view-transitions";
 import { HomeSectionHeader } from "./HomeSectionHeader";
-import { HomeCarousel, homeFeaturedItemClass } from "./HomeCarousel";
+import {
+  HomeScrollSnapStrip,
+  ScrollSnapItem,
+  scrollSnapFeaturedItemClass,
+} from "./HomeScrollSnapStrip";
+import {
+  MotionHoverLift,
+  MotionRevealItem,
+  MotionSection,
+} from "./MotionSection";
 
 export const HomeFeaturedProductFragment = gql(/* GraphQL */ `
   fragment HomeFeaturedProductFragment on products {
@@ -44,18 +56,19 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
   const { id, name, slug, featuredImage, badge } = product;
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
-      <div className="relative w-full aspect-[3/4] max-h-[min(70vh,420px)] sm:max-h-[480px] bg-muted">
-        <Link href={`/shop/${slug}`} className="absolute inset-0">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#C1105A]/12 bg-card shadow-[0_14px_36px_-22px_rgba(193,16,90,0.55)]">
+      <div className="relative w-full aspect-[3/4] max-h-[min(72vh,440px)] bg-muted">
+        <ViewTransitionLink href={`/shop/${slug}`} className="absolute inset-0">
           <Image
             src={keytoUrl(featuredImage?.key)}
             alt={featuredImage?.alt || name}
             fill
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 85vw, 400px"
-            className="object-cover object-top"
+            sizes="(max-width: 640px) 78vw, (max-width: 1024px) 42vw, 360px"
+            className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.04]"
+            style={viewTransitionStyle(productImageTransitionName(id))}
             loading="lazy"
           />
-        </Link>
+        </ViewTransitionLink>
         <ProductDiscountBadge
           product={product}
           className="absolute top-3 left-3 z-10"
@@ -68,7 +81,7 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
             {badge}
           </Badge>
         ) : null}
-        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border bg-white/95 px-3 py-1.5 shadow-md">
+        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#C1105A]/15 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-sm">
           <Suspense fallback={<span className="inline-block h-9 w-9" />}>
             <AddToWishListButton productId={id} />
           </Suspense>
@@ -78,11 +91,11 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
         </div>
       </div>
       <div className="flex flex-1 flex-col justify-center p-3 sm:p-4">
-        <Link href={`/shop/${slug}`}>
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug sm:text-base hover:underline">
+        <ViewTransitionLink href={`/shop/${slug}`}>
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug sm:text-base hover:text-[#C1105A]">
             {name}
           </h3>
-        </Link>
+        </ViewTransitionLink>
         <ProductPriceDisplay product={product} className="mt-1" />
       </div>
     </article>
@@ -93,20 +106,24 @@ export function HomeFeaturedCarousel({ products }: Props) {
   if (!products.length) return null;
 
   return (
-    <section className="w-full min-w-0 py-4 sm:py-8 md:py-10">
+    <MotionSection className="w-full min-w-0 py-4 sm:py-8 md:py-10">
       <HomeSectionHeader
         title="Featured"
         titleAccent="Products"
         href="/featured"
       />
-      <HomeCarousel loop={products.length > 1}>
-        {products.map(({ node }) => (
-          <CarouselItem key={node.id} className={homeFeaturedItemClass}>
-            <FeaturedSlide product={node} />
-          </CarouselItem>
+      <HomeScrollSnapStrip ariaLabel="Featured products">
+        {products.map(({ node }, index) => (
+          <ScrollSnapItem key={node.id} className={scrollSnapFeaturedItemClass}>
+            <MotionRevealItem index={index} className="group h-full">
+              <MotionHoverLift className="h-full">
+                <FeaturedSlide product={node} />
+              </MotionHoverLift>
+            </MotionRevealItem>
+          </ScrollSnapItem>
         ))}
-      </HomeCarousel>
-    </section>
+      </HomeScrollSnapStrip>
+    </MotionSection>
   );
 }
 

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { viewTransitionStyle } from "@/lib/view-transitions";
 
 type CollectionCardSurfaceProps = {
   label: string;
@@ -11,6 +12,7 @@ type CollectionCardSurfaceProps = {
   aspectClass?: string;
   sizes?: string;
   priority?: boolean;
+  viewTransitionName?: string;
 };
 
 /**
@@ -24,6 +26,7 @@ export function CollectionCardSurface({
   aspectClass = "aspect-[4/5] sm:aspect-[5/4] lg:aspect-[16/10]",
   sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px",
   priority = false,
+  viewTransitionName,
 }: CollectionCardSurfaceProps) {
   return (
     <div
@@ -36,7 +39,12 @@ export function CollectionCardSurface({
         priority={priority}
         loading={priority ? undefined : "lazy"}
         sizes={sizes}
-        className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+        className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.05]"
+        style={
+          viewTransitionName
+            ? viewTransitionStyle(viewTransitionName)
+            : undefined
+        }
       />
       <div
         className="absolute inset-0 bg-gradient-to-t from-[#5A0A33]/95 via-[#5A0A33]/45 to-transparent"

@@ -2,6 +2,10 @@ import { gql, DocumentType } from "@/gql";
 import { keytoUrl } from "@/lib/utils";
 import Image from "next/image";
 import React from "react";
+import {
+  collectionImageTransitionName,
+  viewTransitionStyle,
+} from "@/lib/view-transitions";
 
 const CollectionBannerFragment = gql(/* GraphQL */ `
   fragment CollectionBannerFragment on collections {
@@ -21,7 +25,7 @@ function CollectionBanner({
 }: {
   collectionBannerData: DocumentType<typeof CollectionBannerFragment>;
 }) {
-  const { label, featuredImage } = collectionBannerData;
+  const { label, featuredImage, id } = collectionBannerData;
   const imageKey = featuredImage?.key;
   const imageAlt = featuredImage?.alt || label;
 
@@ -34,6 +38,7 @@ function CollectionBanner({
         priority
         sizes="100vw"
         className="object-cover object-center"
+        style={viewTransitionStyle(collectionImageTransitionName(id))}
       />
       <div
         className="absolute inset-0 bg-gradient-to-t from-[#5A0A33]/90 via-[#5A0A33]/40 to-black/20"

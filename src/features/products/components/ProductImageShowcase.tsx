@@ -9,9 +9,14 @@ import {
   productThumbnailFrameClass,
   productThumbnailImageClass,
 } from "@/features/products/productThumbnail";
+import {
+  productImageTransitionName,
+  viewTransitionStyle,
+} from "@/lib/view-transitions";
 
 type ProductImageShowcaseProps = React.HTMLAttributes<HTMLDivElement> & {
   data: DocumentType<typeof ProductImageShowcaseFragment>;
+  viewTransitionKey?: string;
 };
 
 const ProductImageShowcaseFragment = gql(/* GraphQL */ `
@@ -37,7 +42,13 @@ const ProductImageShowcaseFragment = gql(/* GraphQL */ `
   }
 `);
 
-function ProductImageShowcase({ data }: ProductImageShowcaseProps) {
+function ProductImageShowcase({
+  data,
+  viewTransitionKey,
+}: ProductImageShowcaseProps) {
+  const transitionName = productImageTransitionName(
+    viewTransitionKey ?? data.id,
+  );
   const allImages = [
     data.featuredImage,
     ...(data.images?.edges.map(({ node }) => node.media) || []),
@@ -69,6 +80,7 @@ function ProductImageShowcase({ data }: ProductImageShowcaseProps) {
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className={productThumbnailImageClass}
+              style={viewTransitionStyle(transitionName)}
               priority
             />
           </div>

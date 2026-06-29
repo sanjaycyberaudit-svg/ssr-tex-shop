@@ -5,6 +5,7 @@ import {
   HomeCategoriesCarousel,
   HomeTestimonialsCarousel,
   HomeFeaturedCarousel,
+  HomeShoppableReels,
   HomeExploreLinks,
 } from "@/features/storefront/components";
 import { heroSlides } from "@/config/heroSlides";
@@ -65,6 +66,13 @@ export default async function Home() {
 
         {collectionScrollCards?.edges?.length ? (
           <HomeCategoriesCarousel collections={collectionScrollCards.edges} />
+        ) : null}
+
+        {homeTestimonials?.edges?.length || featuredProducts.length ? (
+          <HomeShoppableReels
+            testimonials={homeTestimonials?.edges ?? []}
+            products={featuredProducts}
+          />
         ) : null}
 
         {homeTestimonials?.edges?.length ? (
