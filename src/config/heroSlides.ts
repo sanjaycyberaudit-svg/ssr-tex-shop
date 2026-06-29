@@ -20,8 +20,7 @@ export const heroSlides: HeroSlide[] = [
     href: "/collections/kanjivaram-wedding-sarees",
     cta: "Shop now",
     image: heroBannerImage("festiveSilk"),
-    imageAlt:
-      "Model in Kanjivaram silk saree — SRI SAI RAGHAVENDRA TEX, Salem",
+    imageAlt: "Model in Kanjivaram silk saree — SRI SAI RAGHAVENDRA TEX, Salem",
   },
   {
     id: "summer-weaves",
@@ -41,8 +40,7 @@ export const heroSlides: HeroSlide[] = [
     href: "/collections/wedding-collections",
     cta: "Shop now",
     image: heroBannerImage("weddingEdit"),
-    imageAlt:
-      "Model in wedding silk saree — SRI SAI RAGHAVENDRA TEX, Salem",
+    imageAlt: "Model in wedding silk saree — SRI SAI RAGHAVENDRA TEX, Salem",
   },
   {
     id: "daily-elegance",

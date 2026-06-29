@@ -30,8 +30,6 @@ export const HERO_BANNER_IMAGES = {
   dailyElegance: SAREE_SHOP_MODEL_IMAGES[3],
 } as const;
 
-export function heroBannerImage(
-  key: keyof typeof HERO_BANNER_IMAGES,
-): string {
+export function heroBannerImage(key: keyof typeof HERO_BANNER_IMAGES): string {
   return HERO_BANNER_IMAGES[key];
 }
