@@ -18,6 +18,9 @@ function CartBadge({ count }: { count: number }) {
   );
 }
 
+const floatingActionButtonClass =
+  "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-105 active:scale-95";
+
 export function StoreFloatingActions() {
   const social = useStorefrontSocial();
   const { isOpen: menuOpen } = useMobileMenu();
@@ -39,7 +42,7 @@ export function StoreFloatingActions() {
         </span>
         <a
           href={siteConfig.phoneHref}
-          className="animate-phone-glow flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#C1105A] text-white ring-2 ring-[#C1105A]/40 transition-transform hover:scale-105 active:scale-95"
+          className={`animate-phone-glow ${floatingActionButtonClass} bg-[#C1105A] text-white ring-2 ring-[#C1105A]/40`}
           aria-label="Call SRI SAI RAGHAVENDRA TEX"
         >
           <PhoneCall className="h-5 w-5" strokeWidth={2} />
@@ -55,7 +58,7 @@ export function StoreFloatingActions() {
         </span>
         <Link
           href="/cart"
-          className="relative flex h-12 w-12 items-center justify-center rounded-full border border-border bg-white text-foreground shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-transform hover:scale-105 active:scale-95"
+          className={`relative ${floatingActionButtonClass} border border-border bg-white text-foreground shadow-[0_4px_16px_rgba(0,0,0,0.12)]`}
           aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
         >
           <ShoppingBag className="h-5 w-5" strokeWidth={1.75} />
@@ -74,10 +77,10 @@ export function StoreFloatingActions() {
           href={social.whatsapp}
           target="_blank"
           rel="noopener noreferrer"
-          className="animate-whatsapp-glow flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white ring-2 ring-[#25D366]/40 transition-transform hover:scale-105 active:scale-95"
+          className={`animate-whatsapp-glow ${floatingActionButtonClass} bg-[#25D366] text-white ring-2 ring-[#25D366]/40`}
           aria-label="Chat on WhatsApp"
         >
-          <Icons.whatsapp className="h-7 w-7" />
+          <Icons.whatsapp className="h-5 w-5" />
         </a>
       </div>
     </div>
