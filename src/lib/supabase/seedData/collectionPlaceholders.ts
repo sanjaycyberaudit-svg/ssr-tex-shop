@@ -40,10 +40,7 @@ export function collectionPlaceholderImage(index: number): string {
 
 /** Category-aware image — real Tamil Nadu saree model / pattu photography */
 export function collectionImageForLabel(label: string, index = 0): string {
-  return (
-    COLLECTION_IMAGE_BY_LABEL[label] ??
-    collectionPlaceholderImage(index)
-  );
+  return COLLECTION_IMAGE_BY_LABEL[label] ?? collectionPlaceholderImage(index);
 }
 
 export const DEFAULT_SAREE_PLACEHOLDER = COLLECTION_PLACEHOLDER_IMAGES[0];
