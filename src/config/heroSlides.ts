@@ -10,48 +10,47 @@ export type HeroSlide = {
   imageAlt: string;
 };
 
-/** Homepage hero carousel — Tamil Nadu saree model placeholders until Admin → Home Banner uploads. */
+/** Homepage hero carousel — real Tamil saree model photography until Admin → Home Banner uploads. */
 export const heroSlides: HeroSlide[] = [
   {
     id: "festive-silk",
     title: "Festive Silk",
     subtitle:
       "Kanjivaram, soft silk, and wedding weaves — curated for every celebration",
-    href: "/collections",
+    href: "/collections/kanjivaram-wedding-sarees",
     cta: "Shop now",
     image: heroBannerImage("festiveSilk"),
     imageAlt:
-      "Model in festive silk saree — SRI SAI RAGHAVENDRA TEX, Salem Tamil Nadu",
+      "Model in Kanjivaram silk saree — SRI SAI RAGHAVENDRA TEX, Salem",
   },
   {
     id: "summer-weaves",
     title: "Summer Weaves",
     subtitle:
       "Light cotton, silk cotton, and soft silks for comfort and elegance",
-    href: "/collections",
+    href: "/collections/cotton-sarees",
     cta: "Shop now",
     image: heroBannerImage("summerWeaves"),
-    imageAlt:
-      "Woman in traditional cotton saree — SRI SAI RAGHAVENDRA TEX, Tamil Nadu",
+    imageAlt: "Model in cotton saree — SRI SAI RAGHAVENDRA TEX, Tamil Nadu",
   },
   {
     id: "wedding-edit",
     title: "Wedding Edit",
-    subtitle: "Traditional silks and bridal weaves for your special day",
-    href: "/featured",
+    subtitle:
+      "Traditional silks, Kubera pattu, and celebrity-inspired bridal looks",
+    href: "/collections/wedding-collections",
     cta: "Shop now",
     image: heroBannerImage("weddingEdit"),
     imageAlt:
-      "Bridal silk saree collection — SRI SAI RAGHAVENDRA TEX, Salem",
+      "Model in wedding silk saree — SRI SAI RAGHAVENDRA TEX, Salem",
   },
   {
     id: "daily-elegance",
     title: "Daily Elegance",
-    subtitle: "Premium quality sarees — wholesale and retail from Salem",
+    subtitle: "Softie sarees and fancy silks — premium quality, trusted weave",
     href: "/shop",
     cta: "Shop now",
     image: heroBannerImage("dailyElegance"),
-    imageAlt:
-      "Daily wear saree model — SRI SAI RAGHAVENDRA TEX, Tamil Nadu",
+    imageAlt: "Model in soft silk saree — SRI SAI RAGHAVENDRA TEX, Tamil Nadu",
   },
 ];

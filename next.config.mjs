@@ -32,6 +32,12 @@ const nextConfig = {
             },
           ]
         : []),
+      // Shop saree model photography (shared public storage)
+      {
+        protocol: "https",
+        hostname: "qhtwwyqlsnckorndmhmt.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
       {
         protocol: "https",
         hostname: "source.unsplash.com",

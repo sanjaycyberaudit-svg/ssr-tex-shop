@@ -1,32 +1,19 @@
-/** Verified Pexels saree / Tamil traditional-wear model photos (free to use). */
-export function pexelsPhoto(id: number, width = 900): string {
-  return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${width}&fit=crop`;
-}
+/** Real Tamil saree model photography — shop assets (public Supabase storage). */
+export const SAKTHI_MEDIA_BASE =
+  "https://qhtwwyqlsnckorndmhmt.supabase.co/storage/v1/object/public/media/sakthi/";
 
-/** Homepage hero — 1400px wide for sharp banners */
-export function pexelsHeroPhoto(id: number): string {
-  return pexelsPhoto(id, 1400);
-}
-
-/** Tamil Nadu / South Indian saree model placeholders (IDs verified HTTP 200). */
-export const SAREE_MODEL_PEXELS_IDS = [
-  13031587, // pink sari model — fashion show
-  36114637, // green saree portrait
-  29026115, // traditional sari outdoors
-  1926769,
-  8681840,
-  1192609,
-  3754682,
-  5868277,
-  7319307,
-  8894332,
-  1036623,
-  3762802,
+export const SAREE_SHOP_MODEL_IMAGES = [
+  `${SAKTHI_MEDIA_BASE}saree-R-tapgdDCDppiSQlGdkRl.webp`,
+  `${SAKTHI_MEDIA_BASE}saree-pdIkXPnfznIDPsDJ4k4PE.webp`,
+  `${SAKTHI_MEDIA_BASE}saree-U0Rtn9BZSywuxw19vrXla.webp`,
+  `${SAKTHI_MEDIA_BASE}saree-N2Osq4mnOsiSNYN62fSbu.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-yMQI_X4Up0VTMyFXk9ZU7.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-RzPrdVNd6zAdsxUqjC0WD.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-TYcLFtrenilsOJUUynu8U.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-jYVtTkgJ_e2FyiDDUc9Jg.webp`,
 ] as const;
 
-export const COLLECTION_PLACEHOLDER_IMAGES = SAREE_MODEL_PEXELS_IDS.map((id) =>
-  pexelsPhoto(id),
-);
+export const COLLECTION_PLACEHOLDER_IMAGES = [...SAREE_SHOP_MODEL_IMAGES];
 
 export function collectionPlaceholderImage(index: number): string {
   const list = COLLECTION_PLACEHOLDER_IMAGES;
@@ -35,16 +22,16 @@ export function collectionPlaceholderImage(index: number): string {
 
 export const DEFAULT_SAREE_PLACEHOLDER = COLLECTION_PLACEHOLDER_IMAGES[0];
 
-/** Default hero banner images — one per slide theme */
-export const HERO_BANNER_PEXELS_IDS = {
-  festiveSilk: 13031587,
-  summerWeaves: 29026115,
-  weddingEdit: 36114637,
-  dailyElegance: 8681840,
+/** Default hero banner images — one real model photo per slide theme */
+export const HERO_BANNER_IMAGES = {
+  festiveSilk: SAREE_SHOP_MODEL_IMAGES[0],
+  summerWeaves: SAREE_SHOP_MODEL_IMAGES[1],
+  weddingEdit: SAREE_SHOP_MODEL_IMAGES[2],
+  dailyElegance: SAREE_SHOP_MODEL_IMAGES[3],
 } as const;
 
 export function heroBannerImage(
-  key: keyof typeof HERO_BANNER_PEXELS_IDS,
+  key: keyof typeof HERO_BANNER_IMAGES,
 ): string {
-  return pexelsHeroPhoto(HERO_BANNER_PEXELS_IDS[key]);
+  return HERO_BANNER_IMAGES[key];
 }
