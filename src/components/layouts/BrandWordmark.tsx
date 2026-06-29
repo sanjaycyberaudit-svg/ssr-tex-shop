@@ -16,11 +16,17 @@ const BADGE: Record<Size, string> = {
 /** Full brand name typography */
 const NAME: Record<Size, string> = {
   nav: "text-[0.9rem] sm:text-[1rem]",
-  sidebar: "text-[0.95rem]",
-  sm: "text-[0.95rem]",
+  sidebar: "text-[0.95rem] leading-snug",
+  sm: "text-[0.875rem] leading-snug",
   md: "text-[1.18rem]",
   footer: "text-[1.12rem]",
   lg: "text-[1.7rem]",
+};
+
+/** Sizes where the wordmark may wrap (narrow admin sidebar, etc.) */
+const WRAP_NAME: Partial<Record<Size, boolean>> = {
+  sm: true,
+  sidebar: true,
 };
 
 /** Tagline only shows where there's room (desktop header / footer / large) */
@@ -47,10 +53,16 @@ type Props = {
 /** Brand lockup: rani-rose "SSR" monogram + "Sri Sai Raghavendra Tex" wordmark. */
 export function BrandWordmark({ className, size = "md" }: Props) {
   const tagline = TAGLINE[size];
+  const wrapName = WRAP_NAME[size] ?? false;
 
   return (
     <span
-      className={cn("inline-flex items-center", GAP[size], className)}
+      className={cn(
+        "inline-flex min-w-0 max-w-full",
+        wrapName ? "items-start" : "items-center",
+        GAP[size],
+        className,
+      )}
       aria-label="Sri Sai Raghavendra Tex"
     >
       <span
@@ -63,10 +75,11 @@ export function BrandWordmark({ className, size = "md" }: Props) {
         SSR
       </span>
 
-      <span className="flex min-w-0 flex-col justify-center leading-none">
+      <span className="flex min-w-0 flex-1 flex-col justify-center leading-none">
         <span
           className={cn(
-            "whitespace-nowrap font-[family-name:var(--font-brand-sans)] font-extrabold leading-none tracking-tight text-[#C1105A]",
+            "font-[family-name:var(--font-brand-sans)] font-extrabold tracking-tight text-[#C1105A]",
+            wrapName ? "whitespace-normal" : "whitespace-nowrap leading-none",
             NAME[size],
           )}
         >

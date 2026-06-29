@@ -1,54 +1,39 @@
 import db from "../db";
 import * as schema from "../schema";
-
-const collections = [
-  {
-    id: "1",
-    label: "Bathroom",
-    slug: "bathroom",
-    title: "Elevate Your Bathroom Experience",
-    description:
-      "Transform your bathroom with our premium essentials, blending luxury, functionality, and style. Shop now for the ultimate in comfort and elegance.",
-    featuredImageId: "1",
-  },
-  {
-    id: "2",
-    label: "Kitchen",
-    title: "Elevate Your Kitchen Experience",
-    slug: "kitchen-planning",
-    description: "",
-    featuredImageId: "2",
-  },
-  {
-    id: "3",
-    label: "Living Room",
-    title: "Elevate Your Kitchen Experience",
-    slug: "living-room-planning",
-    description: "",
-    featuredImageId: "3",
-    order: 9,
-  },
-  {
-    id: "4",
-    label: "Bedroom",
-    title: "Elevate Your Bedroom Experience",
-    slug: "Bedroom-planning",
-    description: "",
-    featuredImageId: "4",
-  },
-];
+import { slugify } from "@/lib/utils";
+import { SAKTHI_COLLECTION_LABELS } from "./sakthiCollections";
+import { collectionPlaceholderImage } from "./collectionPlaceholders";
 
 const seedCollections = async () => {
   try {
     await db.delete(schema.collections);
 
-    const insertedCollections = await db
-      .insert(schema.collections)
-      .values(collections)
-      .onConflictDoNothing()
-      .returning();
-    if (insertedCollections != null)
-      console.log(`collections are added to the DB.`);
+    for (let i = 0; i < SAKTHI_COLLECTION_LABELS.length; i++) {
+      const label = SAKTHI_COLLECTION_LABELS[i];
+      const slug = slugify(label);
+      const imageKey = collectionPlaceholderImage(i);
+
+      const [media] = await db
+        .insert(schema.medias)
+        .values({
+          key: imageKey,
+          alt: `${label} — SRI SAI RAGHAVENDRA TEX`,
+        })
+        .returning();
+
+      if (!media) continue;
+
+      await db.insert(schema.collections).values({
+        label,
+        slug,
+        title: label,
+        description: `Explore our ${label} at SRI SAI RAGHAVENDRA TEX.`,
+        order: i + 1,
+        featuredImageId: media.id,
+      });
+    }
+
+    console.log(`Saree collections are added to the DB.`);
   } catch (err) {
     console.log("Error happen while inserting collections", err);
   }

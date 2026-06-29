@@ -14,7 +14,8 @@ export function BrandLogo({ className, size = "nav" }: Props) {
       href="/"
       aria-label={siteConfig.name}
       className={cn(
-        "inline-flex w-fit shrink-0 items-center justify-start touch-manipulation",
+        "inline-flex min-w-0 max-w-full items-center justify-start touch-manipulation",
+        size === "sm" || size === "sidebar" ? "shrink" : "w-fit shrink-0",
         className,
       )}
     >

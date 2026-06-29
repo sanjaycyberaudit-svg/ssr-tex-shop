@@ -24,7 +24,7 @@ for (const line of lines) {
 
 // Production site URL (update after first deploy if different)
 vars.NEXT_PUBLIC_SITE_URL =
-  process.env.VERCEL_SITE_URL || "https://sakthi-textiles-shop.vercel.app";
+  process.env.VERCEL_SITE_URL || "https://ssr-tex-shop.vercel.app";
 vars.SKIP_ENV_VALIDATION = "true";
 
 const targets = ["production", "preview"];

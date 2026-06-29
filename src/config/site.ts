@@ -11,8 +11,16 @@ const ADDRESS_LINES = [
 
 /** Proprietors / contact persons from the business card */
 const CONTACTS = [
-  { name: "J. Moulee", phone: "+91 80127 15132", phoneHref: "tel:+918012715132" },
-  { name: "J. Vimal", phone: "+91 95667 84543", phoneHref: "tel:+919566784543" },
+  {
+    name: "J. Moulee",
+    phone: "+91 80127 15132",
+    phoneHref: "tel:+918012715132",
+  },
+  {
+    name: "J. Vimal",
+    phone: "+91 95667 84543",
+    phoneHref: "tel:+919566784543",
+  },
 ] as const;
 
 const PHONE = CONTACTS[0].phone;

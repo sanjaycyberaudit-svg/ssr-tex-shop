@@ -24,14 +24,14 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
         <div
           className={cn(
             adminLayout
-              ? "flex h-[var(--admin-header-height-mobile)] w-full md:h-[var(--admin-header-height-desktop)]"
+              ? "flex min-h-[var(--admin-header-height-mobile)] w-full md:min-h-[var(--admin-header-height-desktop)]"
               : "container",
           )}
         >
           {adminLayout ? (
             <div className="hidden w-full md:flex">
-              <div className="flex w-[var(--admin-sidebar-width)] shrink-0 items-center border-r px-3">
-                <Branding size="sm" />
+              <div className="flex w-[var(--admin-sidebar-width)] shrink-0 items-center border-r px-3 py-2">
+                <Branding size="sm" className="min-w-0 max-w-full" />
               </div>
               <div className="flex min-w-0 flex-1 items-center justify-end gap-x-5 px-6 lg:px-8">
                 <Suspense>

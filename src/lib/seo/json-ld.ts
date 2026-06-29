@@ -116,7 +116,8 @@ export function buildProductJsonLd(input: {
     "@context": "https://schema.org",
     "@type": "Product",
     name: input.name,
-    description: input.description ?? `Buy ${input.name} from SRI SAI RAGHAVENDRA TEX.`,
+    description:
+      input.description ?? `Buy ${input.name} from SRI SAI RAGHAVENDRA TEX.`,
     image: input.imageUrl ? [input.imageUrl] : undefined,
     sku: input.slug,
     brand: {

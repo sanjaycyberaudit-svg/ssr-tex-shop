@@ -8,7 +8,8 @@ export const revalidate = STOREFRONT_STATIC_REVALIDATE_SECONDS;
 
 export const metadata: Metadata = {
   title: "FAQ | SRI SAI RAGHAVENDRA TEX",
-  description: "Frequently asked questions about SRI SAI RAGHAVENDRA TEX sarees",
+  description:
+    "Frequently asked questions about SRI SAI RAGHAVENDRA TEX sarees",
 };
 
 const faqs = [

@@ -31,9 +31,14 @@ export function supabaseStoragePublicUrl(storagePath: string) {
   return `${base}/storage/v1/object/public/${SUPABASE_MEDIA_BUCKET}/${storagePath}`;
 }
 
+import {
+  DEFAULT_SAREE_PLACEHOLDER,
+  collectionPlaceholderImage,
+} from "@/lib/supabase/seedData/collectionPlaceholders";
+
 export const keytoUrl = (key?: string) => {
   if (!key) {
-    return `https://${DEMO_S3_BUCKET}.s3.${DEMO_S3_REGION}.amazonaws.com/public/bathroom-planning.jpg`;
+    return DEFAULT_SAREE_PLACEHOLDER;
   }
 
   if (key.startsWith("http://") || key.startsWith("https://")) {

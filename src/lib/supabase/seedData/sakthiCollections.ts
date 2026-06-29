@@ -2,8 +2,9 @@ import { eq, inArray } from "drizzle-orm";
 import db from "../db";
 import * as schema from "../schema";
 import { slugify } from "@/lib/utils";
+import { collectionPlaceholderImage } from "./collectionPlaceholders";
 
-/** SRI SAI RAGHAVENDRA TEX saree categories (homepage carousel + /collections/[slug]) */
+/** SSR Tex saree categories (homepage carousel + /collections/[slug]) */
 export const SAKTHI_COLLECTION_LABELS = [
   "Softie Sarees",
   "Kanjivaram Wedding Sarees",
@@ -15,18 +16,11 @@ export const SAKTHI_COLLECTION_LABELS = [
   "Cotton Sarees",
   "Silk Cotton Sarees",
   "Fancy Silk Sarees",
-  "Mysore silk",
-  "Space silk saree",
-  "Fancy sarees",
-  "celebrity inspired saree",
+  "Mysore Silk",
+  "Space Silk Saree",
+  "Fancy Sarees",
+  "Celebrity Inspired Saree",
 ] as const;
-
-const PLACEHOLDER_IMAGE_KEYS = [
-  "public/bathroom-planning.jpg",
-  "public/kitchen-planning.jpg",
-  "public/living-room-planning.jpg",
-  "public/bedroom-planning.jpg",
-];
 
 const DEMO_COLLECTION_SLUGS = [
   "bathroom",
@@ -72,9 +66,8 @@ export default async function seedSakthiCollections(
     const slug = slugify(label);
     const { title, description } = collectionCopy(label);
     const order = i + 1;
-    const imageKey =
-      PLACEHOLDER_IMAGE_KEYS[i % PLACEHOLDER_IMAGE_KEYS.length] ??
-      PLACEHOLDER_IMAGE_KEYS[0];
+    const imageKey = collectionPlaceholderImage(i);
+    const imageAlt = `${label} — SRI SAI RAGHAVENDRA TEX`;
 
     const existing = await db
       .select()
@@ -83,10 +76,17 @@ export default async function seedSakthiCollections(
       .limit(1);
 
     if (existing.length > 0) {
+      const row = existing[0];
+      if (row.featuredImageId) {
+        await db
+          .update(schema.medias)
+          .set({ key: imageKey, alt: imageAlt })
+          .where(eq(schema.medias.id, row.featuredImageId));
+      }
       await db
         .update(schema.collections)
         .set({ label, title, description, order })
-        .where(eq(schema.collections.id, existing[0].id));
+        .where(eq(schema.collections.id, row.id));
       updated++;
       console.log(`Updated: ${label} → /collections/${slug}`);
       continue;
@@ -96,7 +96,7 @@ export default async function seedSakthiCollections(
       .insert(schema.medias)
       .values({
         key: imageKey,
-        alt: `${slug}-category`,
+        alt: imageAlt,
       })
       .returning();
 
@@ -121,6 +121,6 @@ export default async function seedSakthiCollections(
     `\nDone. ${created} created, ${updated} updated (${SAKTHI_COLLECTION_LABELS.length} categories total).`,
   );
   console.log(
-    "Replace placeholder images in Admin → Collections, or re-run after uploading to S3.",
+    "Replace placeholder images in Admin → Collections when your photos are ready.",
   );
 }
