@@ -8,11 +8,12 @@ import { TestimonialVideoPlayer } from "@/features/testimonials/components/Testi
 import { keytoUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { HomeSectionHeader } from "./HomeSectionHeader";
+import { HomeScrollSnapStrip, ScrollSnapItem } from "./HomeScrollSnapStrip";
 import {
-  HomeScrollSnapStrip,
-  ScrollSnapItem,
-} from "./HomeScrollSnapStrip";
-import { MotionHoverLift, MotionRevealItem, MotionSection } from "./MotionSection";
+  MotionHoverLift,
+  MotionRevealItem,
+  MotionSection,
+} from "./MotionSection";
 
 type TestimonialNode = DocumentType<typeof TestimonialCardFragment>;
 
@@ -91,10 +92,7 @@ function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
     <article className="flex h-full min-h-[260px] flex-col rounded-2xl border border-[#C1105A]/12 bg-card p-5 shadow-[0_16px_40px_-28px_rgba(193,16,90,0.45)] sm:min-h-[280px] sm:p-6">
       <div className="mb-4 flex items-start justify-between gap-3">
         <StarRating rating={node.rating ?? 5} />
-        <Quote
-          className="h-8 w-8 shrink-0 text-[#C1105A]/15"
-          aria-hidden
-        />
+        <Quote className="h-8 w-8 shrink-0 text-[#C1105A]/15" aria-hidden />
       </div>
 
       {node.quote ? (
