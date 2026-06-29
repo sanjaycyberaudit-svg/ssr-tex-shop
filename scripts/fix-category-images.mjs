@@ -1,5 +1,5 @@
 /**
- * Fix collection + product images: replace broken Unsplash / old furniture placeholders.
+ * Fix collection + product images — real Tamil Nadu pattu saree model photos.
  * Usage: node scripts/fix-category-images.mjs
  */
 import { createId } from "@paralleldrive/cuid2";
@@ -7,13 +7,59 @@ import { createClient } from "@supabase/supabase-js";
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 
-const PLACEHOLDER_IDS = [
-  13031587, 36114637, 29026115, 1926769, 8681840, 1192609, 3754682, 5868277,
-  7319307, 8894332, 1036623, 3762802,
+const SAKTHI_MEDIA_BASE =
+  "https://qhtwwyqlsnckorndmhmt.supabase.co/storage/v1/object/public/media/sakthi/";
+
+const SAREE_SHOP_MODEL_IMAGES = [
+  `${SAKTHI_MEDIA_BASE}saree-R-tapgdDCDppiSQlGdkRl.webp`,
+  `${SAKTHI_MEDIA_BASE}saree-pdIkXPnfznIDPsDJ4k4PE.webp`,
+  `${SAKTHI_MEDIA_BASE}saree-U0Rtn9BZSywuxw19vrXla.webp`,
+  `${SAKTHI_MEDIA_BASE}saree-N2Osq4mnOsiSNYN62fSbu.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-yMQI_X4Up0VTMyFXk9ZU7.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-RzPrdVNd6zAdsxUqjC0WD.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-TYcLFtrenilsOJUUynu8U.webp`,
+  `${SAKTHI_MEDIA_BASE}upload-jYVtTkgJ_e2FyiDDUc9Jg.webp`,
 ];
 
-function pexelsUrl(id) {
-  return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=900`;
+const COLLECTION_IMAGE_BY_LABEL = {
+  "Softie Sarees": SAREE_SHOP_MODEL_IMAGES[3],
+  "Kanjivaram Wedding Sarees": SAREE_SHOP_MODEL_IMAGES[0],
+  "Soft Silk Sarees": SAREE_SHOP_MODEL_IMAGES[3],
+  "Banaras Tissue Silk Sarees": SAREE_SHOP_MODEL_IMAGES[5],
+  "Traditional Silk Sarees": SAREE_SHOP_MODEL_IMAGES[0],
+  "Kubera Pattu Sarees": SAREE_SHOP_MODEL_IMAGES[2],
+  "Wedding Collections": SAREE_SHOP_MODEL_IMAGES[2],
+  "Cotton Sarees": SAREE_SHOP_MODEL_IMAGES[1],
+  "Silk Cotton Sarees": SAREE_SHOP_MODEL_IMAGES[1],
+  "Fancy Silk Sarees": SAREE_SHOP_MODEL_IMAGES[4],
+  "Mysore Silk": SAREE_SHOP_MODEL_IMAGES[6],
+  "Space Silk Saree": SAREE_SHOP_MODEL_IMAGES[5],
+  "Fancy Sarees": SAREE_SHOP_MODEL_IMAGES[7],
+  "Celebrity Inspired Saree": SAREE_SHOP_MODEL_IMAGES[4],
+};
+
+function collectionImageForLabel(label, index) {
+  return (
+    COLLECTION_IMAGE_BY_LABEL[label] ??
+    SAREE_SHOP_MODEL_IMAGES[index % SAREE_SHOP_MODEL_IMAGES.length]
+  );
+}
+
+function isStaleImageKey(key) {
+  if (!key) return true;
+  if (key.startsWith("http://") || key.startsWith("https://")) {
+    return (
+      key.includes("unsplash.com") ||
+      key.includes("images.pexels.com") ||
+      key.includes("placehold.co")
+    );
+  }
+  return (
+    key.startsWith("public/bathroom-planning") ||
+    key.startsWith("public/kitchen-planning") ||
+    key.startsWith("public/living-room-planning") ||
+    key.startsWith("public/bedroom-planning")
+  );
 }
 
 function loadEnv() {
@@ -45,13 +91,20 @@ async function main() {
 
   for (let i = 0; i < collections.length; i++) {
     const col = collections[i];
-    const url = pexelsUrl(PLACEHOLDER_IDS[i % PLACEHOLDER_IDS.length]);
-    const alt = `${col.label} — SRI SAI RAGHAVENDRA TEX`;
+    const url = collectionImageForLabel(col.label, i);
+    const alt = `${col.label} — Tamil Nadu saree model, SRI SAI RAGHAVENDRA TEX`;
 
     let mediaId = col.featured_image_id;
-    if (mediaId) {
+
+    const { data: currentMedia } = mediaId
+      ? await sb.from("medias").select("key").eq("id", mediaId).maybeSingle()
+      : { data: null };
+
+    const needsReplace = !mediaId || isStaleImageKey(currentMedia?.key) || currentMedia?.key !== url;
+
+    if (mediaId && needsReplace) {
       await sb.from("medias").update({ key: url, alt }).eq("id", mediaId);
-    } else {
+    } else if (!mediaId) {
       const { data: media, error } = await sb
         .from("medias")
         .insert({ key: url, alt })
@@ -80,21 +133,11 @@ async function main() {
     const src = sareeMedias[i % sareeMedias.length] ?? sareeMedias[0];
     let mediaId = product.featured_image_id;
 
-    const oldKeys = [
-      "public/bathroom-planning.jpg",
-      "public/kitchen-planning.jpg",
-      "public/living-room-planning.jpg",
-      "public/bedroom-planning.jpg",
-    ];
-
     const { data: currentMedia } = mediaId
       ? await sb.from("medias").select("key").eq("id", mediaId).maybeSingle()
       : { data: null };
 
-    const needsReplace =
-      !mediaId ||
-      oldKeys.includes(currentMedia?.key) ||
-      currentMedia?.key?.includes("unsplash.com");
+    const needsReplace = !mediaId || isStaleImageKey(currentMedia?.key);
 
     if (needsReplace) {
       if (mediaId && currentMedia) {
@@ -133,7 +176,7 @@ async function main() {
     .from("medias")
     .select("id,key")
     .or(
-      "key.like.public/bathroom-planning%,key.like.public/kitchen-planning%,key.like.public/living-room-planning%,key.like.public/bedroom-planning%,key.like.%unsplash.com%",
+      "key.like.public/bathroom-planning%,key.like.public/kitchen-planning%,key.like.public/living-room-planning%,key.like.public/bedroom-planning%,key.like.%unsplash.com%,key.like.%images.pexels.com%",
     );
 
   for (const row of stale ?? []) {

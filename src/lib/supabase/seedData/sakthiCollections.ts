@@ -2,7 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import db from "../db";
 import * as schema from "../schema";
 import { slugify } from "@/lib/utils";
-import { collectionPlaceholderImage } from "./collectionPlaceholders";
+import { collectionImageForLabel } from "./collectionPlaceholders";
 
 /** SSR Tex saree categories (homepage carousel + /collections/[slug]) */
 export const SAKTHI_COLLECTION_LABELS = [
@@ -66,8 +66,8 @@ export default async function seedSakthiCollections(
     const slug = slugify(label);
     const { title, description } = collectionCopy(label);
     const order = i + 1;
-    const imageKey = collectionPlaceholderImage(i);
-    const imageAlt = `${label} — SRI SAI RAGHAVENDRA TEX`;
+    const imageKey = collectionImageForLabel(label, i);
+    const imageAlt = `${label} — Tamil Nadu saree model, SRI SAI RAGHAVENDRA TEX`;
 
     const existing = await db
       .select()
@@ -119,8 +119,5 @@ export default async function seedSakthiCollections(
 
   console.log(
     `\nDone. ${created} created, ${updated} updated (${SAKTHI_COLLECTION_LABELS.length} categories total).`,
-  );
-  console.log(
-    "Replace placeholder images in Admin → Collections when your photos are ready.",
   );
 }
