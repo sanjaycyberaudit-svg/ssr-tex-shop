@@ -9,14 +9,14 @@ type Props = { adminLayout: boolean };
 
 function MobileNavbar({ adminLayout }: Props) {
   return (
-    <div className="grid h-[3.75rem] min-h-[3.75rem] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 md:hidden">
-      <SideMenu triggerClassName="justify-self-start -ml-0.5" />
+    <div className="grid h-[3.75rem] min-h-[3.75rem] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-4 md:hidden">
+      <SideMenu triggerClassName="justify-self-start -ml-1.5" />
 
       <div className="flex min-w-0 justify-center overflow-visible px-0.5">
         <Branding size="nav" className="mx-auto shrink-0" />
       </div>
 
-      <div className="flex justify-end -mr-1">
+      <div className="flex justify-end mr-0.5">
         {!adminLayout ? (
           <Link
             href="/cart"
