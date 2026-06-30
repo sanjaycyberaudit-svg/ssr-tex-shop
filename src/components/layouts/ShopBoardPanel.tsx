@@ -34,7 +34,10 @@ export function ShopBoardPanel({
 
   return (
     <span
-      className={cn("brand-board-frame relative inline-flex max-w-full", className)}
+      className={cn(
+        "brand-board-frame relative inline-flex max-w-full",
+        className,
+      )}
       style={{ minHeight, ...style }}
     >
       <svg
@@ -87,7 +90,6 @@ export function ShopBoardPanel({
           vectorEffect="non-scaling-stroke"
           strokeLinejoin="miter"
         />
-
       </svg>
 
       <span
