@@ -8,9 +8,7 @@ type Props = {
 };
 
 function Branding({ className, size = "nav", align = "left" }: Props) {
-  return (
-    <BrandLogo size={size} align={align} className={cn(className)} />
-  );
+  return <BrandLogo size={size} align={align} className={cn(className)} />;
 }
 
 export default Branding;
