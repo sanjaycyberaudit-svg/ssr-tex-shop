@@ -1,43 +1,28 @@
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { BrandEmblem, type BrandEmblemSize } from "./BrandEmblem";
 
-type Size = "sm" | "md" | "lg" | "nav" | "sidebar" | "footer";
+type Size = BrandEmblemSize;
 
-/** SSR monogram badge (kept on the left across the whole site) */
-const BADGE: Record<Size, string> = {
-  nav: "h-8 w-8 rounded-lg text-[10px]",
-  sidebar: "h-8 w-8 rounded-lg text-[10px]",
-  sm: "h-8 w-8 rounded-lg text-[10px]",
-  md: "h-9 w-9 rounded-xl text-[11px]",
-  footer: "h-9 w-9 rounded-xl text-[11px]",
-  lg: "h-12 w-12 rounded-2xl text-[14px]",
-};
-
-/** Full brand name typography */
+/** Full brand name — elegant serif like the shop board */
 const NAME: Record<Size, string> = {
-  nav: "text-[0.9rem] sm:text-[1rem]",
-  sidebar: "text-[0.95rem] leading-snug",
+  nav: "text-[0.72rem] leading-[1.05] sm:text-[0.82rem]",
+  sidebar: "text-[0.9rem] leading-snug",
   sm: "text-[0.875rem] leading-snug",
-  md: "text-[1.18rem]",
-  footer: "text-[1.12rem]",
-  lg: "text-[1.7rem]",
+  md: "text-[1.05rem] lg:text-[1.15rem]",
+  footer: "text-[1.08rem]",
+  lg: "text-[1.65rem]",
 };
 
-/** Sizes where the wordmark may wrap (narrow admin sidebar, etc.) */
-const WRAP_NAME: Partial<Record<Size, boolean>> = {
-  sm: true,
-  sidebar: true,
-};
-
-/** Tagline only shows where there's room (desktop header / footer / large) */
-const TAGLINE: Partial<Record<Size, string>> = {
-  md: "text-[7.5px]",
-  footer: "text-[7.5px]",
-  lg: "text-[10px]",
+/** ELAMPILLAI line — desktop header, footer, large hero blocks */
+const SHOW_LOCATION: Partial<Record<Size, boolean>> = {
+  md: true,
+  footer: true,
+  lg: true,
 };
 
 const GAP: Record<Size, string> = {
-  nav: "gap-2",
+  nav: "gap-1.5",
   sidebar: "gap-2",
   sm: "gap-2",
   md: "gap-2.5",
@@ -50,10 +35,27 @@ type Props = {
   size?: Size;
 };
 
-/** Brand lockup: rani-rose "SSR" monogram + "Sri Sai Raghavendra Tex" wordmark. */
+function BrandLocationLine({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-1.5 text-[#6B2D6A]/85",
+        className,
+      )}
+    >
+      <span className="h-px w-3 shrink-0 bg-current opacity-50 sm:w-4" />
+      <span className="whitespace-nowrap font-[family-name:var(--font-brand-sans)] text-[0.48rem] font-bold uppercase tracking-[0.28em] sm:text-[0.52rem]">
+        {siteConfig.location}
+      </span>
+      <span className="h-px w-3 shrink-0 bg-current opacity-50 sm:w-4" />
+    </span>
+  );
+}
+
+/** Brand lockup: gold SSR emblem + serif shop name (+ ELAMPILLAI on desktop). */
 export function BrandWordmark({ className, size = "md" }: Props) {
-  const tagline = TAGLINE[size];
-  const wrapName = WRAP_NAME[size] ?? false;
+  const showLocation = SHOW_LOCATION[size] ?? false;
+  const wrapName = size === "sm" || size === "sidebar";
 
   return (
     <span
@@ -63,40 +65,30 @@ export function BrandWordmark({ className, size = "md" }: Props) {
         GAP[size],
         className,
       )}
-      aria-label="Sri Sai Raghavendra Tex"
+      aria-label={`${siteConfig.name}, ${siteConfig.location}`}
     >
-      <span
-        className={cn(
-          "grid shrink-0 place-items-center bg-gradient-to-br from-[#C1105A] to-[#7A0E43] font-[family-name:var(--font-brand-sans)] font-extrabold uppercase leading-none tracking-tight text-white shadow-[0_4px_12px_rgba(193,16,90,0.35)] ring-1 ring-[#C9A227]/50",
-          BADGE[size],
-        )}
-        aria-hidden
-      >
-        SSR
-      </span>
+      <BrandEmblem
+        size={size}
+        priority={size === "nav" || size === "md"}
+      />
 
       <span className="flex min-w-0 flex-1 flex-col justify-center leading-none">
         <span
           className={cn(
-            "font-[family-name:var(--font-brand-sans)] font-extrabold tracking-tight text-[#C1105A]",
-            wrapName ? "whitespace-normal" : "whitespace-nowrap leading-none",
+            "font-[family-name:var(--font-hero-serif)] font-semibold tracking-[0.01em] text-[#4A1248]",
+            "[text-shadow:0_1px_0_rgba(255,255,255,0.85),0_0_18px_rgba(193,16,90,0.12)]",
+            wrapName ? "whitespace-normal" : "whitespace-nowrap",
             NAME[size],
           )}
         >
           Sri Sai Raghavendra Tex
-          <sup className="ml-[0.12em] align-super text-[0.4em] font-bold text-[#C9A227]">
+          <sup className="ml-[0.1em] align-super font-[family-name:var(--font-brand-sans)] text-[0.38em] font-bold text-[#C9A227]">
             ®
           </sup>
         </span>
-        {tagline ? (
-          <span
-            className={cn(
-              "mt-[3px] whitespace-nowrap font-semibold uppercase tracking-[0.18em] text-[#8A0E48]/80",
-              tagline,
-            )}
-          >
-            {siteConfig.tagline}
-          </span>
+
+        {showLocation ? (
+          <BrandLocationLine className="mt-[3px]" />
         ) : null}
       </span>
     </span>

@@ -39,6 +39,8 @@ export const siteConfig = {
   name: "SRI SAI RAGHAVENDRA TEX®",
   shortName: "SSR Tex",
   tagline: "Sarees Wholesale & Retail Merchant",
+  /** Town shown on shop board / navbar */
+  location: "ELAMPILLAI",
   description: "Sarees wholesale & retail merchant — silk and cotton sarees",
   searchPlaceholder: "Search silk & cotton sarees, collections…",
   url: "https://sakthi-textiles-shop.vercel.app",
