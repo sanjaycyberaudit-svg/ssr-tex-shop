@@ -1,18 +1,9 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useId, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import {
-  contactActionHref,
-  type StoreContact,
-} from "@/lib/contact/links";
+import { contactActionHref, type StoreContact } from "@/lib/contact/links";
 
 export type ContactPickerMode = "call" | "whatsapp";
 
@@ -94,7 +85,9 @@ export function FloatingContactPicker({
         id={listId}
         role="menu"
         aria-label={
-          mode === "call" ? "Choose a number to call" : "Choose WhatsApp contact"
+          mode === "call"
+            ? "Choose a number to call"
+            : "Choose WhatsApp contact"
         }
         className={cn(
           "flex flex-col items-end gap-2 transition-all duration-300 ease-out",
@@ -125,7 +118,10 @@ export function FloatingContactPicker({
               )}
               style={
                 isOpen
-                  ? { animationDelay: `${index * 60}ms`, animationFillMode: "backwards" }
+                  ? {
+                      animationDelay: `${index * 60}ms`,
+                      animationFillMode: "backwards",
+                    }
                   : undefined
               }
               aria-label={
@@ -157,10 +153,7 @@ export function FloatingContactPicker({
         aria-controls={listId}
         aria-haspopup="menu"
         aria-label={triggerLabel}
-        className={cn(
-          triggerClassName,
-          isOpen && `ring-2 ${styles.ring}`,
-        )}
+        className={cn(triggerClassName, isOpen && `ring-2 ${styles.ring}`)}
       >
         {triggerIcon}
       </button>
