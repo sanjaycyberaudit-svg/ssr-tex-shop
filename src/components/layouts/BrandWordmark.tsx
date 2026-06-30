@@ -38,10 +38,7 @@ type Props = {
 function BrandLocationLine({ className }: { className?: string }) {
   return (
     <span
-      className={cn(
-        "flex items-center gap-1.5 text-[#6B2D6A]/85",
-        className,
-      )}
+      className={cn("flex items-center gap-1.5 text-[#6B2D6A]/85", className)}
     >
       <span className="h-px w-3 shrink-0 bg-current opacity-50 sm:w-4" />
       <span className="whitespace-nowrap font-[family-name:var(--font-brand-sans)] text-[0.48rem] font-bold uppercase tracking-[0.28em] sm:text-[0.52rem]">
@@ -67,10 +64,7 @@ export function BrandWordmark({ className, size = "md" }: Props) {
       )}
       aria-label={`${siteConfig.name}, ${siteConfig.location}`}
     >
-      <BrandEmblem
-        size={size}
-        priority={size === "nav" || size === "md"}
-      />
+      <BrandEmblem size={size} priority={size === "nav" || size === "md"} />
 
       <span className="flex min-w-0 flex-1 flex-col justify-center leading-none">
         <span
@@ -87,9 +81,7 @@ export function BrandWordmark({ className, size = "md" }: Props) {
           </sup>
         </span>
 
-        {showLocation ? (
-          <BrandLocationLine className="mt-[3px]" />
-        ) : null}
+        {showLocation ? <BrandLocationLine className="mt-[3px]" /> : null}
       </span>
     </span>
   );

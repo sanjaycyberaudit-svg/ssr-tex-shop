@@ -1,13 +1,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-export type BrandEmblemSize =
-  | "sm"
-  | "md"
-  | "lg"
-  | "nav"
-  | "sidebar"
-  | "footer";
+export type BrandEmblemSize = "sm" | "md" | "lg" | "nav" | "sidebar" | "footer";
 
 const EMBLEM_PX: Record<BrandEmblemSize, number> = {
   nav: 36,
