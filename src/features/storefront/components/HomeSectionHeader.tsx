@@ -22,12 +22,12 @@ export function HomeSectionHeader({
       <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
         <span
           aria-hidden
-          className="h-6 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-[#C1105A] to-[#7A0E43] sm:h-7"
+          className="h-6 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-primary to-[#55104A] sm:h-7"
         />
         <h2 className="min-w-0 text-lg font-bold leading-tight tracking-tight sm:text-xl md:text-2xl">
           {title}
           {titleAccent ? (
-            <span className="bg-gradient-to-r from-[#C1105A] to-[#D6347E] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-[#C9A227] bg-clip-text text-transparent">
               {" "}
               {titleAccent}
             </span>
@@ -38,8 +38,8 @@ export function HomeSectionHeader({
         <Link
           href={href}
           className={cn(
-            "group inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-[#C1105A]/30 bg-[#C1105A]/5 px-4 py-2 text-xs font-semibold text-[#C1105A] sm:text-sm",
-            "transition-colors hover:bg-[#C1105A] hover:text-white",
+            "group inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary sm:text-sm",
+            "transition-colors hover:bg-primary hover:text-white",
           )}
         >
           {viewMoreLabel}

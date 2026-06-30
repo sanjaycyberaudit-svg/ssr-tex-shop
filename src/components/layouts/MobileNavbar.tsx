@@ -14,22 +14,18 @@ function MobileNavbar({ adminLayout }: Props) {
   return (
     <div className="relative h-16 min-h-16 w-full md:hidden">
       <div
-        className="absolute inset-y-0 left-0 flex items-center"
+        className="absolute inset-y-0 left-0 z-[2] flex items-center"
         style={{ paddingLeft: edgeInset }}
       >
         <SideMenu triggerClassName="ml-0" />
       </div>
 
-      <div className="flex h-full min-w-0 items-center justify-center px-[2.85rem]">
-        <Branding
-          size="nav"
-          align="center"
-          className="w-full max-w-[15.75rem] justify-center"
-        />
+      <div className="flex h-full items-center justify-center px-[3rem]">
+        <Branding size="nav" align="center" className="max-w-[18rem]" />
       </div>
 
       <div
-        className="absolute inset-y-0 right-0 flex items-center"
+        className="absolute inset-y-0 right-0 z-[2] flex items-center"
         style={{ paddingRight: edgeInsetRight }}
       >
         {!adminLayout ? (

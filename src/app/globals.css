@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    /* Luxury pattu-saree palette — Rani rose primary with champagne gold accents */
-    --background: 350 50% 99%;
-    --foreground: 335 45% 14%;
+    /* SSR Tex — regal plum purple primary with champagne gold accents */
+    --background: 320 28% 98%;
+    --foreground: 318 35% 14%;
 
-    --card: 350 50% 99%;
-    --card-foreground: 335 45% 14%;
+    --card: 320 28% 99%;
+    --card-foreground: 318 35% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 335 45% 14%;
+    --popover-foreground: 318 35% 14%;
 
-    --primary: 335 85% 41%;
-    --primary-foreground: 40 60% 98%;
+    --primary: 318 42% 35%;
+    --primary-foreground: 42 55% 96%;
 
-    --secondary: 42 55% 92%;
-    --secondary-foreground: 335 45% 20%;
+    --secondary: 42 48% 93%;
+    --secondary-foreground: 318 35% 20%;
 
-    --muted: 345 35% 95%;
-    --muted-foreground: 335 14% 42%;
+    --muted: 320 22% 95%;
+    --muted-foreground: 318 12% 42%;
 
-    --accent: 38 60% 90%;
-    --accent-foreground: 335 45% 20%;
+    --accent: 42 58% 90%;
+    --accent-foreground: 318 35% 18%;
 
     --destructive: 0 75% 47%;
-    --destructive-foreground: 40 60% 98%;
+    --destructive-foreground: 42 55% 96%;
 
-    --border: 340 35% 89%;
-    --input: 340 35% 89%;
-    --ring: 335 85% 41%;
+    --border: 318 18% 88%;
+    --input: 318 18% 88%;
+    --ring: 318 42% 35%;
 
     --radius: 0.1rem;
     --mobile-nav-height: calc(
@@ -54,34 +54,34 @@
   }
 
   .dark {
-    /* Deep maroon-plum night palette with luminous rani rose + gold accents */
-    --background: 335 38% 8%;
-    --foreground: 40 38% 92%;
+    /* Deep plum night palette with gold accents */
+    --background: 318 32% 8%;
+    --foreground: 42 38% 92%;
 
-    --card: 335 35% 11%;
-    --card-foreground: 40 38% 92%;
+    --card: 318 30% 11%;
+    --card-foreground: 42 38% 92%;
 
-    --popover: 335 35% 11%;
-    --popover-foreground: 40 38% 92%;
+    --popover: 318 30% 11%;
+    --popover-foreground: 42 38% 92%;
 
-    --primary: 335 80% 56%;
-    --primary-foreground: 335 45% 10%;
+    --primary: 318 38% 52%;
+    --primary-foreground: 318 35% 10%;
 
-    --secondary: 335 28% 18%;
-    --secondary-foreground: 40 38% 92%;
+    --secondary: 318 26% 18%;
+    --secondary-foreground: 42 38% 92%;
 
-    --muted: 335 24% 18%;
-    --muted-foreground: 345 18% 66%;
+    --muted: 318 22% 18%;
+    --muted-foreground: 318 14% 66%;
 
-    --accent: 38 40% 22%;
-    --accent-foreground: 42 70% 80%;
+    --accent: 42 35% 22%;
+    --accent-foreground: 42 65% 80%;
 
     --destructive: 0 62% 42%;
-    --destructive-foreground: 40 38% 92%;
+    --destructive-foreground: 42 38% 92%;
 
-    --border: 335 24% 20%;
-    --input: 335 24% 20%;
-    --ring: 335 80% 56%;
+    --border: 318 22% 20%;
+    --input: 318 22% 20%;
+    --ring: 318 38% 52%;
   }
 }
 
@@ -174,18 +174,76 @@ body {
   0%,
   100% {
     box-shadow:
-      0 4px 16px rgba(193, 16, 90, 0.35),
-      0 0 0 0 rgba(193, 16, 90, 0.45);
+      0 4px 16px rgba(107, 24, 88, 0.35),
+      0 0 0 0 rgba(107, 24, 88, 0.45);
   }
   50% {
     box-shadow:
-      0 4px 20px rgba(193, 16, 90, 0.5),
-      0 0 0 10px rgba(193, 16, 90, 0);
+      0 4px 20px rgba(107, 24, 88, 0.5),
+      0 0 0 10px rgba(107, 24, 88, 0);
   }
 }
 
 .animate-phone-glow {
   animation: phone-glow 2.2s ease-in-out infinite;
+}
+
+/* SSR Tex shop-board text panel — crisp rendering */
+.brand-board-lockup {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+.brand-board-frame {
+  filter: drop-shadow(0 1px 4px rgba(42, 6, 40, 0.2));
+}
+
+.brand-board-emblem {
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28));
+}
+
+.brand-board-name {
+  background: linear-gradient(
+    180deg,
+    #fff8e7 0%,
+    #f5e6b8 35%,
+    #e8c872 62%,
+    #c9a227 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+}
+
+.brand-board-location {
+  color: #f0d78c;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+.brand-board-rule {
+  display: block;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #e8c872 35%,
+    #f5d878 50%,
+    #e8c872 65%,
+    transparent 100%
+  );
+}
+
+@media (min-width: 640px) {
+  .brand-board-panel--nav .brand-board-name {
+    font-size: 14px !important;
+  }
+
+  .brand-board-panel--nav .brand-board-location {
+    font-size: 9px !important;
+  }
 }
 
 /* Product grid thumbnails — portrait frame, top-aligned crop (see productThumbnail.ts) */

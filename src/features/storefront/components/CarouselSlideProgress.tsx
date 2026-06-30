@@ -25,14 +25,14 @@ export function CarouselSlideProgress({
       aria-live="polite"
       aria-label={`Slide ${active + 1} of ${count}`}
     >
-      <div className="flex h-1 gap-1 overflow-hidden rounded-full bg-[#C1105A]/12">
+      <div className="flex h-1 gap-1 overflow-hidden rounded-full bg-primary/12">
         {Array.from({ length: count }).map((_, index) => (
           <div
             key={index}
-            className="h-full min-w-0 flex-1 overflow-hidden rounded-full bg-[#C1105A]/10"
+            className="h-full min-w-0 flex-1 overflow-hidden rounded-full bg-primary/10"
           >
             <div
-              className="h-full rounded-full bg-[#C1105A] transition-[width] duration-100 ease-linear"
+              className="h-full rounded-full bg-primary transition-[width] duration-100 ease-linear"
               style={{
                 width:
                   index < active

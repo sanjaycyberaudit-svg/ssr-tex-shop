@@ -28,12 +28,19 @@ const config = {
       },
     },
     extend: {
-      colors: {
+        colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        brand: {
+          purple: "#6B1858",
+          "purple-dark": "#55104A",
+          "purple-deep": "#4A1048",
+          gold: "#E8C872",
+          "gold-dark": "#C9A227",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

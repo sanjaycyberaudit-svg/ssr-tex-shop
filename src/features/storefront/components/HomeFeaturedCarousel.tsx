@@ -56,7 +56,7 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
   const { id, name, slug, featuredImage, badge } = product;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#C1105A]/12 bg-card shadow-[0_14px_36px_-22px_rgba(193,16,90,0.55)]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-primary/12 bg-card shadow-[0_14px_36px_-22px_rgba(107,24,88,0.55)]">
       <div className="relative w-full aspect-[3/4] max-h-[min(72vh,440px)] bg-muted">
         <ViewTransitionLink href={`/shop/${slug}`} className="absolute inset-0">
           <Image
@@ -81,7 +81,7 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
             {badge}
           </Badge>
         ) : null}
-        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#C1105A]/15 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-sm">
+        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-primary/15 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-sm">
           <Suspense fallback={<span className="inline-block h-9 w-9" />}>
             <AddToWishListButton productId={id} />
           </Suspense>
@@ -92,7 +92,7 @@ function FeaturedSlide({ product }: { product: ProductNode }) {
       </div>
       <div className="flex flex-1 flex-col justify-center p-3 sm:p-4">
         <ViewTransitionLink href={`/shop/${slug}`}>
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug sm:text-base hover:text-[#C1105A]">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug sm:text-base hover:text-primary">
             {name}
           </h3>
         </ViewTransitionLink>

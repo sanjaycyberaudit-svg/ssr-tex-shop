@@ -36,6 +36,8 @@ const SOCIAL = {
 } as const;
 
 export const siteConfig = {
+  /** Title-case shop board line (navbar/footer wordmark) */
+  shopBoardName: "Sri Sai Raghavendra Tex",
   name: "SRI SAI RAGHAVENDRA TEX®",
   shortName: "SSR Tex",
   tagline: "Sarees Wholesale & Retail Merchant",

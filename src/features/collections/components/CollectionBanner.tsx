@@ -41,7 +41,7 @@ function CollectionBanner({
         style={viewTransitionStyle(collectionImageTransitionName(id))}
       />
       <div
-        className="absolute inset-0 bg-gradient-to-t from-[#5A0A33]/90 via-[#5A0A33]/40 to-black/20"
+        className="absolute inset-0 bg-gradient-to-t from-[#4A1048]/90 via-[#4A1048]/40 to-black/20"
         aria-hidden
       />
       <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">

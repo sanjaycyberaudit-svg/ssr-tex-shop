@@ -12,7 +12,7 @@ export function AuthStoreShell({ children }: { children: ReactNode }) {
       <Navbar />
       <main className="w-full max-w-[100vw] overflow-x-hidden pt-[var(--store-header-offset-mobile)] md:pt-[var(--store-header-offset-desktop)] pb-[var(--mobile-nav-height)] md:pb-10">
         <div className="container flex justify-center px-4 py-6 sm:py-10">
-          <div className="w-full max-w-md rounded-2xl border border-[#C1105A]/15 bg-card p-6 shadow-sm sm:p-8">
+          <div className="w-full max-w-md rounded-2xl border border-primary/15 bg-card p-6 shadow-sm sm:p-8">
             {children}
           </div>
         </div>

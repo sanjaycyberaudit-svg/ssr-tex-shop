@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SRI SAI RAGHAVENDRA TEX">
   <defs>
     <linearGradient id="ssr-rose" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#C1105A" />
-      <stop offset="100%" stop-color="#7A0E43" />
+      <stop offset="0%" stop-color="#6B1858" />
+      <stop offset="100%" stop-color="#55104A" />
     </linearGradient>
     <linearGradient id="ssr-gold" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#E8D5A3" />

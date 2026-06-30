@@ -1,49 +1,88 @@
 import Image from "next/image";
+import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 import {
-  shopBoardBrand,
-  shopBoardBannerHeight,
-  SHOP_BOARD_ASPECT,
+  shopBoardSizeConfig,
   type ShopBoardBrandSize,
 } from "@/lib/brand/shop-board";
+import { ShopBoardPanel } from "./ShopBoardPanel";
 
 export type BrandWordmarkSize = ShopBoardBrandSize;
 
 type Props = {
   className?: string;
   size?: BrandWordmarkSize;
-  /** Crop anchor when the banner is wider than its container */
   align?: "left" | "center";
 };
 
-/**
- * Physical shop-board artwork — exact fonts, colours, ELAMPILLAI, and logo.
- */
+function GoldRule({ widthPx }: { widthPx: number }) {
+  return (
+    <span
+      className="brand-board-rule shrink-0"
+      style={{ width: widthPx }}
+      aria-hidden
+    />
+  );
+}
+
+/** Shop sign lockup — transparent SSR medallion left + purple text panel right. */
 export function BrandWordmark({
   className,
   size = "md",
   align = "left",
 }: Props) {
-  const height = shopBoardBannerHeight[size];
-  const width = Math.round(height * SHOP_BOARD_ASPECT);
+  const config = shopBoardSizeConfig[size];
 
   return (
     <span
-      className={cn("inline-flex max-w-full", className)}
-      aria-label={shopBoardBrand.imageAlt}
+      className={cn(
+        "brand-board-lockup inline-flex max-w-full items-center",
+        align === "center" && "mx-auto",
+        className,
+      )}
+      aria-label={`${siteConfig.shopBoardName}, ${siteConfig.location}`}
     >
       <Image
-        src={shopBoardBrand.imageSrc}
-        alt={shopBoardBrand.imageAlt}
-        width={width}
-        height={height}
-        priority={size === "nav" || size === "md"}
-        className={cn(
-          "w-auto max-w-full select-none",
-          align === "center" ? "mx-auto object-center" : "object-left",
-        )}
-        style={{ height: `${height}px`, width: "auto" }}
+        src="/images/ssr-emblem.png"
+        alt=""
+        width={config.emblemPx}
+        height={config.emblemPx}
+        className="brand-board-emblem relative z-[2] shrink-0 object-contain"
+        style={{ marginLeft: config.emblemOffsetRightPx }}
+        aria-hidden
+        priority={size === "nav"}
       />
+
+      <ShopBoardPanel
+        slantPercent={config.slantPercent}
+        minHeight={config.panelMinHeight}
+        padX={config.panelPadX}
+        padY={config.panelPadY}
+        className={cn(`brand-board-panel--${size} relative z-[1]`)}
+        style={{ marginLeft: -config.emblemOverlapPx }}
+      >
+        <span
+          className="brand-board-name whitespace-nowrap font-[family-name:var(--font-hero-serif)] font-bold"
+          style={{ fontSize: config.nameFontPx, lineHeight: 1.15 }}
+        >
+          {siteConfig.shopBoardName}
+        </span>
+
+        <span className="mt-1 flex w-full items-center justify-center gap-1.5">
+          <GoldRule widthPx={config.lineWidthPx} />
+          <span
+            className="brand-board-location whitespace-nowrap font-[family-name:var(--font-brand-sans)] font-bold uppercase"
+            style={{
+              fontSize: config.locationFontPx,
+              letterSpacing: config.locationTracking,
+              lineHeight: 1.2,
+            }}
+          >
+            {siteConfig.location}
+          </span>
+          <GoldRule widthPx={config.lineWidthPx} />
+        </span>
+      </ShopBoardPanel>
     </span>
   );
 }

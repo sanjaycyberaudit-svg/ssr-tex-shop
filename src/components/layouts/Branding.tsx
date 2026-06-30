@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
-  size?: "sm" | "md" | "lg" | "nav" | "sidebar" | "footer";
+  size?: "nav" | "md" | "footer";
   align?: "left" | "center";
 };
 

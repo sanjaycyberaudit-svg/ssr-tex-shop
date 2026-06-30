@@ -25,9 +25,9 @@ export function HomeExploreLinks() {
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-lg border bg-card p-4 transition hover:border-[#C1105A]/40 hover:bg-[#C1105A]/5"
+            className="rounded-lg border bg-card p-4 transition hover:border-primary/40 hover:bg-primary/5"
           >
-            <h3 className="text-sm font-semibold text-[#C1105A] md:text-base">
+            <h3 className="text-sm font-semibold text-primary md:text-base">
               {item.name}
             </h3>
             <p className="mt-1 text-xs text-muted-foreground md:text-sm">

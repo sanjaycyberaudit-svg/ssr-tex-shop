@@ -40,7 +40,7 @@ function StarRating({ rating }: { rating: number }) {
             "h-3.5 w-3.5 sm:h-4 sm:w-4",
             i < rating
               ? "fill-[#C5A059] text-[#C5A059]"
-              : "fill-transparent text-[#C1105A]/20",
+              : "fill-transparent text-primary/20",
           )}
         />
       ))}
@@ -65,7 +65,7 @@ function CustomerAvatar({
 
   if (imageKey) {
     return (
-      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-[#C1105A]/15 ring-offset-2 ring-offset-background">
+      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-primary/15 ring-offset-2 ring-offset-background">
         <Image
           src={keytoUrl(imageKey)}
           alt={imageAlt || name}
@@ -79,7 +79,7 @@ function CustomerAvatar({
   }
 
   return (
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#C1105A] to-[#7A0E43] text-sm font-bold text-white ring-2 ring-[#C1105A]/15 ring-offset-2 ring-offset-background">
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#55104A] text-sm font-bold text-white ring-2 ring-primary/15 ring-offset-2 ring-offset-background">
       {initials || "ST"}
     </div>
   );
@@ -89,11 +89,11 @@ function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
   const imageKey = node.featuredImage?.key;
 
   return (
-    <article className="flex w-full flex-col rounded-2xl border border-[#C1105A]/12 bg-card p-4 shadow-[0_16px_40px_-28px_rgba(193,16,90,0.45)] sm:min-h-[280px] sm:p-6">
+    <article className="flex w-full flex-col rounded-2xl border border-primary/12 bg-card p-4 shadow-[0_16px_40px_-28px_rgba(107,24,88,0.45)] sm:min-h-[280px] sm:p-6">
       <div className="mb-3 flex items-start justify-between gap-2 sm:mb-4 sm:gap-3">
         <StarRating rating={node.rating ?? 5} />
         <Quote
-          className="h-6 w-6 shrink-0 text-[#C1105A]/15 sm:h-8 sm:w-8"
+          className="h-6 w-6 shrink-0 text-primary/15 sm:h-8 sm:w-8"
           aria-hidden
         />
       </div>
@@ -108,7 +108,7 @@ function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
         </p>
       )}
 
-      <footer className="mt-4 flex items-center gap-2.5 border-t border-[#C1105A]/10 pt-3 sm:mt-5 sm:gap-3 sm:pt-4">
+      <footer className="mt-4 flex items-center gap-2.5 border-t border-primary/10 pt-3 sm:mt-5 sm:gap-3 sm:pt-4">
         <CustomerAvatar
           name={node.customer_name}
           imageKey={imageKey}
@@ -119,7 +119,7 @@ function ModernTextTestimonialCard({ node }: { node: TestimonialNode }) {
             {node.customer_name}
           </p>
           <p className="mt-0.5 flex items-start gap-1 text-[11px] leading-snug text-muted-foreground sm:text-xs">
-            <BadgeCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#C1105A]" />
+            <BadgeCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
             <span className="line-clamp-2">
               {node.location
                 ? `Verified buyer · ${node.location}`
@@ -137,7 +137,7 @@ function ModernVideoTestimonialCard({ node }: { node: TestimonialNode }) {
   const posterUrl = imageKey ? keytoUrl(imageKey) : null;
 
   return (
-    <article className="group flex w-full flex-col overflow-hidden rounded-2xl border border-[#C1105A]/15 bg-[#5A0A33]/5 shadow-[0_16px_40px_-24px_rgba(193,16,90,0.5)]">
+    <article className="group flex w-full flex-col overflow-hidden rounded-2xl border border-primary/15 bg-[#4A1048]/5 shadow-[0_16px_40px_-24px_rgba(107,24,88,0.5)]">
       <div className="relative aspect-[9/13] w-full max-h-[min(62vh,360px)] bg-muted sm:aspect-[3/4] sm:max-h-none">
         <TestimonialVideoPlayer
           fill
@@ -146,7 +146,7 @@ function ModernVideoTestimonialCard({ node }: { node: TestimonialNode }) {
           posterUrl={posterUrl}
           customerName={node.customer_name}
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#5A0A33]/95 via-[#5A0A33]/50 to-transparent p-3 pt-12 sm:p-4 sm:pt-16">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#4A1048]/95 via-[#4A1048]/50 to-transparent p-3 pt-12 sm:p-4 sm:pt-16">
           <StarRating rating={node.rating ?? 5} />
           {node.quote ? (
             <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug text-white sm:mt-2 sm:text-sm">

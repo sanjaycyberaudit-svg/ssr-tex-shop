@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
-  size?: "sm" | "md" | "lg" | "nav" | "sidebar" | "footer";
+  size?: "nav" | "md" | "footer";
   align?: "left" | "center";
 };
 
@@ -13,11 +13,10 @@ export function BrandLogo({ className, size = "nav", align = "left" }: Props) {
   return (
     <RobustNavLink
       href="/"
-      aria-label={siteConfig.name}
+      aria-label={siteConfig.shopBoardName}
       className={cn(
         "inline-flex min-w-0 max-w-full items-center touch-manipulation",
         align === "center" ? "justify-center" : "justify-start",
-        size === "sm" || size === "sidebar" ? "shrink" : "w-fit shrink-0",
         className,
       )}
     >

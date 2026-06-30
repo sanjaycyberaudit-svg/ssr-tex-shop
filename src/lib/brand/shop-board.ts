@@ -1,34 +1,62 @@
-/** Colours sampled from the physical SSR Tex shop board artwork */
-export const shopBoardBrand = {
-  imageSrc: "/images/ssr-shop-board-banner.png",
-  imageAlt: "Sri Sai Raghavendra Tex — Elampillai",
-  purpleDeep: "#3A0A38",
-  purpleMid: "#5C1458",
-  purpleLight: "#6E1A68",
-  gold: "#D4AF37",
-  goldLight: "#F5E6B8",
-  textWhite: "#FFFFFF",
-  textGlow:
-    "0 0 10px rgba(255,255,255,0.45), 0 0 22px rgba(255,255,255,0.18), 0 2px 6px rgba(0,0,0,0.35)",
-} as const;
+/** SSR Tex shop-board — SVG panel with forward-slanted right edge */
+export type ShopBoardBrandSize = "nav" | "md" | "footer";
 
-export type ShopBoardBrandSize =
-  | "sm"
-  | "md"
-  | "lg"
-  | "nav"
-  | "sidebar"
-  | "footer";
-
-/** Render height (px) for the shop-board banner image per placement */
-export const shopBoardBannerHeight: Record<ShopBoardBrandSize, number> = {
-  nav: 50,
-  sidebar: 44,
-  sm: 44,
-  md: 56,
-  footer: 64,
-  lg: 80,
+type SizeConfig = {
+  panelMinHeight: number;
+  /** Transparent medallion — matches sign height */
+  emblemPx: number;
+  /** Panel tucks under emblem right edge (px) */
+  emblemOverlapPx: number;
+  /** Shift emblem right (px) — logo position only */
+  emblemOffsetRightPx: number;
+  nameFontPx: number;
+  locationFontPx: number;
+  locationTracking: string;
+  panelPadX: number;
+  panelPadY: number;
+  /** Forward slant: top-right extends past bottom-right (% of panel width) */
+  slantPercent: number;
+  lineWidthPx: number;
 };
 
-/** Approximate aspect ratio of the shop board artwork (width / height) */
-export const SHOP_BOARD_ASPECT = 4.85;
+export const shopBoardSizeConfig: Record<ShopBoardBrandSize, SizeConfig> = {
+  nav: {
+    panelMinHeight: 44,
+    emblemPx: 58,
+    emblemOverlapPx: 18,
+    emblemOffsetRightPx: 16,
+    nameFontPx: 13,
+    locationFontPx: 8,
+    locationTracking: "0.18em",
+    panelPadX: 14,
+    panelPadY: 8,
+    slantPercent: 11,
+    lineWidthPx: 20,
+  },
+  md: {
+    panelMinHeight: 48,
+    emblemPx: 66,
+    emblemOverlapPx: 20,
+    emblemOffsetRightPx: 18,
+    nameFontPx: 16,
+    locationFontPx: 10,
+    locationTracking: "0.2em",
+    panelPadX: 18,
+    panelPadY: 10,
+    slantPercent: 12,
+    lineWidthPx: 24,
+  },
+  footer: {
+    panelMinHeight: 72,
+    emblemPx: 78,
+    emblemOverlapPx: 22,
+    emblemOffsetRightPx: 10,
+    nameFontPx: 19,
+    locationFontPx: 11,
+    locationTracking: "0.22em",
+    panelPadX: 20,
+    panelPadY: 12,
+    slantPercent: 12,
+    lineWidthPx: 28,
+  },
+};

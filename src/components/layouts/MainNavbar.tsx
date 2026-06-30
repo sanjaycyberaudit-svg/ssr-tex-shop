@@ -24,9 +24,7 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
         {adminLayout ? (
           <div className="flex min-h-[var(--admin-header-height-mobile)] w-full md:min-h-[var(--admin-header-height-desktop)]">
             <div className="hidden w-full md:flex">
-              <div className="flex w-[var(--admin-sidebar-width)] shrink-0 items-center border-r px-3 py-2">
-                <Branding size="sm" className="min-w-0 max-w-full" />
-              </div>
+              <div className="w-[var(--admin-sidebar-width)] shrink-0 border-r" />
               <div className="flex min-w-0 flex-1 items-center justify-end gap-x-5 px-6 lg:px-8">
                 <Suspense>
                   <UserNav />
@@ -42,11 +40,11 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
           </div>
         ) : (
           <>
-            <div className="container hidden md:block">
-              <div className="flex w-full items-center justify-between gap-x-8">
-                <div className="flex min-w-0 max-w-[min(100%,22rem)] shrink-0 items-center gap-x-3">
+            <div className="container hidden py-2 md:block">
+              <div className="flex w-full items-center justify-between gap-x-6">
+                <div className="flex min-w-0 shrink-0 items-center gap-x-2">
                   <SideMenu />
-                  <Branding size="md" />
+                  <Branding size="md" className="min-w-0" />
                 </div>
 
                 <nav
@@ -62,7 +60,7 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="text-foreground/80 transition hover:text-[#C1105A]"
+                      className="text-foreground/80 transition hover:text-primary"
                     >
                       {item.title}
                     </Link>

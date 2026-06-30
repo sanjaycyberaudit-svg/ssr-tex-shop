@@ -22,9 +22,9 @@ const modeStyles: Record<
   { pill: string; pillHover: string; ring: string }
 > = {
   call: {
-    pill: "border-[#C1105A]/25 bg-white",
-    pillHover: "hover:border-[#C1105A]/50 hover:bg-[#C1105A]/[0.06]",
-    ring: "ring-[#C1105A]/40",
+    pill: "border-primary/25 bg-white",
+    pillHover: "hover:border-primary/50 hover:bg-primary/[0.06]",
+    ring: "ring-primary/40",
   },
   whatsapp: {
     pill: "border-[#25D366]/30 bg-white",
@@ -72,14 +72,21 @@ export function FloatingContactPicker({
       close();
     };
 
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    // Defer so the same tap that opened the menu does not immediately close it
+    const timer = window.setTimeout(() => {
+      document.addEventListener("pointerdown", onPointerDown);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
   }, [close, isOpen]);
 
   return (
     <div
       ref={rootRef}
-      className="pointer-events-auto flex items-center justify-end gap-2"
+      className="relative flex shrink-0 items-center justify-end"
     >
       <div
         id={listId}
@@ -90,10 +97,10 @@ export function FloatingContactPicker({
             : "Choose WhatsApp contact"
         }
         className={cn(
-          "flex flex-col items-end gap-2 transition-all duration-300 ease-out",
+          "absolute right-[calc(100%+0.5rem)] top-1/2 z-10 flex -translate-y-1/2 flex-col items-end gap-2 transition-all duration-300 ease-out",
           isOpen
-            ? "pointer-events-auto translate-x-0 scale-100 opacity-100"
-            : "pointer-events-none translate-x-3 scale-95 opacity-0",
+            ? "pointer-events-auto translate-x-0 opacity-100"
+            : "pointer-events-none hidden translate-x-3 opacity-0",
         )}
         aria-hidden={!isOpen}
       >
@@ -109,7 +116,6 @@ export function FloatingContactPicker({
               tabIndex={isOpen ? 0 : -1}
               target={external ? "_blank" : undefined}
               rel={external ? "noopener noreferrer" : undefined}
-              onClick={close}
               className={cn(
                 "flex min-h-[44px] min-w-[11.5rem] max-w-[min(calc(100vw-6rem),14rem)] flex-col justify-center rounded-xl border px-3 py-2 shadow-[0_4px_20px_rgba(0,0,0,0.12)] transition-all touch-manipulation",
                 styles.pill,
@@ -136,7 +142,7 @@ export function FloatingContactPicker({
               <span
                 className={cn(
                   "truncate text-sm font-medium tabular-nums",
-                  mode === "call" ? "text-[#C1105A]" : "text-[#128C7E]",
+                  mode === "call" ? "text-primary" : "text-[#128C7E]",
                 )}
               >
                 {contact.phone}

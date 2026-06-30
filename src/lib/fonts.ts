@@ -8,8 +8,9 @@ export const brandSans = Montserrat({
   display: "swap",
 });
 
-/** Hero banner titles */
+/** Hero banner titles + shop-board brand name (reference serif) */
 export const heroSerif = Playfair_Display({
+  weight: ["600", "700"],
   subsets: ["latin"],
   variable: "--font-hero-serif",
   display: "swap",
