@@ -12,7 +12,7 @@ const edgeInsetRight = "max(0.75rem, env(safe-area-inset-right, 0px))" as const;
 
 function MobileNavbar({ adminLayout }: Props) {
   return (
-    <div className="relative h-[3.75rem] min-h-[3.75rem] w-full md:hidden">
+    <div className="relative h-16 min-h-16 w-full md:hidden">
       <div
         className="absolute inset-y-0 left-0 flex items-center"
         style={{ paddingLeft: edgeInset }}
@@ -20,8 +20,12 @@ function MobileNavbar({ adminLayout }: Props) {
         <SideMenu triggerClassName="ml-0" />
       </div>
 
-      <div className="flex h-full min-w-0 items-center justify-center px-[3.25rem]">
-        <Branding size="nav" className="max-w-[min(100%,13.75rem)]" />
+      <div className="flex h-full min-w-0 items-center justify-center px-[2.85rem]">
+        <Branding
+          size="nav"
+          align="center"
+          className="w-full max-w-[15.75rem] justify-center"
+        />
       </div>
 
       <div

@@ -44,7 +44,7 @@ async function MainNavbar({ adminLayout = false }: MainNavbarProps) {
           <>
             <div className="container hidden md:block">
               <div className="flex w-full items-center justify-between gap-x-8">
-                <div className="flex items-center gap-x-3">
+                <div className="flex min-w-0 max-w-[min(100%,22rem)] shrink-0 items-center gap-x-3">
                   <SideMenu />
                   <Branding size="md" />
                 </div>

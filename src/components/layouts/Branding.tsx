@@ -4,10 +4,13 @@ import { cn } from "@/lib/utils";
 type Props = {
   className?: string;
   size?: "sm" | "md" | "lg" | "nav" | "sidebar" | "footer";
+  align?: "left" | "center";
 };
 
-function Branding({ className, size = "nav" }: Props) {
-  return <BrandLogo size={size} className={cn(className)} />;
+function Branding({ className, size = "nav", align = "left" }: Props) {
+  return (
+    <BrandLogo size={size} align={align} className={cn(className)} />
+  );
 }
 
 export default Branding;
