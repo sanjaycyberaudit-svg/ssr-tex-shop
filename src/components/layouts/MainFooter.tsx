@@ -146,7 +146,7 @@ function MainFooter() {
             </div>
           </div>
 
-          <p className="mt-8 border-t border-primary/10 pt-6 text-center text-xs text-muted-foreground/90">
+          <p className="mt-8 border-t border-primary/10 pt-6 text-center text-xs text-foreground/70">
             © {new Date().getFullYear()} {siteConfig.name}. All rights
             reserved.
           </p>

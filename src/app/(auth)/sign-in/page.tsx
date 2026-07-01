@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { AuthOrDivider } from "@/features/auth/components/AuthOrDivider";
 import OAuthLoginButtons from "@/features/auth/components/OAuthLoginButtons";
 import { SigninForm } from "@/features/auth";
 import { isAdminUser } from "@/lib/auth/admin";
@@ -59,25 +60,21 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
       <Suspense
         fallback={
+          <div className="h-[7.5rem] w-full animate-pulse rounded-xl bg-muted" />
+        }
+      >
+        <OAuthLoginButtons />
+      </Suspense>
+
+      <AuthOrDivider />
+
+      <Suspense
+        fallback={
           <div className="h-48 w-full animate-pulse rounded-lg bg-muted" />
         }
       >
         <SigninForm />
       </Suspense>
-
-      <div className="space-y-4">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-primary/15" />
-          </div>
-          <span className="relative mx-auto block w-fit bg-card px-2 text-xs uppercase tracking-wide text-muted-foreground">
-            Or
-          </span>
-        </div>
-        <Suspense fallback={null}>
-          <OAuthLoginButtons />
-        </Suspense>
-      </div>
 
       <div className="flex flex-col gap-3 border-t border-primary/10 pt-4 text-sm">
         <p className="text-muted-foreground">

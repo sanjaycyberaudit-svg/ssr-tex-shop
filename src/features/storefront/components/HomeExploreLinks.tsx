@@ -9,7 +9,7 @@ export function HomeExploreLinks() {
     >
       <h2
         id="explore-sakthi-heading"
-        className="font-[family-name:var(--font-hero-serif)] text-xl font-semibold md:text-2xl"
+        className="font-[family-name:var(--font-hero-serif)] text-xl font-semibold text-foreground md:text-2xl"
       >
         Explore SRI SAI RAGHAVENDRA TEX
       </h2>

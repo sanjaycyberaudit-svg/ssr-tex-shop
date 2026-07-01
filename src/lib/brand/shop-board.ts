@@ -47,9 +47,9 @@ export const shopBoardSizeConfig: Record<ShopBoardBrandSize, SizeConfig> = {
     lineWidthPx: 24,
   },
   footer: {
-    panelMinHeight: 72,
-    emblemPx: 78,
-    emblemOverlapPx: 22,
+    panelMinHeight: 76,
+    emblemPx: 86,
+    emblemOverlapPx: 26,
     emblemOffsetRightPx: 10,
     nameFontPx: 19,
     locationFontPx: 11,

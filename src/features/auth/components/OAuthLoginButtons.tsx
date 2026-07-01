@@ -9,6 +9,7 @@ import { Icons } from "@/components/layouts/icons";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 function OAuthLoginButtons() {
   const [isLoading, setIsLoading] = useState(false);
@@ -45,20 +46,31 @@ function OAuthLoginButtons() {
   };
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      className="w-full border-primary/25 hover:bg-primary/5"
-      onClick={signWithGoogle}
-      disabled={isLoading}
-    >
-      {isLoading ? (
-        <Spinner className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-      ) : (
-        <Icons.google className="mr-2 h-4 w-4" />
+    <div
+      className={cn(
+        "rounded-xl border border-primary/25 bg-primary/[0.05] p-4",
+        "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)]",
       )}
-      Continue with Google
-    </Button>
+    >
+      <Button
+        type="button"
+        variant="outline"
+        className={cn(
+          "h-11 w-full border-border/80 bg-background font-medium shadow-sm",
+          "transition-colors hover:border-primary/30 hover:bg-background hover:shadow-md",
+          "focus-visible:ring-primary/30",
+        )}
+        onClick={signWithGoogle}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <Spinner className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+        ) : (
+          <Icons.google className="mr-2 h-4 w-4 shrink-0" />
+        )}
+        Continue with Google
+      </Button>
+    </div>
   );
 }
 

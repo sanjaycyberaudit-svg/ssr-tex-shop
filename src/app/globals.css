@@ -188,20 +188,31 @@ body {
   animation: phone-glow 2.2s ease-in-out infinite;
 }
 
-/* SSR Tex shop-board text panel — crisp rendering */
+/* SSR Tex shop-board — gold on purple, readable in light & dark page themes */
 .brand-board-lockup {
+  isolation: isolate;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: geometricPrecision;
 }
 
 .brand-board-frame {
-  filter: drop-shadow(0 1px 4px rgba(42, 6, 40, 0.2));
+  filter: drop-shadow(0 1px 4px rgba(42, 6, 40, 0.22));
+}
+
+.dark .brand-board-frame {
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 1px rgba(232, 200, 114, 0.2));
 }
 
 .brand-board-emblem {
   display: block;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28));
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+.dark .brand-board-emblem {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 10px rgba(232, 200, 114, 0.14));
 }
 
 .brand-board-name {
@@ -215,12 +226,40 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+}
+
+.dark .brand-board-name {
+  background: linear-gradient(
+    180deg,
+    #fffbf0 0%,
+    #f8ecc0 28%,
+    #edd080 58%,
+    #d4a832 100%
+  );
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75))
+    drop-shadow(0 0 12px rgba(232, 200, 114, 0.2));
+}
+
+@supports not (background-clip: text) {
+  .brand-board-name {
+    background: none;
+    color: #e8c872;
+    -webkit-text-fill-color: #e8c872;
+  }
 }
 
 .brand-board-location {
   color: #f0d78c;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+.dark .brand-board-location {
+  color: #f8e098;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.65),
+    0 0 8px rgba(232, 200, 114, 0.15);
 }
 
 .brand-board-rule {
@@ -232,6 +271,17 @@ body {
     #e8c872 35%,
     #f5d878 50%,
     #e8c872 65%,
+    transparent 100%
+  );
+}
+
+.dark .brand-board-rule {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #edd080 35%,
+    #f8e098 50%,
+    #edd080 65%,
     transparent 100%
   );
 }
