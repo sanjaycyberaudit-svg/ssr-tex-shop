@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { buildOAuthCallbackUrl } from "@/lib/auth/callback";
 import { getRedirectFromSearchParams } from "@/lib/auth/redirect";
+import { getCanonicalSiteOrigin } from "@/lib/auth/site-urls";
 
 import { Icons } from "@/components/layouts/icons";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,11 @@ function OAuthLoginButtons() {
     setIsLoading(true);
 
     const next = getRedirectFromSearchParams(searchParams);
-    const redirectTo = buildOAuthCallbackUrl(window.location.origin, next);
+    const origin =
+      process.env.NODE_ENV === "development"
+        ? window.location.origin
+        : getCanonicalSiteOrigin();
+    const redirectTo = buildOAuthCallbackUrl(origin, next);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

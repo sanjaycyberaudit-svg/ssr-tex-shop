@@ -1,5 +1,5 @@
 /** Canonical storefront origin(s) used for auth redirects and SEO. */
-const DEFAULT_PRODUCTION_ORIGIN = "https://sairaghavendratex.com";
+const DEFAULT_PRODUCTION_ORIGIN = "https://www.sairaghavendratex.com";
 
 function normalizeOrigin(value: string): string {
   const trimmed = value.trim().replace(/\/$/, "");

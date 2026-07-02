@@ -22,9 +22,10 @@ for (const line of lines) {
   if (key) vars[key] = value;
 }
 
-// Production site URL (update after first deploy if different)
-vars.NEXT_PUBLIC_SITE_URL =
-  process.env.VERCEL_SITE_URL || "https://ssr-tex-shop.vercel.app";
+// Production site URL — keep custom domain from .env.local; only override via VERCEL_SITE_URL.
+if (process.env.VERCEL_SITE_URL?.trim()) {
+  vars.NEXT_PUBLIC_SITE_URL = process.env.VERCEL_SITE_URL.trim();
+}
 vars.SKIP_ENV_VALIDATION = "true";
 
 const targets = ["production", "preview"];

@@ -1,5 +1,7 @@
 import { isAdminUser } from "@/lib/auth/admin";
+import { safeAuthErrorMessage, safeAuthRedirectError } from "@/lib/auth/safe-auth-errors";
 import { getPostAuthRedirectUrl } from "@/lib/auth/callback";
+import { getCanonicalSiteOrigin } from "@/lib/auth/site-urls";
 import {
   ADMIN_POST_LOGIN_PATH,
   getRedirectFromSearchParams,
@@ -43,7 +45,47 @@ function redirectWithSessionCookies(
   return redirect;
 }
 
+function authFailureRedirect(
+  request: NextRequest,
+  requestedNext: string,
+  isRecovery: boolean,
+  message: string,
+) {
+  const destination = isRecovery ? "/forgot-password" : "/sign-in";
+  const redirectUrl = new URL(destination, request.url);
+  redirectUrl.searchParams.set("error", message);
+  if (!isRecovery && requestedNext !== "/") {
+    redirectUrl.searchParams.set("from", requestedNext);
+  }
+  return NextResponse.redirect(redirectUrl);
+}
+
+function isPkceVerifierMissing(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const message =
+    "message" in error && typeof error.message === "string"
+      ? error.message.toLowerCase()
+      : "";
+  return message.includes("code verifier");
+}
+
 export async function GET(request: NextRequest) {
+  const canonicalHost = new URL(getCanonicalSiteOrigin()).host;
+  const requestHost =
+    request.headers.get("x-forwarded-host") ?? request.nextUrl.host;
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    requestHost === "ssr-tex-shop.vercel.app" &&
+    canonicalHost !== requestHost
+  ) {
+    const canonicalCallback = new URL(request.nextUrl.pathname, getCanonicalSiteOrigin());
+    request.nextUrl.searchParams.forEach((value, key) => {
+      canonicalCallback.searchParams.set(key, value);
+    });
+    return NextResponse.redirect(canonicalCallback);
+  }
+
   const { searchParams } = request.nextUrl;
   const tokenType = searchParams.get("type");
   const isRecovery = tokenType === "recovery";
@@ -55,10 +97,14 @@ export async function GET(request: NextRequest) {
     searchParams.get("error_description") ?? searchParams.get("error");
 
   if (oauthError) {
+    console.error("[auth/callback] OAuth provider error:", oauthError);
     const signIn = new URL("/sign-in", request.url);
     signIn.searchParams.set(
       "error",
-      oauthError.replace(/\+/g, " ").replace(/%20/g, " "),
+      safeAuthRedirectError(
+        oauthError,
+        "Sign-in could not be completed. Please try again.",
+      ),
     );
     if (requestedNext !== "/") {
       signIn.searchParams.set("from", requestedNext);
@@ -76,20 +122,33 @@ export async function GET(request: NextRequest) {
     const supabase = createRouteHandlerSupabaseClient(request, sessionResponse);
 
     if (code) {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) {
-        const destination = isRecovery ? "/forgot-password" : "/sign-in";
-        const redirectUrl = new URL(destination, request.url);
-        redirectUrl.searchParams.set(
-          "error",
-          isRecovery
-            ? "This password reset link is invalid or has expired. Request a new one."
-            : error.message || "Google sign-in could not be completed.",
-        );
-        if (!isRecovery && requestedNext !== "/") {
-          redirectUrl.searchParams.set("from", requestedNext);
+      try {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error("[auth/callback] exchangeCodeForSession failed:", error);
+          return authFailureRedirect(
+            request,
+            requestedNext,
+            isRecovery,
+            isRecovery
+              ? "This password reset link is invalid or has expired. Request a new one."
+              : safeAuthErrorMessage(
+                  error,
+                  "Google sign-in could not be completed.",
+                ),
+          );
         }
-        return NextResponse.redirect(redirectUrl);
+      } catch (error) {
+        console.error("[auth/callback] exchangeCodeForSession threw:", error);
+        const fallback = isPkceVerifierMissing(error)
+          ? "Sign-in could not be completed. Please try again from the same website address you started on."
+          : "Google sign-in could not be completed.";
+        return authFailureRedirect(
+          request,
+          requestedNext,
+          isRecovery,
+          safeAuthErrorMessage(error, fallback),
+        );
       }
     } else if (token_hash && type) {
       const { error } = await supabase.auth.verifyOtp({
