@@ -1,13 +1,12 @@
 /**
- * Configure Supabase Auth redirect URLs and Google OAuth via Management API.
+ * Configure Supabase Auth site URL, redirect allow list, and Google OAuth.
  *
- * Required in .env.local (or environment):
+ * Required in .env.local:
  *   SUPABASE_ACCESS_TOKEN  — https://supabase.com/dashboard/account/tokens
- *   GOOGLE_CLIENT_ID       — Google Cloud OAuth Web client
- *   GOOGLE_CLIENT_SECRET   — Google Cloud OAuth secret
  *
  * Optional:
- *   SUPABASE_SITE_URL      — default https://ssr-tex-shop.vercel.app
+ *   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+ *   NEXT_PUBLIC_SITE_URL or SUPABASE_SITE_URL
  *
  * Run: node scripts/setup-auth-config.mjs
  */
@@ -22,19 +21,36 @@ const projectRef = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF;
 const accessToken = process.env.SUPABASE_ACCESS_TOKEN?.trim();
 const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-const siteUrl =
+const siteUrl = (
   process.env.SUPABASE_SITE_URL?.trim() ||
   process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-  "https://ssr-tex-shop.vercel.app";
+  "https://sairaghavendratex.com"
+).replace(/\/$/, "");
 
-const redirectAllowList = [
-  "http://localhost:3000/auth/callback",
-  "http://127.0.0.1:3000/auth/callback",
-  "https://ssr-tex-shop.vercel.app/auth/callback",
-  siteUrl.endsWith("/auth/callback") ? siteUrl : `${siteUrl.replace(/\/$/, "")}/auth/callback`,
-]
-  .filter(Boolean)
-  .filter((url, i, arr) => arr.indexOf(url) === i)
+function authCallback(origin) {
+  return `${origin.replace(/\/$/, "")}/auth/callback`;
+}
+
+const redirectOrigins = new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://ssr-tex-shop.vercel.app",
+  siteUrl,
+]);
+
+try {
+  const host = new URL(siteUrl).host;
+  if (host.startsWith("www.")) {
+    redirectOrigins.add(`https://${host.replace(/^www\./, "")}`);
+  } else {
+    redirectOrigins.add(`https://www.${host}`);
+  }
+} catch {
+  /* ignore */
+}
+
+const redirectAllowList = [...redirectOrigins]
+  .map((origin) => authCallback(origin))
   .join(",");
 
 function missing(label) {
@@ -44,8 +60,6 @@ function missing(label) {
 
 if (!projectRef) missing("NEXT_PUBLIC_SUPABASE_PROJECT_REF");
 if (!accessToken) missing("SUPABASE_ACCESS_TOKEN");
-if (!googleClientId) missing("GOOGLE_CLIENT_ID");
-if (!googleClientSecret) missing("GOOGLE_CLIENT_SECRET");
 
 const apiBase = "https://api.supabase.com/v1";
 
@@ -59,16 +73,10 @@ async function api(path, options = {}) {
     },
   });
   const text = await res.text();
-  let body;
-  try {
-    body = text ? JSON.parse(text) : {};
-  } catch {
-    body = { raw: text };
-  }
   if (!res.ok) {
     throw new Error(`${options.method ?? "GET"} ${path} → ${res.status}: ${text}`);
   }
-  return body;
+  return text ? JSON.parse(text) : {};
 }
 
 console.log("Configuring Supabase Auth for project:", projectRef);
@@ -76,14 +84,17 @@ console.log("Site URL:", siteUrl);
 console.log("Redirect allow list:", redirectAllowList);
 
 const payload = {
-  site_url: siteUrl.replace(/\/$/, ""),
+  site_url: siteUrl,
   uri_allow_list: redirectAllowList,
-  external_google_enabled: true,
-  external_google_client_id: googleClientId,
-  external_google_secret: googleClientSecret,
   external_email_enabled: true,
   disable_signup: false,
 };
+
+if (googleClientId && googleClientSecret) {
+  payload.external_google_enabled = true;
+  payload.external_google_client_id = googleClientId;
+  payload.external_google_secret = googleClientSecret;
+}
 
 const updated = await api(`/projects/${projectRef}/config/auth`, {
   method: "PATCH",
@@ -91,11 +102,6 @@ const updated = await api(`/projects/${projectRef}/config/auth`, {
 });
 
 console.log("\nAuth config updated.");
-console.log("  Google enabled:", updated.external_google_enabled ?? true);
-console.log("  Email enabled:", updated.external_email_enabled ?? true);
 console.log("  Site URL:", updated.site_url ?? siteUrl);
-console.log("\nGoogle Cloud Console — Authorized redirect URI (must match exactly):");
-console.log(
-  `  https://${projectRef}.supabase.co/auth/v1/callback`,
-);
-console.log("\nDone. Test at /sign-in → Continue with Google.");
+console.log("  Google enabled:", updated.external_google_enabled ?? payload.external_google_enabled ?? "(unchanged)");
+console.log("\nDone. Sign out, sign in again, then open /admin on your custom domain.");

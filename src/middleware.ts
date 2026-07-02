@@ -1,7 +1,35 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/** Supabase sometimes returns OAuth to Site URL root (?code=) — forward to /auth/callback. */
+function redirectStrayOAuthToCallback(request: NextRequest): NextResponse | null {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname.startsWith("/auth/callback")) {
+    return null;
+  }
+
+  const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
+
+  if (!code && !(tokenHash && type)) {
+    return null;
+  }
+
+  const callback = new URL("/auth/callback", request.url);
+  searchParams.forEach((value, key) => {
+    callback.searchParams.set(key, value);
+  });
+
+  return NextResponse.redirect(callback);
+}
+
 export async function middleware(request: NextRequest) {
+  const strayOAuth = redirectStrayOAuthToCallback(request);
+  if (strayOAuth) {
+    return strayOAuth;
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
