@@ -176,32 +176,14 @@ export function useDraftProductIds(initialIds?: string[]) {
   const [draftIds, setDraftIds] = useState<Set<string>>(
     () => new Set(initialIds ?? []),
   );
-  const [loaded, setLoaded] = useState(hasServerIds);
+  const [loaded, setLoaded] = useState(true);
 
   useEffect(() => {
-    if (hasServerIds) return;
-
-    let active = true;
-
-    void fetch("/api/products/drafts")
-      .then(async (res) => {
-        if (!res.ok) throw new Error("failed");
-        return res.json() as Promise<{ ids?: string[] }>;
-      })
-      .then((payload) => {
-        if (!active) return;
-        setDraftIds(new Set(payload.ids ?? []));
-        setLoaded(true);
-      })
-      .catch(() => {
-        if (!active) return;
-        setDraftIds(new Set());
-        setLoaded(true);
-      });
-
-    return () => {
-      active = false;
-    };
+    if (!hasServerIds) {
+      // Draft products are filtered server-side in /api/storefront/products.
+      setDraftIds(new Set());
+      setLoaded(true);
+    }
   }, [hasServerIds]);
 
   return { draftIds, draftLoaded: loaded };

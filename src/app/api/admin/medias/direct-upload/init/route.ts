@@ -1,3 +1,4 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import {
   createDirectUploadSession,
@@ -44,8 +45,12 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Could not start upload.";
-    return NextResponse.json({ message }, { status: 400 });
+    console.error("[direct-upload/init] failed:", error);
+    return NextResponse.json(
+      {
+        message: publicErrorMessage(error, "Could not start upload."),
+      },
+      { status: 400 },
+    );
   }
 }

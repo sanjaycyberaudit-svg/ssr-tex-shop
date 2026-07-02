@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { publicErrorMessage } from "@/lib/api/public-error";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -19,8 +20,10 @@ export default function AdminError({
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8 text-center">
       <h1 className="text-xl font-semibold">Admin could not load</h1>
       <p className="max-w-md text-sm text-muted-foreground">
-        {error.message ||
-          "Something went wrong loading the admin panel. Try again or sign in again."}
+        {publicErrorMessage(
+          error,
+          "Something went wrong loading the admin panel. Try again or sign in again.",
+        )}
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <Button type="button" onClick={() => reset()}>

@@ -45,7 +45,11 @@ function redirectWithSessionCookies(
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const requestedNext = getRedirectFromSearchParams(searchParams);
+  const tokenType = searchParams.get("type");
+  const isRecovery = tokenType === "recovery";
+  const requestedNext = isRecovery
+    ? "/reset-password"
+    : getRedirectFromSearchParams(searchParams);
   const code = searchParams.get("code");
   const oauthError =
     searchParams.get("error_description") ?? searchParams.get("error");
@@ -74,15 +78,18 @@ export async function GET(request: NextRequest) {
     if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
-        const signIn = new URL("/sign-in", request.url);
-        signIn.searchParams.set(
+        const destination = isRecovery ? "/forgot-password" : "/sign-in";
+        const redirectUrl = new URL(destination, request.url);
+        redirectUrl.searchParams.set(
           "error",
-          error.message || "Google sign-in could not be completed.",
+          isRecovery
+            ? "This password reset link is invalid or has expired. Request a new one."
+            : error.message || "Google sign-in could not be completed.",
         );
-        if (requestedNext !== "/") {
-          signIn.searchParams.set("from", requestedNext);
+        if (!isRecovery && requestedNext !== "/") {
+          redirectUrl.searchParams.set("from", requestedNext);
         }
-        return NextResponse.redirect(signIn);
+        return NextResponse.redirect(redirectUrl);
       }
     } else if (token_hash && type) {
       const { error } = await supabase.auth.verifyOtp({
@@ -90,7 +97,17 @@ export async function GET(request: NextRequest) {
         token_hash,
       });
       if (error) {
-        return NextResponse.redirect(new URL("/error", request.url));
+        const redirectUrl = new URL(
+          isRecovery ? "/forgot-password" : "/error",
+          request.url,
+        );
+        if (isRecovery) {
+          redirectUrl.searchParams.set(
+            "error",
+            "This password reset link is invalid or has expired. Request a new one.",
+          );
+        }
+        return NextResponse.redirect(redirectUrl);
       }
     }
 

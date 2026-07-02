@@ -1,3 +1,4 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import {
   getProductSizeConfigsByProductIds,
   normalizeProductSizeConfig,
@@ -548,7 +549,8 @@ export async function handleVeloProductsRequest(
         };
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Request failed.";
+    console.error("[velo/products] request failed:", error);
+    const message = publicErrorMessage(error, "Request failed.");
     response = {
       ok: false,
       requestId,
@@ -740,10 +742,9 @@ async function handleBulkUpsert(
         product: result.product,
       });
     } catch (error) {
+      console.error("[velo/products] bulk upsert item failed:", error);
       errors.push(
-        `Item ${index + 1} (${item.externalProductId}): ${
-          error instanceof Error ? error.message : "Bulk upsert failed."
-        }`,
+        `Item ${index + 1} (${item.externalProductId}): ${publicErrorMessage(error, "Bulk upsert failed.")}`,
       );
     }
   }

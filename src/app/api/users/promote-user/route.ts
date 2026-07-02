@@ -1,47 +1,60 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import { PromoteAdminSchema, promoteAdminSchema } from "@/features/users";
+import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import createClient from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  const cookieStore = cookies();
-  const client = createClient({ cookieStore, isAdmin: true });
-  const session = await client.auth.getSession();
-
-  if (!session.data.session?.user?.app_metadata?.isAdmin)
+  const user = await getSessionUser();
+  if (!(await isAdminUser(user))) {
     return NextResponse.json(
-      { message: `Only Admin allowed to do this action.` },
-      { status: 500 },
+      { message: "Only admins can perform this action." },
+      { status: 403 },
     );
+  }
 
   const data: PromoteAdminSchema = await request.json();
   const validate = promoteAdminSchema.safeParse(data);
 
-  if (!validate)
+  if (!validate.success) {
     return NextResponse.json(
-      { message: "Error, Data validation failed." },
-      { status: 500 },
+      { message: "Error, data validation failed." },
+      { status: 400 },
     );
+  }
+
+  const cookieStore = cookies();
+  const client = createClient({ cookieStore, isAdmin: true });
 
   const { data: userResponse } = await client.auth.admin.getUserById(
-    data.userId,
+    validate.data.userId,
   );
 
-  if (!userResponse.user)
+  if (!userResponse.user) {
     return NextResponse.json(
-      { message: `Error, UserId: ${data.userId} not found.` },
-      { status: 500 },
+      { message: `Error, userId: ${validate.data.userId} not found.` },
+      { status: 404 },
     );
-
-  console.log("userResponse", userResponse.user);
+  }
 
   const { data: updatedUser, error } = await client.auth.admin.updateUserById(
-    data.userId,
+    validate.data.userId,
     { app_metadata: { isAdmin: true } },
   );
 
-  if (error)
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  if (error) {
+    console.error("[promote-user] update failed:", error);
+    return NextResponse.json(
+      {
+        message: publicErrorMessage(
+          error,
+          "Could not promote user. Please try again.",
+        ),
+      },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json(
     {

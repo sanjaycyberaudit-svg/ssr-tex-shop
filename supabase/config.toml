@@ -85,6 +85,12 @@ enable_refresh_token_rotation = true
 # Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10
+
+[auth.sessions]
+# Cap total session lifetime at 24 hours (requires Supabase Auth v2.163+).
+timebox = "24h"
+# Sign out inactive sessions after 8 hours.
+inactivity_timeout = "8h"
 # Allow/disallow new user signups to your project.
 enable_signup = true
 # Allow/disallow testing manual linking of accounts
@@ -97,7 +103,9 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
+# Recovery and signup OTP links expire after 1 hour (3600 seconds).
+otp_expiry = 3600
 
 # Uncomment to customize email template
 # [auth.email.template.invite]

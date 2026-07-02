@@ -1,3 +1,4 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import { invalidateAdminMediaCache } from "@/lib/admin/media-library";
 import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
@@ -44,8 +45,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Could not finalize upload.";
-    return NextResponse.json({ message }, { status: 400 });
+    console.error("[direct-upload/complete] failed:", error);
+    return NextResponse.json(
+      {
+        message: publicErrorMessage(error, "Could not finalize upload."),
+      },
+      { status: 400 },
+    );
   }
 }

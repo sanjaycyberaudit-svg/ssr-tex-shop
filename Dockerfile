@@ -25,8 +25,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-# Copy .env for runtime
-COPY .env .env
+# Runtime secrets: inject via docker-compose env_file or platform env (never bake into image).
 
 EXPOSE 3000
 CMD ["node", "server.js"] 

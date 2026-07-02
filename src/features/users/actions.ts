@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { profiles } from "../../lib/supabase/schema";
 import { AdminUserFormData } from "@/features/users/validations";
-import { env } from "@/env.mjs";
+import { requireAdminActionUser } from "@/lib/auth/require-admin";
 import createClient from "@/lib/supabase/server";
 
 export const getCurrentUser = async () => {
@@ -15,12 +15,14 @@ export const getCurrentUser = async () => {
   return getSessionUser();
 };
 export const getCurrentUserSession = async () => {
+  const { getSessionUser } = await import("@/lib/auth/admin");
+  const user = await getSessionUser();
+  if (!user) return null;
+
   const cookieStore = cookies();
   const supabase = createServerClient({ cookieStore });
-
-  const userResponse = await supabase.auth.getSession();
-
-  return userResponse.data.session;
+  const { data } = await supabase.auth.getSession();
+  return data.session;
 };
 
 /** Quick check from JWT metadata (safe optional chaining). */
@@ -34,6 +36,7 @@ export const checkIsAdmin = async (currentUser: User | null) => {
 };
 
 export const getUser = async ({ userId }: { userId: string }) => {
+  await requireAdminActionUser();
   const cookieStore = cookies();
   const adminAuthClient = createClient({ cookieStore, isAdmin: true }).auth
     .admin;
@@ -53,6 +56,7 @@ export const listUsers = async ({
   page?: number;
   perPage?: number;
 }) => {
+  await requireAdminActionUser();
   const cookieStore = cookies();
   const adminAuthClient = createClient({ cookieStore, isAdmin: true }).auth
     .admin;
@@ -72,6 +76,7 @@ export const createUser = async ({
   name,
   password,
 }: AdminUserFormData) => {
+  await requireAdminActionUser();
   const cookieStore = cookies();
   const adminAuthClient = createClient({ cookieStore, isAdmin: true }).auth
     .admin;

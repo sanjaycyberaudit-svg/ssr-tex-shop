@@ -1,3 +1,4 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import db from "@/lib/supabase/db";
 import { testimonials } from "@/lib/supabase/schema";
@@ -63,12 +64,10 @@ export async function POST(request: NextRequest) {
     await db.insert(testimonials).values(insertValues);
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error("[admin/testimonials] POST failed:", error);
     return NextResponse.json(
       {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to create testimonial.",
+        message: publicErrorMessage(error, "Failed to create testimonial."),
       },
       { status: 400 },
     );
@@ -123,12 +122,10 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error("[admin/testimonials] PUT failed:", error);
     return NextResponse.json(
       {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to update testimonial.",
+        message: publicErrorMessage(error, "Failed to update testimonial."),
       },
       { status: 400 },
     );

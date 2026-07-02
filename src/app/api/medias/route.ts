@@ -1,4 +1,6 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import { invalidateAdminMediaCache } from "@/lib/admin/media-library";
+import { requireAdminApiUser } from "@/lib/auth/require-admin";
 import { processUploadedImage } from "@/lib/image/processUpload";
 import { uploadMediaToSupabase } from "@/lib/storage/uploadMedia";
 import db from "@/lib/supabase/db";
@@ -8,6 +10,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAdminApiUser();
+  if (auth.error) return auth.error;
+
   const formData = await request.formData();
   const data = Object.fromEntries(formData) as z.infer<typeof mediaSchema>;
   const validation = mediaSchema.safeParse(data);
@@ -34,8 +39,10 @@ export async function POST(request: NextRequest) {
 
       uploadedPaths.push(file.name);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Upload failed.";
-      errors.push(`${file.name}: ${message}`);
+      console.error("[medias] upload failed:", err);
+      errors.push(
+        `${file.name}: ${publicErrorMessage(err, "Upload failed.")}`,
+      );
     }
   }
 

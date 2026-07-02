@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { CheckCircle2, Circle, Package, Truck } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Shell } from "@/components/layouts/Shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import OrderCompletionCleaner from "@/features/orders/components/OrderCompletionCleaner";
+import { canViewOrder } from "@/lib/auth/order-access";
+import { appendFromToSignIn } from "@/lib/auth/redirect";
 import db from "@/lib/supabase/db";
 import {
   address,
@@ -20,6 +22,7 @@ import Image from "next/image";
 
 type TrackOrderProps = {
   params: { orderId: string };
+  searchParams?: { token?: string };
 };
 
 const STATUS_STEPS = ["ordered", "packed", "shipped", "delivered"] as const;
@@ -54,10 +57,15 @@ function buildShippingAddress(details: {
   return [...lines, cityLine, details.country || "India"].filter(Boolean);
 }
 
-async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
+async function TrackOrderPage({
+  params: { orderId },
+  searchParams,
+}: TrackOrderProps) {
   const orderRows = await db
     .select({
       id: orders.id,
+      user_id: orders.user_id,
+      createdAt: orders.createdAt,
       amount: orders.amount,
       currency: orders.currency,
       orderStatus: orders.order_status,
@@ -66,7 +74,6 @@ async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
       customerName: orders.name,
       customerEmail: orders.email,
       customerMobile: orders.customer_mobile,
-      createdAt: orders.createdAt,
       addressLine1: address.line1,
       addressLine2: address.line2,
       addressCity: address.city,
@@ -81,6 +88,26 @@ async function TrackOrderPage({ params: { orderId } }: TrackOrderProps) {
 
   const order = orderRows[0];
   if (!order) return notFound();
+
+  const allowed = await canViewOrder(
+    {
+      id: order.id,
+      user_id: order.user_id,
+      createdAt: order.createdAt,
+    },
+    searchParams?.token,
+  );
+
+  if (!allowed) {
+    if (order.user_id) {
+      redirect(
+        appendFromToSignIn("/sign-in", `/orders/${orderId}`, {
+          error: "Sign in to view this order.",
+        }),
+      );
+    }
+    notFound();
+  }
 
   const lineRows = await db
     .select({

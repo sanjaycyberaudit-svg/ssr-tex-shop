@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
 import db from "@/lib/supabase/db";
 import { medias } from "@/lib/supabase/schema";
+import { keytoUrl } from "@/lib/utils";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
@@ -11,19 +12,28 @@ export async function GET(
     where: eq(medias.id, params.id),
   });
 
-  if (!media)
+  if (!media) {
     return NextResponse.json(
       {
         message: "Media not found.",
       },
       { status: 404 },
     );
+  }
 
   return NextResponse.json(
     {
-      data: media,
-      preview: "https://hugo-coding.s3.us-west-1.amazonaws.com/" + media.key,
+      data: {
+        id: media.id,
+        alt: media.alt,
+        url: keytoUrl(media.key),
+      },
     },
-    { status: 201 },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    },
   );
 }

@@ -7,6 +7,7 @@ type CreatePhonePePaymentParams = {
   amountInRupees: number;
   customerMobile?: string | null;
   customerEmail?: string | null;
+  accessToken?: string;
 };
 
 type PhonePePayResponse = {
@@ -74,12 +75,17 @@ export async function createPhonePePayment(params: CreatePhonePePaymentParams) {
   const merchantUserId =
     `${config.merchantUserIdPrefix || "USR"}_${params.orderId}`.slice(0, 35);
 
+  const redirectParams = new URLSearchParams({ orderId: params.orderId });
+  if (params.accessToken) {
+    redirectParams.set("token", params.accessToken);
+  }
+
   const payload = {
     merchantId: config.merchantId,
     merchantTransactionId,
     merchantUserId,
     amount: toPaise(params.amountInRupees),
-    redirectUrl: `${getURL()}api/phonepe/redirect?orderId=${params.orderId}`,
+    redirectUrl: `${getURL()}api/phonepe/redirect?${redirectParams.toString()}`,
     redirectMode: "REDIRECT",
     callbackUrl: `${getURL()}api/phonepe/webhook`,
     mobileNumber: normalizeIndianMobile(params.customerMobile),
@@ -155,4 +161,28 @@ export async function fetchPhonePePaymentStatus(merchantTransactionId: string) {
   }
 
   return data.data;
+}
+
+export function verifyPhonePeWebhookSignature(params: {
+  base64Response: string;
+  signature: string;
+  saltKey: string;
+  saltIndex: string;
+}): boolean {
+  const response = params.base64Response.trim();
+  const provided = params.signature.trim();
+  if (!response || !provided) return false;
+
+  const expectedHash = sha256Hex(`${response}${params.saltKey}`);
+  const expected = `${expectedHash}###${params.saltIndex}`;
+
+  try {
+    if (expected.length !== provided.length) return false;
+    return crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(provided),
+    );
+  } catch {
+    return false;
+  }
 }

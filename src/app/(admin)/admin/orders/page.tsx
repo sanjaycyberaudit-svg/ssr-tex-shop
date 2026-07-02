@@ -2,6 +2,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DataTable } from "@/features/cms";
 import { OrdersColumns } from "@/features/orders";
+import { publicErrorMessage } from "@/lib/api/public-error";
 import {
   isPaidPaymentStatus,
   needsPaymentAttention,
@@ -76,8 +77,8 @@ async function OrdersPage({ searchParams }: AdminOrdersPageProps) {
       }));
     }
   } catch (error) {
-    fetchError =
-      error instanceof Error ? error.message : "Failed to load orders";
+    console.error("[admin/orders] page load failed:", error);
+    fetchError = publicErrorMessage(error, "Failed to load orders.");
   }
 
   const paidOrders = orders.filter((entry) =>

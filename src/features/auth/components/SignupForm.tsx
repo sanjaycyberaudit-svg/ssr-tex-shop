@@ -35,11 +35,28 @@ export function SignUpForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      name: searchParams.get("name") || "",
+      name: "",
       email: searchParams.get("email") || "",
-      password: searchParams.get("password") || "",
+      password: "",
     },
   });
+
+  React.useEffect(() => {
+    const sensitiveParams = ["password", "name"] as const;
+    const url = new URL(window.location.href);
+    let changed = false;
+
+    for (const key of sensitiveParams) {
+      if (url.searchParams.has(key)) {
+        url.searchParams.delete(key);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    }
+  }, [searchParams]);
 
   async function onSubmit({ email, password, name }: FormData) {
     setIsLoading(true);
@@ -55,10 +72,6 @@ export function SignUpForm() {
     });
     const from = searchParams?.get("from");
 
-    if (data) {
-      router.push(from ? from : "/");
-    }
-
     const unknownError = "Something went wrong, please try again.";
 
     if (error) {
@@ -67,7 +80,21 @@ export function SignUpForm() {
         description: error?.message || unknownError,
       });
       setIsLoading(false);
+      return;
     }
+
+    if (data.session) {
+      router.push(from ? from : "/");
+      router.refresh();
+    } else {
+      toast({
+        title: "Check your email",
+        description:
+          "We sent a confirmation link. Verify your email, then sign in.",
+      });
+    }
+
+    setIsLoading(false);
   }
 
   return (

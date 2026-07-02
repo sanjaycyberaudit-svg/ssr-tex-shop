@@ -2,6 +2,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import { buttonVariants } from "@/components/ui/button";
 import { StockControlForm } from "@/features/admin/settings/StockControlForm";
 import { ProductsColumns, ProductsDataTable } from "@/features/products";
+import { publicErrorMessage } from "@/lib/api/public-error";
 import {
   resolveBulkOrderGuardConfig,
   resolveStockControlConfig,
@@ -138,10 +139,10 @@ async function ProductsPage({ searchParams }: AdminProjectsPageProps) {
     );
   } catch (error) {
     console.error("[admin/products] page load failed:", error);
-    loadError =
-      error instanceof Error
-        ? error.message
-        : "Could not load products from the database.";
+    loadError = publicErrorMessage(
+      error,
+      "Could not load products from the database.",
+    );
   }
 
   return (

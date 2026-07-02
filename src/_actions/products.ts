@@ -2,6 +2,7 @@
 
 import db from "@/lib/supabase/db";
 import { InsertProducts, productMedias, products } from "@/lib/supabase/schema";
+import { requireAdminActionUser } from "@/lib/auth/require-admin";
 import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { eq, inArray, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -25,6 +26,7 @@ type SearchProductsActionProps = {
 };
 
 export const createProductAction = async (product: InsertProducts) => {
+  await requireAdminActionUser();
   createInsertSchema(products).parse(product);
   const data = await db.insert(products).values(product).returning();
   revalidateProductCatalogPaths();
@@ -36,6 +38,7 @@ export const updateProductAction = async (
   productId: string,
   product: InsertProducts,
 ) => {
+  await requireAdminActionUser();
   createInsertSchema(products).parse(product);
   const insertedProduct = await db
     .update(products)
@@ -90,6 +93,7 @@ export async function createDraftProductsFromMedia(
   mediaItems: DraftSourceMedia[],
   shared?: BulkDraftSharedData,
 ): Promise<BulkDraftCreateResult[]> {
+  await requireAdminActionUser();
   if (mediaItems.length === 0) return [];
 
   return db.transaction(async (tx) => {

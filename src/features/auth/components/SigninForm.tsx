@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -47,11 +48,10 @@ export function SignInForm() {
 
   function onSubmit({ email, password }: FormData) {
     startTransition(async () => {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      console.log("data", data);
 
       if (error) {
         toast({ title: "Error", description: error.message });
@@ -99,6 +99,14 @@ export function SignInForm() {
             </FormItem>
           )}
         />
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <Button
           disabled={isPending}
           className="w-full bg-primary hover:bg-[#55104A]"

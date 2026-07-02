@@ -1,4 +1,5 @@
 import { getProductsByIds } from "@/_actions/products";
+import { publicErrorMessage } from "@/lib/api/public-error";
 import { getEffectiveProductPrice } from "@/lib/products/discount";
 import type { CartItems } from "@/features/carts";
 import { createPhonePePayment } from "@/lib/payments/phonepe";
@@ -6,7 +7,7 @@ import { createCashfreePayment } from "@/lib/payments/cashfree";
 import { stripe } from "@/lib/stripe";
 import { getProductSizeConfigsByProductIds } from "@/lib/products/sizeConfig";
 import db from "@/lib/supabase/db";
-import { SelectProducts, orders } from "@/lib/supabase/schema";
+import { SelectProducts, address, orders } from "@/lib/supabase/schema";
 import {
   calculateCourierCharge,
   calculateGstAmount,
@@ -17,8 +18,9 @@ import {
   resolveCourierChargesConfig,
   resolveOfferCodesConfig,
 } from "@/lib/integrations/settings";
+import { createOrderAccessToken } from "@/lib/auth/order-access";
 import { getURL } from "@/lib/utils";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { orderLines } from "./../../../lib/supabase/schema";
 
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -51,20 +53,47 @@ type OrderProducts = CartItems;
 
 export async function POST(request: Request) {
   const payload = await request.json().catch(() => null);
-  const data = (payload ?? {}) as {
-    orderProducts: OrderProducts;
-    guest: boolean;
-    shipping: z.infer<typeof shippingSchema>;
-    promoCode?: string | null;
-  };
 
-  const validation = orderProductsSchema.safeParse(data);
+  const validation = orderProductsSchema.safeParse(payload ?? {});
   const supabase = createRouteHandlerClient({ cookies });
 
   if (!validation.success)
     return new NextResponse(JSON.stringify("Invalid data format."), {
       status: 400,
     });
+
+  const checkout = validation.data;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!checkout.guest) {
+    if (!user) {
+      return NextResponse.json(
+        { message: "Sign in required for account checkout." },
+        { status: 401 },
+      );
+    }
+
+    const [ownedAddress] = await db
+      .select({ id: address.id })
+      .from(address)
+      .where(
+        and(
+          eq(address.id, checkout.shipping.addressId),
+          eq(address.userProfileId, user.id),
+        ),
+      )
+      .limit(1);
+
+    if (!ownedAddress) {
+      return NextResponse.json(
+        { message: "Invalid shipping address for this account." },
+        { status: 403 },
+      );
+    }
+  }
 
   try {
     const [
@@ -110,7 +139,7 @@ export async function POST(request: Request) {
     const preferPhonePe = !preferCashfree && Boolean(phonePeConfig);
 
     const productsQuantity = await mergeProductDetailsWithQuantities(
-      data.orderProducts,
+      checkout.orderProducts as OrderProducts,
     );
     if (stockControlSetting?.isEnabled) {
       const unavailable = productsQuantity.filter(
@@ -126,10 +155,10 @@ export async function POST(request: Request) {
       }
     }
     const sizeConfigs = await getProductSizeConfigsByProductIds(
-      Object.keys(data.orderProducts),
+      Object.keys(checkout.orderProducts),
     );
     for (const line of productsQuantity) {
-      const selectedSize = String(data.orderProducts[line.id]?.size ?? "")
+      const selectedSize = String(checkout.orderProducts[line.id]?.size ?? "")
         .trim()
         .toUpperCase();
       const sizeConfig = sizeConfigs.get(line.id);
@@ -169,7 +198,7 @@ export async function POST(request: Request) {
     }
 
     const subtotalAmount = calcSubtotal(productsQuantity);
-    const normalizedPromoCode = String(data.promoCode ?? "")
+    const normalizedPromoCode = String(checkout.promoCode ?? "")
       .trim()
       .toUpperCase()
       .replace(/\s+/g, "");
@@ -194,7 +223,7 @@ export async function POST(request: Request) {
       0,
     );
     const courierBreakdown = calculateCourierCharge({
-      state: data.shipping.state,
+      state: checkout.shipping.state,
       quantity: totalQuantity,
       config: courierConfig,
     });
@@ -209,12 +238,10 @@ export async function POST(request: Request) {
       const created = await tx
         .insert(orders)
         .values({
-          user_id: !data.guest
-            ? (await supabase.auth.getUser()).data.user?.id
-            : null,
-          name: data.shipping.fullName,
-          email: data.shipping.email,
-          addressId: data.shipping.addressId,
+          user_id: !checkout.guest ? user?.id ?? null : null,
+          name: checkout.shipping.fullName,
+          email: checkout.shipping.email,
+          addressId: checkout.shipping.addressId,
           currency: "inr",
           amount: `${amount}`,
           order_status: "pending",
@@ -229,7 +256,7 @@ export async function POST(request: Request) {
             : preferPhonePe
               ? "phonepe"
               : "stripe",
-          customer_mobile: data.shipping.mobile,
+          customer_mobile: checkout.shipping.mobile,
           payment_meta: {
             subtotalAmount,
             discountAmount,
@@ -240,11 +267,11 @@ export async function POST(request: Request) {
             gstAmount,
             gstEnabled: courierConfig.gstEnabled,
             gstPercentage: courierConfig.gstPercentage,
-            courierState: data.shipping.state,
+            courierState: checkout.shipping.state,
             courierRule: courierBreakdown.ruleApplied,
             totalQuantity,
             sizes: Object.fromEntries(
-              Object.entries(data.orderProducts).map(([id, value]) => [
+              Object.entries(checkout.orderProducts).map(([id, value]) => [
                 id,
                 String(value.size ?? "")
                   .trim()
@@ -267,21 +294,25 @@ export async function POST(request: Request) {
       return created;
     });
 
+    const order = insertedOrder[0];
+    const accessToken = createOrderAccessToken(order.id, order.createdAt);
+
     if (preferCashfree) {
       const payment = await createCashfreePayment({
-        orderId: insertedOrder[0].id,
+        orderId: order.id,
         amountInRupees: amount,
-        customerName: data.shipping.fullName,
-        customerMobile: data.shipping.mobile,
-        customerEmail: data.shipping.email,
-        customerId: !data.guest
-          ? (await supabase.auth.getUser()).data.user?.id
-          : undefined,
+        customerName: checkout.shipping.fullName,
+        customerMobile: checkout.shipping.mobile,
+        customerEmail: checkout.shipping.email,
+        customerId: !checkout.guest ? user?.id : undefined,
       });
 
       if (!payment?.paymentSessionId) {
         throw new Error("Cashfree payment session could not be created");
       }
+
+      const existingMeta =
+        (order.payment_meta as Record<string, unknown> | null) ?? {};
 
       await db
         .update(orders)
@@ -289,14 +320,17 @@ export async function POST(request: Request) {
           payment_reference:
             payment.cashfreeCfOrderId ?? payment.cashfreeOrderId,
           payment_meta: {
+            ...existingMeta,
             cashfreeOrderId: payment.cashfreeOrderId,
             cashfreeCfOrderId: payment.cashfreeCfOrderId,
           },
         })
-        .where(eq(orders.id, insertedOrder[0].id));
+        .where(eq(orders.id, order.id));
 
       return NextResponse.json({
         provider: "cashfree",
+        orderId: order.id,
+        accessToken,
         paymentSessionId: payment.paymentSessionId,
         environment: payment.environment,
       });
@@ -304,10 +338,11 @@ export async function POST(request: Request) {
 
     if (preferPhonePe) {
       const payment = await createPhonePePayment({
-        orderId: insertedOrder[0].id,
+        orderId: order.id,
         amountInRupees: amount,
-        customerMobile: data.shipping.mobile,
-        customerEmail: data.shipping.email,
+        customerMobile: checkout.shipping.mobile,
+        customerEmail: checkout.shipping.email,
+        accessToken,
       });
 
       if (!payment?.redirectUrl || !payment.merchantTransactionId) {
@@ -320,24 +355,29 @@ export async function POST(request: Request) {
           phonepe_merchant_transaction_id: payment.merchantTransactionId,
           payment_reference: payment.merchantTransactionId,
         })
-        .where(eq(orders.id, insertedOrder[0].id));
+        .where(eq(orders.id, order.id));
 
       return NextResponse.json({
         provider: "phonepe",
+        orderId: order.id,
+        accessToken,
         redirectUrl: payment.redirectUrl,
       });
     }
 
+    const successUrl = new URL(`${getURL()}/orders/${order.id}`);
+    successUrl.searchParams.set("token", accessToken);
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       billing_address_collection: "required",
-      customer_email: data.shipping.email,
+      customer_email: checkout.shipping.email,
       phone_number_collection: { enabled: true },
       metadata: {
-        customer_mobile: data.shipping.mobile,
-        shipping_address_id: data.shipping.addressId,
+        customer_mobile: checkout.shipping.mobile,
+        shipping_address_id: checkout.shipping.addressId,
       },
-      client_reference_id: insertedOrder[0].id,
+      client_reference_id: order.id,
       line_items: [
         {
           price_data: {
@@ -380,18 +420,27 @@ export async function POST(request: Request) {
       ],
       mode: "payment",
       allow_promotion_codes: true,
-      success_url: `${getURL()}/orders/${insertedOrder[0].id}`,
+      success_url: successUrl.toString(),
       cancel_url: `${getURL()}/cart`,
     });
 
-    return NextResponse.json({ provider: "stripe", sessionId: session.id });
+    return NextResponse.json({
+      provider: "stripe",
+      orderId: order.id,
+      accessToken,
+      sessionId: session.id,
+    });
   } catch (err) {
     console.error("[checkout] create-checkout-session failed:", err);
-    const message =
-      err instanceof Error
-        ? err.message
-        : "Checkout initiation failed. Please retry.";
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json(
+      {
+        message: publicErrorMessage(
+          err,
+          "Checkout initiation failed. Please retry.",
+        ),
+      },
+      { status: 500 },
+    );
   }
 }
 

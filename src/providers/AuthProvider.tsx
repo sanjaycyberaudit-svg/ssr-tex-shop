@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { AuthUser, Session } from "@supabase/supabase-js";
 import { nanoid } from "nanoid";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import useWishlistStore from "@/features/wishlists/useWishlistStore";
 
@@ -61,6 +62,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
   const removeAllCartStorage = useCartStore((s) => s.removeAllProducts);
   const setWishlist = useWishlistStore((s) => s.setWishlist);
   const { toast } = useToast();
+  const router = useRouter();
   const lastWelcomedUserId = useRef<string | null>(null);
 
   const loadWishlistForUser = (userId: string) => {
@@ -101,8 +103,15 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
             });
             break;
           case "PASSWORD_RECOVERY":
-            supabase.auth.signOut();
-            setUser(null);
+            supabase.auth.getUser().then(({ data }) => {
+              setUser(data.user);
+            });
+            if (
+              typeof window !== "undefined" &&
+              !window.location.pathname.startsWith("/reset-password")
+            ) {
+              router.push("/reset-password");
+            }
             break;
 
           case "SIGNED_IN":
@@ -178,7 +187,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({
     }
 
     return () => subscription?.unsubscribe();
-  }, [removeAllCartStorage, setWishlist, toast]);
+  }, [removeAllCartStorage, router, setWishlist, toast]);
 
   return (
     <SupabaseAuthContext.Provider value={{ user, session }}>

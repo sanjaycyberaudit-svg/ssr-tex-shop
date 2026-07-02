@@ -19,7 +19,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
             "pr-10 focus:ring-0 focus-visible:ring-0 focus:border-0 focus:ring-offset-0 focus:outline-none",
             className,
           )}
-          type={showPassword ? "text" : "Password"}
+          type={showPassword ? "text" : "password"}
         />
         <Button
           type="button"

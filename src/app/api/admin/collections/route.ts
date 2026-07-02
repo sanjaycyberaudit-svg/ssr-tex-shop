@@ -1,3 +1,4 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import { invalidateStorefrontCache } from "@/lib/cache/invalidate-storefront";
 import { getSessionUser, isAdminUser } from "@/lib/auth/admin";
 import db from "@/lib/supabase/db";
@@ -73,9 +74,13 @@ export async function POST(request: NextRequest) {
     await revalidateCollectionPages();
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to create collection.";
-    return NextResponse.json({ message }, { status: 400 });
+    console.error("[admin/collections] POST failed:", error);
+    return NextResponse.json(
+      {
+        message: publicErrorMessage(error, "Failed to create collection."),
+      },
+      { status: 400 },
+    );
   }
 }
 
@@ -135,9 +140,13 @@ export async function PUT(request: NextRequest) {
     await revalidateCollectionPages();
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to update collection.";
-    return NextResponse.json({ message }, { status: 400 });
+    console.error("[admin/collections] PUT failed:", error);
+    return NextResponse.json(
+      {
+        message: publicErrorMessage(error, "Failed to update collection."),
+      },
+      { status: 400 },
+    );
   }
 }
 
@@ -173,8 +182,12 @@ export async function DELETE(request: NextRequest) {
     await revalidateCollectionPages();
     return NextResponse.json({ ok: true, deletedId: parsed.data.id });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to delete collection.";
-    return NextResponse.json({ message }, { status: 400 });
+    console.error("[admin/collections] DELETE failed:", error);
+    return NextResponse.json(
+      {
+        message: publicErrorMessage(error, "Failed to delete collection."),
+      },
+      { status: 400 },
+    );
   }
 }

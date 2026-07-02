@@ -2,6 +2,7 @@ import {
   fetchFeaturedProductsCached,
   fetchProductSearchCached,
 } from "@/lib/storefront/product-queries";
+import { filterDraftProductsFromCollection } from "@/lib/storefront/filter-draft-products";
 import { parseProductListRequest } from "@/lib/storefront/search-params";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache/constants";
 import type { SearchQueryVariables } from "@/gql/graphql";
@@ -21,8 +22,10 @@ export async function GET(request: NextRequest) {
     );
 
     if (mode === "featured") {
-      const productsCollection = await fetchFeaturedProductsCached(
-        variables as { first: number; after?: string | null },
+      const productsCollection = await filterDraftProductsFromCollection(
+        await fetchFeaturedProductsCached(
+          variables as { first: number; after?: string | null },
+        ),
       );
 
       return NextResponse.json(
@@ -35,7 +38,15 @@ export async function GET(request: NextRequest) {
       variables as SearchQueryVariables,
     );
 
-    return NextResponse.json(searchResult, { headers: CACHE_HEADERS });
+    return NextResponse.json(
+      {
+        ...searchResult,
+        productsCollection: await filterDraftProductsFromCollection(
+          searchResult.productsCollection,
+        ),
+      },
+      { headers: CACHE_HEADERS },
+    );
   } catch (error) {
     console.error("[storefront/products] GET failed:", error);
     return NextResponse.json(

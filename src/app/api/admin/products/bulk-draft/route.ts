@@ -1,3 +1,4 @@
+import { publicErrorMessage } from "@/lib/api/public-error";
 import {
   BulkDraftSharedData,
   createDraftProductsFromMedia,
@@ -170,9 +171,10 @@ export async function POST(request: NextRequest) {
           originalFileName: file.name,
         });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Upload failed.";
-        uploadErrors.push(`${file.name}: ${message}`);
+        console.error("[bulk-draft] file upload failed:", error);
+        uploadErrors.push(
+          `${file.name}: ${publicErrorMessage(error, "Upload failed.")}`,
+        );
       }
     }
 
@@ -216,15 +218,19 @@ export async function POST(request: NextRequest) {
         { status: 201 },
       );
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Could not create draft products.";
+      console.error("[bulk-draft] create products failed:", error);
+      const message = publicErrorMessage(
+        error,
+        "Could not create draft products.",
+      );
       return errorJson(message, 500, [...uploadErrors, message]);
     }
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Bulk upload request failed.";
+    console.error("[bulk-draft] request failed:", error);
+    const message = publicErrorMessage(
+      error,
+      "Bulk upload request failed.",
+    );
     return errorJson(message, 500, [message]);
   }
 }

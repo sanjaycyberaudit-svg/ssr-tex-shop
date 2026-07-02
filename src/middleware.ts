@@ -1,8 +1,15 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  checkAuthRateLimit,
+  getRequestIp,
+  isAuthRateLimitPath,
+} from "@/lib/auth/rate-limit";
 
 /** Supabase sometimes returns OAuth to Site URL root (?code=) — forward to /auth/callback. */
-function redirectStrayOAuthToCallback(request: NextRequest): NextResponse | null {
+function redirectStrayOAuthToCallback(
+  request: NextRequest,
+): NextResponse | null {
   const { pathname, searchParams } = request.nextUrl;
   if (pathname.startsWith("/auth/callback")) {
     return null;
@@ -25,6 +32,21 @@ function redirectStrayOAuthToCallback(request: NextRequest): NextResponse | null
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (isAuthRateLimitPath(pathname)) {
+    const ip = getRequestIp(request.headers);
+    const { limited } = await checkAuthRateLimit(ip);
+    if (limited) {
+      const signIn = new URL("/sign-in", request.url);
+      signIn.searchParams.set(
+        "error",
+        "Too many sign-in attempts. Please wait a minute and try again.",
+      );
+      return NextResponse.redirect(signIn);
+    }
+  }
+
   const strayOAuth = redirectStrayOAuthToCallback(request);
   if (strayOAuth) {
     return strayOAuth;
@@ -66,7 +88,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
   if (pathname.startsWith("/admin") && !user) {
     const signIn = new URL("/sign-in", request.url);
     signIn.searchParams.set("from", pathname);

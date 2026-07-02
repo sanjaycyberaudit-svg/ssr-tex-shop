@@ -1,4 +1,5 @@
 "use server";
+import { requireAdminActionUser } from "@/lib/auth/require-admin";
 import { env } from "@/env.mjs";
 import {
   PutObjectCommand,
@@ -18,6 +19,7 @@ export const bufferToFile = (buffer: Buffer) =>
   `data:image/webp;base64,${buffer.toString("base64")}`;
 
 export const uploadImage = async (params: PutObjectCommandInput) => {
+  await requireAdminActionUser();
   const putObject = new PutObjectCommand(params);
   const s3Response = await s3Client.send(putObject);
   return s3Response;

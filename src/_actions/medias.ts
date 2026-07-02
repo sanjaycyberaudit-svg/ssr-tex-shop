@@ -1,9 +1,11 @@
 "use server";
 
+import { requireAdminActionUser } from "@/lib/auth/require-admin";
 import db from "@/lib/supabase/db";
-import { productMedias } from "@/lib/supabase/schema";
+import { medias } from "@/lib/supabase/schema";
 import { eq } from "drizzle-orm";
 
 export async function getMedia(id: string) {
-  return await db.query.medias.findFirst({ where: eq(productMedias.id, id) });
+  await requireAdminActionUser();
+  return await db.query.medias.findFirst({ where: eq(medias.id, id) });
 }
